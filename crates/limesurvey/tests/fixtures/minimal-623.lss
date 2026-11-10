@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+  <LimeSurveyDocType>Survey</LimeSurveyDocType>
+  <DBVersion>623</DBVersion>
+  <languages><language>fr</language><language>en</language></languages>
+  <surveys>
+    <fields><fieldname>sid</fieldname><fieldname>language</fieldname><fieldname>custom_setting</fieldname></fields>
+    <rows><row><sid>701</sid><language>fr</language><custom_setting><![CDATA[0007]]></custom_setting></row></rows>
+  </surveys>
+  <groups>
+    <fields><fieldname>gid</fieldname><fieldname>sid</fieldname><fieldname>group_order</fieldname></fields>
+    <rows><row><gid>20</gid><sid>701</sid><group_order>0</group_order></row></rows>
+  </groups>
+  <group_l10ns>
+    <fields><fieldname>gid</fieldname><fieldname>language</fieldname><fieldname>group_name</fieldname></fields>
+    <rows>
+      <row><gid>20</gid><language>fr</language><group_name>Groupe de test</group_name></row>
+      <row><gid>20</gid><language>en</language><group_name>Test group</group_name></row>
+    </rows>
+  </group_l10ns>
+  <questions>
+    <fields><fieldname>qid</fieldname><fieldname>sid</fieldname><fieldname>gid</fieldname><fieldname>parent_qid</fieldname><fieldname>title</fieldname><fieldname>type</fieldname><fieldname>mandatory</fieldname><fieldname>question_order</fieldname></fields>
+    <rows>
+      <row><qid>101</qid><sid>701</sid><gid>20</gid><parent_qid>0</parent_qid><title>CHOICE</title><type>L</type><mandatory>Y</mandatory><question_order>0</question_order></row>
+      <row><qid>102</qid><sid>701</sid><gid>20</gid><parent_qid>0</parent_qid><title>DETAILS</title><type>Q</type><mandatory>S</mandatory><question_order>1</question_order></row>
+    </rows>
+  </questions>
+  <subquestions>
+    <fields><fieldname>qid</fieldname><fieldname>sid</fieldname><fieldname>gid</fieldname><fieldname>parent_qid</fieldname><fieldname>title</fieldname><fieldname>scale_id</fieldname></fields>
+    <rows><row><qid>103</qid><sid>701</sid><gid>20</gid><parent_qid>102</parent_qid><title>SQ001</title><scale_id>0</scale_id></row></rows>
+  </subquestions>
+  <question_l10ns>
+    <fields><fieldname>qid</fieldname><fieldname>language</fieldname><fieldname>question</fieldname></fields>
+    <rows>
+      <row><qid>101</qid><language>fr</language><question>Choisir une option</question></row>
+      <row><qid>101</qid><language>en</language><question>Choose an option</question></row>
+      <row><qid>102</qid><language>fr</language><question>Détails</question></row>
+      <row><qid>102</qid><language>en</language><question>Details</question></row>
+      <row><qid>103</qid><language>fr</language><question>Précision</question></row>
+      <row><qid>103</qid><language>en</language><question>Detail</question></row>
+    </rows>
+  </question_l10ns>
+  <answers>
+    <fields><fieldname>aid</fieldname><fieldname>qid</fieldname><fieldname>code</fieldname><fieldname>scale_id</fieldname></fields>
+    <rows>
+      <row><aid>501</aid><qid>101</qid><code>01</code><scale_id>0</scale_id></row>
+      <row><aid>502</aid><qid>101</qid><code>02</code><scale_id>0</scale_id></row>
+    </rows>
+  </answers>
+  <answer_l10ns>
+    <fields><fieldname>aid</fieldname><fieldname>language</fieldname><fieldname>answer</fieldname></fields>
+    <rows>
+      <row><aid>501</aid><language>fr</language><answer>Option un</answer></row>
+      <row><aid>501</aid><language>en</language><answer>Option one</answer></row>
+      <row><aid>502</aid><language>fr</language><answer>Option deux</answer></row>
+      <row><aid>502</aid><language>en</language><answer>Option two</answer></row>
+    </rows>
+  </answer_l10ns>
+  <surveys_languagesettings>
+    <fields><fieldname>surveyls_survey_id</fieldname><fieldname>surveyls_language</fieldname><fieldname>surveyls_title</fieldname><fieldname>optional_value</fieldname></fields>
+    <rows>
+      <row><surveyls_survey_id>701</surveyls_survey_id><surveyls_language>fr</surveyls_language><surveyls_title><![CDATA[Étude été — 日本語]]></surveyls_title><optional_value/></row>
+      <row><surveyls_survey_id>701</surveyls_survey_id><surveyls_language>en</surveyls_language><surveyls_title><![CDATA[Summer study]]></surveyls_title></row>
+    </rows>
+  </surveys_languagesettings>
+  <!-- Unknown data must survive every supported edit. -->
+  <custom_extension xmlns:extra="urn:rustsurvey:test" flag="&quot;original&quot;">
+    <extra:payload><![CDATA[<script>synthetic()</script> & 0000]]></extra:payload>
+  </custom_extension>
+</document>

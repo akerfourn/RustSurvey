@@ -71,6 +71,15 @@ coût de compilation, sa requêtologie et sa consommation à l’exécution devr
 être observés avant de généraliser son usage. Une optimisation ciblée pourra
 utiliser SQLx derrière la même frontière d’accès aux données.
 
+## Lecture des fichiers XML
+
+L’adaptateur `.lss` utilise `quick-xml` 0.42 sans options additionnelles. La
+lecture événementielle fournit les positions nécessaires pour préserver les
+données inconnues et limiter les éditions aux champs demandés. Les limites, le
+modèle de lecture et les tests sont décrits dans le [module de
+compatibilité][limesurvey]. La dépendance ne remplace pas les contrôles
+explicites du profil LimeSurvey.
+
 ## Outils de dépôt
 
 Cargo gère Rust ; npm gère un unique workspace `web`. Rustfmt et Clippy assurent
@@ -90,5 +99,6 @@ révèlent une limite concrète. Les critères restent la lisibilité, la fiabil
 et le coût réel du serveur.
 
 [preact]: https://preactjs.com/guide/v11/getting-started/
+[limesurvey]: ../../crates/limesurvey/README.md
 [seaorm]:
   https://www.sea-ql.org/SeaORM/docs/install-and-config/database-and-async-runtime/

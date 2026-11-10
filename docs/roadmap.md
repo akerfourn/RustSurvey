@@ -26,6 +26,11 @@ conception ne dépend pas de la fourniture d’un export de production.
 
 ## Étape 2 — Référence et adaptateur d’échange
 
+Premier incrément réalisé : bibliothèque et CLI `.lss`, conservation source,
+contrôles structurels du schéma 623 et modification ciblée d’un titre. Les tests
+synthétiques couvrent aussi les erreurs et limites XML. La génération de
+fixtures de référence et les `FieldBinding` restent à réaliser.
+
 - Préparer une instance de référence 6.5.14 isolée et des données synthétiques.
 - Réexporter des cas amont pour obtenir des fixtures du schéma cible 623.
 - Implémenter lecture XML bornée, conservation source et `FieldBinding`.

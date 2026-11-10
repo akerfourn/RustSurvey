@@ -1,7 +1,8 @@
 # Documentation de RustSurvey
 
-Cette documentation précède le développement fonctionnel. Elle décrit le
-problème à résoudre, les contraintes acquises et les choix à valider.
+Cette documentation accompagne le développement. Elle décrit le problème à
+résoudre, les contraintes acquises et les choix à valider. Le premier code
+fonctionnel concerne l’[adaptateur `.lss`](../crates/limesurvey/README.md).
 
 ## Parcours de lecture
 

@@ -26,7 +26,11 @@ fidèle, exécution équivalente et continuité des participations. Le
 [protocole de migration](study-migration.md) définit ces garanties. Un fichier
 importable ou archivé ne prouve pas que ses règles et reprises sont exécutables.
 
-**Aucun import/export n’est encore implémenté.**
+**Première implémentation `.lss` disponible** dans
+[`crates/limesurvey`](../crates/limesurvey/README.md) : lecture bornée, modèle
+source du schéma 623, diagnostics, export original et édition d’un titre. Le
+rendu, la persistance métier, les archives et le moteur de règles ne sont pas
+encore implémentés ; l’échange avec une instance 6.5.14 reste à certifier.
 
 ## Formats et priorités proposées
 

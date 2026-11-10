@@ -7,17 +7,32 @@ responsable des autorisations, de la validation et de la persistance.
 
 ## État du projet
 
-**Phase de cadrage et de documentation.** Le dépôt contient un squelette
-technique minimal, pas encore une application de questionnaires :
+**Début d’implémentation.** Le dépôt contient un premier adaptateur `.lss`
+utilisable en bibliothèque et en ligne de commande, ainsi que le socle web :
 
+- lecture bornée, diagnostics et modèle de lecture du schéma LimeSurvey 623 ;
+- réexport de l’original à l’octet près et modification ciblée d’un titre ;
 - un serveur Rust avec un contrôle de disponibilité HTTP/base de données ;
 - une connexion SQLite par défaut et des pilotes PostgreSQL/MariaDB activables ;
 - un point d’entrée pour les migrations, sans migration métier ;
 - une page statique Preact/TypeScript et les outils de formatage/vérification.
 
-L’éditeur, les sessions de réponse, la collecte et les imports/exports ne sont
-pas implémentés. Les propositions d’architecture ne constituent pas une promesse
-de compatibilité ou de performance déjà vérifiée.
+L’éditeur, les sessions de réponse, la collecte, la persistance métier et les
+archives `.lsa` restent à implémenter. Les tests de l’adaptateur ne constituent
+pas encore une certification d’échange avec une instance LimeSurvey 6.5.14.
+
+## Essayer l’adaptateur de fichiers
+
+Inspecter la fixture synthétique fournie :
+
+```sh
+cargo run -p rustsurvey-limesurvey --locked -- inspect \
+  crates/limesurvey/tests/fixtures/minimal-623.lss
+```
+
+La sortie JSON décrit les contrôles effectués et les limites de compatibilité,
+sans afficher les textes du questionnaire. Voir les
+[commandes d’édition et de réexport](crates/limesurvey/README.md).
 
 ## Contraintes retenues
 

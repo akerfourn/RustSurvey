@@ -36,7 +36,8 @@ et continuité sont évalués séparément. Le
 [transfert d’études en cours](study-migration.md) prépare une cible fermée et ne
 l’ouvre qu’après validation d’un instantané cohérent.
 
-Ces décisions sont documentées, pas encore implémentées. Elles s’appuient sur
+La première implémentation porte sur l’adaptateur `.lss`. Le modèle de stockage
+et le protocole complet restent à réaliser. Ces décisions s’appuient sur
 l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans attendre un
 export de production.
 
@@ -75,8 +76,10 @@ Quand le métier sera introduit, séparer progressivement :
 - les accès aux données et les migrations ;
 - le client et son moteur d’interactions.
 
-Créer ces modules au rythme des besoins. Le squelette ne contient aujourd’hui
-que `crates/server`, `crates/migration` et `web`.
+Créer ces modules au rythme des besoins. Le dépôt contient aujourd’hui
+`crates/server`, `crates/migration`, `crates/limesurvey` et `web`. Le modèle de
+lecture de l’adaptateur est propre au format source ; les identifiants natifs et
+leur correspondance seront introduits avec la persistance métier.
 
 ## Sessions et progression
 

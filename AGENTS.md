@@ -2,9 +2,10 @@
 
 ## Phase actuelle
 
-Le premier livrable est le cadrage documentaire. Un squelette technique minimal
-est présent pour vérifier l’environnement. Ne pas étendre le métier ou créer un
-modèle de données anticipé sans demande de développement dédiée.
+Le développement a commencé sur l’adaptateur de fichiers LimeSurvey et son outil
+CLI. Suivre les grandes lignes documentées et livrer des incréments fonctionnels
+testés ; ne pas remplacer le travail de code demandé par un nouveau tour de
+cadrage général.
 
 Lire [README.md](README.md), les [besoins](docs/requirements.md), le
 [modèle interne](docs/domain-model.md) et le document du domaine concerné avant
@@ -82,9 +83,10 @@ npm run check
 npm run check:rust
 ```
 
-Le squelette n’a pas encore de tests métier. Ajouter des tests de comportement
-au moment d’introduire le métier et un test de régression pour chaque bogue
-corrigé. Éviter les tests qui ne font que recopier l’implémentation.
+L’adaptateur `.lss` possède des tests de lecture, de conservation, d’édition et
+de CLI. Ajouter des tests de comportement pour les nouvelles fonctions et un
+test de régression pour chaque bogue corrigé. Éviter les tests qui ne font que
+recopier l’implémentation.
 
 - Tests rapides, déterministes et isolés ; pas d’accès à des services distants.
 - SQLite en mémoire ou fichier temporaire pour les tests courants.

@@ -1,0 +1,78 @@
+# Adaptateur LimeSurvey
+
+Première bibliothèque Rust pour les structures `.lss`, avec un outil CLI. Le
+modèle exposé décrit le fichier source et ses identifiants ; il ne remplace pas
+le modèle de persistance des études.
+
+## Commandes
+
+Depuis la racine du dépôt :
+
+```sh
+cargo run -p rustsurvey-limesurvey --locked -- inspect \
+  crates/limesurvey/tests/fixtures/minimal-623.lss
+```
+
+```sh
+cargo run -p rustsurvey-limesurvey --locked -- export-original \
+  crates/limesurvey/tests/fixtures/minimal-623.lss original.lss
+```
+
+```sh
+cargo run -p rustsurvey-limesurvey --locked -- set-title \
+  crates/limesurvey/tests/fixtures/minimal-623.lss renamed.lss fr \
+  'Nouveau titre'
+```
+
+Les fichiers de sortie doivent être nouveaux : aucun écrasement n’est autorisé.
+`inspect` retourne 0 sans erreur structurelle, 2 avec erreurs dans le rapport,
+et 1 en cas d’échec de lecture ou d’analyse XML.
+
+`export-original` conserve les octets reçus, même si le rapport structurel
+contient des erreurs. Cette commande archive la source ; elle ne certifie pas
+son fonctionnement. `set-title` exige le schéma 623 et l’absence d’erreurs
+structurelles. Il modifie seulement le contenu du titre dans la langue choisie.
+Les autres octets, extensions et attributs sont conservés.
+
+## Contrôles présents
+
+- XML 1.0 UTF-8, sans DTD ni instructions de traitement.
+- Limites configurables via `Limits` : 8 Mio, profondeur 64, 100 000 éléments,
+  32 attributs par élément et 128 diagnostics par défaut.
+- Métadonnées, langues, identifiants et déclarations de colonnes.
+- Groupes, questions, sous-questions, options et références de leurs
+  traductions.
+- Caractère obligatoire strict/souple et familles des types de questions.
+- Conservation des valeurs absentes/vides et des données non interprétées.
+
+Les rapports comptabilisent toutes les erreurs même lorsque la liste affichée
+est tronquée. Ils indiquent les sections effectivement contrôlées et ne
+reprennent pas les valeurs utilisateur dans leurs messages.
+
+## Limites explicites
+
+Les autres révisions de schéma sont conservées sans projection ni contrôle
+structurel complet. Elles ne sont pas modifiables par cet outil.
+
+Conditions, attributs, quotas, thèmes et plugins sont préservés mais ne sont pas
+interprétés. Le rapport annonce l’exécution et la continuité comme non
+implémentées. Aucune route HTTP ni table SQL métier n’est ajoutée ici.
+
+La fixture versionnée est synthétique. Les tests unitaires et CLI vérifient les
+invariants de cet adaptateur ; l’import dans une instance LimeSurvey 6.5.14
+reste à vérifier avant d’annoncer une compatibilité fonctionnelle.
+
+## Dépendances
+
+`quick-xml` 0.42 est utilisé sans fonctionnalités optionnelles pour la lecture
+événementielle et les positions nécessaires aux modifications ciblées. La
+représentation conserve la source originale et un arbre borné, plutôt qu’une
+désérialisation qui oublierait les champs inconnus. `serde` et `serde_json`
+produisent le rapport CLI ; aucune nouvelle dépendance de runtime web ou de base
+de données n’est introduite.
+
+## Tests
+
+```sh
+cargo test -p rustsurvey-limesurvey --locked
+```
