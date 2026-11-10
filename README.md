@@ -88,21 +88,22 @@ limites de cette vérification sont détaillées dans [Développement].
 
 ## Essayer le viewer
 
-Depuis la racine, dans deux terminaux :
-
-```sh
-cargo run -p rustsurvey-server --locked
-```
+Depuis la racine, une commande lance Rust puis Vite :
 
 ```sh
 npm run dev
 ```
 
-Ouvrir <http://127.0.0.1:5173>, puis cliquer sur **Essayer l’exemple** ou
-sélectionner un `.lss` et cliquer sur **Analyser le fichier**. L’exemple
-contient huit questions, trois groupes et deux langues. Choisir Rust fait
-apparaître un groupe ; cocher « Autre objectif » fait apparaître une question de
-précision.
+Le backend essaie le port 3000 puis les suivants en développement. Le lanceur
+transmet directement l’adresse retenue au proxy Vite. Ctrl+C arrête les deux
+services. Un `BIND_ADDRESS` explicite conserve le port demandé.
+
+Ouvrir l’adresse affichée par Vite, <http://127.0.0.1:5173> par défaut. Si ce
+port est occupé, Vite choisit automatiquement le prochain port disponible.
+Cliquer sur **Essayer l’exemple** ou sélectionner un `.lss` et cliquer sur
+**Analyser le fichier**. L’exemple contient huit questions, trois groupes et
+deux langues. Choisir Rust fait apparaître un groupe ; cocher « Autre objectif »
+fait apparaître une question de précision.
 
 La navigation contrôle les réponses obligatoires et les contraintes prises en
 charge. Une réponse devenue non pertinente est effacée. Recharger la page ou

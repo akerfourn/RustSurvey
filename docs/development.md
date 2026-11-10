@@ -62,7 +62,8 @@ TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
 
 | Commande               | Effet                           |
 | ---------------------- | ------------------------------- |
-| `npm run dev`          | Développement Vite              |
+| `npm run dev`          | Backend Rust et client Vite     |
+| `npm run dev:web`      | Client Vite seul                |
 | `npm run build`        | TypeScript et build statique    |
 | `npm run lint`         | ESLint, aucun avertissement     |
 | `npm run typecheck`    | TypeScript sans génération      |
@@ -81,17 +82,17 @@ nécessitent aucun service distant.
 ## Démarrage local
 
 ```sh
-cargo run -p rustsurvey-server --locked
-```
-
-Dans un autre terminal :
-
-```sh
 npm run dev
 ```
 
-- Client : <http://127.0.0.1:5173>.
-- API de disponibilité : <http://127.0.0.1:3000/api/health>.
+Cette commande lance le backend, attend son signal de disponibilité puis démarre
+Vite avec la bonne cible de proxy. Ctrl+C arrête les deux services. Le lanceur
+utilise les bibliothèques standard Node et l’API Vite existante ; aucune
+dépendance supplémentaire n’est nécessaire.
+
+- Client : adresse affichée par Vite, <http://127.0.0.1:5173> par défaut.
+- API de disponibilité : adresse affichée sous `RustSurvey API`, puis
+  `/api/health` ; <http://127.0.0.1:3000/api/health> par défaut.
 - SQLite : `rustsurvey.db` créé dans le répertoire courant, ignoré par Git.
 
 La page permet d’importer un `.lss` et d’essayer le [viewer](viewer.md). Son
@@ -99,17 +100,31 @@ upload et le lien de contrôle utilisent le proxy Vite vers l’API ; les répon
 sont uniquement en mémoire dans le navigateur. Le serveur gère Ctrl+C et, sur
 Unix, SIGTERM pour terminer proprement.
 
+Si le port 5173 est occupé, Vite choisit automatiquement le prochain port
+disponible et affiche l’adresse retenue dans le terminal.
+
+Sans `BIND_ADDRESS`, le backend de développement essaie jusqu’à 100 ports à
+partir de 3000, uniquement en cas d’adresse déjà utilisée. L’IP reste inchangée.
+Le proxy reçoit le port réellement ouvert. Le signal d’adresse utilise
+uniquement la sortie standard du processus enfant, sans fichier de découverte
+persistant.
+
+Un `BIND_ADDRESS` explicite, ainsi que les binaires compilés en mode release,
+conservent un port strict : un conflit arrête le démarrage.
+
 ## Configuration actuelle
 
 | Variable           | Défaut                            |
 | ------------------ | --------------------------------- |
 | `BIND_ADDRESS`     | `127.0.0.1:3000`                  |
 | `DATABASE_URL`     | `sqlite://rustsurvey.db?mode=rwc` |
-| `API_PROXY_TARGET` | `http://127.0.0.1:3000`           |
+| `API_PROXY_TARGET` | Découvert par `npm run dev`       |
 
 `BIND_ADDRESS` définit l’IP et le port du serveur. `DATABASE_URL` définit la
-connexion de base ; le défaut SQLite permet de créer le fichier.
-`API_PROXY_TARGET` configure seulement le proxy de développement Vite.
+connexion de base ; le défaut SQLite permet de créer le fichier. Avec
+`npm run dev`, un `API_PROXY_TARGET` explicite utilise un backend déjà démarré
+et lance uniquement Vite. Avec `npm run dev:web`, cette variable configure le
+proxy Vite ; son défaut est alors `http://127.0.0.1:3000`.
 
 Le serveur ne charge pas `.env` automatiquement. `.env.example` est une
 référence à exporter dans l’environnement du processus, sans secrets réels. Les
@@ -121,10 +136,10 @@ Exemple avec une autre adresse d’API :
 BIND_ADDRESS=127.0.0.1:4000 cargo run -p rustsurvey-server --locked
 ```
 
-Dans l’autre terminal :
+Dans l’autre terminal, pour lancer uniquement le client :
 
 ```sh
-API_PROXY_TARGET=http://127.0.0.1:4000 npm run dev
+API_PROXY_TARGET=http://127.0.0.1:4000 npm run dev:web
 ```
 
 `web/dist` contient le build statique. Son hébergement et le routage `/api` en

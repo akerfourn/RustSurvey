@@ -10,6 +10,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let address: SocketAddr = setting("BIND_ADDRESS", "127.0.0.1:3000")?
         .parse()
         .map_err(|_| io::Error::other("BIND_ADDRESS must be an IP address and port"))?;
+    let automatic_port = cfg!(debug_assertions) && env::var_os("BIND_ADDRESS").is_none();
     let database = connect_database().await?;
     Migrator::up(&database, None)
         .await
@@ -19,8 +20,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_state(database.clone())
         .merge(rustsurvey_server::inspection::routes());
     let shutdown = shutdown_signal()?;
-    let listener = tokio::net::TcpListener::bind(address).await?;
+    let listener = rustsurvey_server::network::bind_listener(address, automatic_port).await?;
     tracing::info!(address = %listener.local_addr()?, "HTTP server listening");
+    if env::var("RUSTSURVEY_DEV_READY").as_deref() == Ok("1") {
+        let mut address = listener.local_addr()?;
+        if address.ip().is_unspecified() {
+            if address.is_ipv4() {
+                address.set_ip(std::net::Ipv4Addr::LOCALHOST.into());
+            } else {
+                address.set_ip(std::net::Ipv6Addr::LOCALHOST.into());
+            }
+        }
+        println!("RUSTSURVEY_DEV_API_URL=http://{address}");
+    }
     axum::serve(listener, router)
         .with_graceful_shutdown(shutdown)
         .await?;
