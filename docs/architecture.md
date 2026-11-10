@@ -23,6 +23,23 @@ la même origine que l’API. Node.js sert aux outils de développement et de bu
 ; aucun runtime Node n’est nécessaire à cette architecture proposée. Le mode de
 distribution final reste à choisir.
 
+## Décisions de conception
+
+Le [modèle interne](domain-model.md) sépare étude, définition immuable, campagne
+de collecte, réponse et droit de reprise. Les tables sont communes aux études ;
+des blocs de données typés et versionnés limitent le nombre d’écritures et les
+dépendances aux particularités JSON des bases.
+
+L’adaptateur LimeSurvey conserve les éléments source et les correspondances
+d’identifiants, en plus du modèle exécutable. Conservation, réexport, exécution
+et continuité sont évalués séparément. Le
+[transfert d’études en cours](study-migration.md) prépare une cible fermée et ne
+l’ouvre qu’après validation d’un instantané cohérent.
+
+Ces décisions sont documentées, pas encore implémentées. Elles s’appuient sur
+l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans attendre un
+export de production.
+
 ## Frontière de confiance
 
 | Côté client             | Côté serveur                   |
@@ -45,9 +62,10 @@ concevoir ; WASM n’est pas une dépendance imposée à ce stade.
 
 ## Modèle et dépendances
 
-Le modèle de questionnaires doit être indépendant du format `.lss` et du schéma
-interne de LimeSurvey. Un adaptateur traduira les fichiers vers ce modèle et
-produira des diagnostics de compatibilité explicites.
+Le modèle de questionnaires est conçu indépendamment du format `.lss` et du
+schéma interne de LimeSurvey. Un adaptateur traduira les fichiers vers ce modèle
+et produira des diagnostics de compatibilité explicites. La représentation
+source conservée ne remplacera jamais la validation du modèle exécutable.
 
 Quand le métier sera introduit, séparer progressivement :
 
@@ -62,8 +80,9 @@ que `crates/server`, `crates/migration` et `web`.
 
 ## Sessions et progression
 
-Cette partie est **à concevoir** ; le squelette n’implémente aucune session. Les
-principes proposés sont les suivants :
+Le squelette n’implémente aucune session. Le modèle définit un checkpoint
+durable et des droits de reprise séparés des participants. Les principes
+d’implémentation sont les suivants :
 
 - Distinguer la session d’un administrateur de la participation à un survey.
 - Ne pas garder chaque participation dans une structure mémoire permanente.

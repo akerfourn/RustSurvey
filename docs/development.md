@@ -149,9 +149,10 @@ migrations est créée. Les pilotes PostgreSQL/MariaDB ont été compilés sans
 serveur externe ; cela ne valide ni un schéma multi-bases ni les futures
 migrations métier.
 
-La CI, les fixtures LimeSurvey et les tests d’intégration multi-bases seront
-introduits avec les premiers comportements. Le dépôt n’impose pour l’instant
-aucun hébergeur Git ni service de CI particulier.
+L’[audit des sources](limesurvey-source-audit.md) identifie désormais des
+fixtures amont et leurs versions. Leur intégration, la CI et les tests
+d’intégration multi-bases viendront avec les premiers comportements. Le dépôt
+n’impose pour l’instant aucun hébergeur Git ni service de CI particulier.
 
 [vite]: https://vite.dev/guide/
 [node-releases]: https://nodejs.org/en/about/previous-releases

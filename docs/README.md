@@ -6,12 +6,15 @@ problème à résoudre, les contraintes acquises et les choix à valider.
 ## Parcours de lecture
 
 1. [Besoins et périmètre](requirements.md).
-2. [Architecture proposée](architecture.md).
-3. [Contrat de compatibilité LimeSurvey](limesurvey-compatibility.md).
-4. [Bases de données et migrations](database.md).
-5. [Environnement de développement](development.md).
-6. [Choix de la pile technique](decisions/0001-technology-stack.md).
-7. [Feuille de route](roadmap.md).
+2. [Analyse des sources LimeSurvey 6.5.14](limesurvey-source-audit.md).
+3. [Architecture proposée](architecture.md).
+4. [Modèle interne et stockage](domain-model.md).
+5. [Contrat de compatibilité LimeSurvey](limesurvey-compatibility.md).
+6. [Migration d’études en cours](study-migration.md).
+7. [Bases de données et migrations](database.md).
+8. [Environnement de développement](development.md).
+9. [Choix de la pile technique](decisions/0001-technology-stack.md).
+10. [Feuille de route](roadmap.md).
 
 ## Lire les statuts
 

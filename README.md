@@ -25,24 +25,29 @@ de compatibilité ou de performance déjà vérifiée.
 - Client TypeScript avec Preact, choix de référence comme pour LiteCloud.
 - Ajouter une couche technique seulement pour un besoin concret et documenté.
 - SQLite, MariaDB et PostgreSQL, avec des migrations automatisées.
-- Compatibilité **des fichiers**, en priorité `.lss`, avec LimeSurvey
+- Compatibilité **des fichiers** `.lss` et `.lsa` avec LimeSurvey
   `6.5.14+240624`, dont le schéma de référence est `DBVersion = 623`. Voir la
   [référence amont][ls-version] et le [contrat de compatibilité].
+- Migration d’études en cours avec conservation des données, du comportement et
+  des moyens de reprise nécessaires ; le protocole est à implémenter.
 - Validation serveur obligatoire, même lorsqu’une règle est évaluée côté client.
 
 ## Documentation
 
 Commencer par l’[index de documentation] et les [besoins du projet].
 
-| Document               | Contenu                     |
-| ---------------------- | --------------------------- |
-| [Architecture]         | Client, serveur et sessions |
-| [Compatibilité]        | Formats et vérifications    |
-| [Bases de données]     | Portabilité et migrations   |
-| [Développement]        | Outillage et commandes      |
-| [Choix techniques]     | Alternatives et compromis   |
-| [Feuille de route]     | Prochaines étapes           |
-| [AGENTS.md](AGENTS.md) | Consignes de contribution   |
+| Document               | Contenu                          |
+| ---------------------- | -------------------------------- |
+| [Architecture]         | Client, serveur et sessions      |
+| [Modèle interne]       | Études, campagnes et réponses    |
+| [Migration d’études]   | Transfert et continuité          |
+| [Audit LimeSurvey]     | Constats dans les sources 6.5.14 |
+| [Compatibilité]        | Formats et vérifications         |
+| [Bases de données]     | Portabilité et migrations        |
+| [Développement]        | Outillage et commandes           |
+| [Choix techniques]     | Alternatives et compromis        |
+| [Feuille de route]     | Prochaines étapes                |
+| [AGENTS.md](AGENTS.md) | Consignes de contribution        |
 
 ## Vérifier l’environnement
 
@@ -83,9 +88,11 @@ créée. `.env.example` décrit les deux variables de configuration ; les fichie
 
 ## Contribution et licence
 
-Les prochains travaux doivent d’abord s’appuyer sur le cadrage et sur des
-exports de référence anonymisés. Garder les changements ciblés et proposer un
-message de commit ; ne pas créer de commit automatiquement.
+Les prochains travaux s’appuient sur le modèle documenté et sur les sources de
+la version cible. Le corpus amont permet de commencer sans export utilisateur ;
+des fichiers de production anonymisés serviront ensuite à valider les usages
+réels. Garder les changements ciblés et proposer un message de commit ; ne pas
+créer de commit automatiquement.
 
 La licence de RustSurvey reste à choisir avant publication. L’étude du format
 LimeSurvey n’implique pas de reprendre son code, ses thèmes ou ses extensions.
@@ -93,6 +100,9 @@ LimeSurvey n’implique pas de reprendre son code, ses thèmes ou ses extensions
 [index de documentation]: docs/README.md
 [besoins du projet]: docs/requirements.md
 [Architecture]: docs/architecture.md
+[Modèle interne]: docs/domain-model.md
+[Migration d’études]: docs/study-migration.md
+[Audit LimeSurvey]: docs/limesurvey-source-audit.md
 [contrat de compatibilité]: docs/limesurvey-compatibility.md
 [Bases de données]: docs/database.md
 [Développement]: docs/development.md

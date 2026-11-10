@@ -16,13 +16,15 @@ ultérieures.
 
 ## Sens de « compatible »
 
-Le contrat visé est un échange de fichiers importables et réexportables. La
-reproduction de RemoteControl, des routes web ou de la base LimeSurvey n’est pas
-une exigence.
+Le contrat visé est un échange de fichiers importables et réexportables,
+permettant aussi la migration d’études en cours sans perte de données et avec le
+comportement attendu. La reproduction de RemoteControl ou de la base interne
+LimeSurvey n’est pas une exigence.
 
-Deux niveaux doivent être vérifiés séparément : la conservation de la structure
-et l’exécution équivalente du questionnaire. Un fichier importable ne garantit
-pas que toutes ses expressions ou options sont exécutables.
+Quatre preuves sont distinctes : conservation des données reçues, réexport
+fidèle, exécution équivalente et continuité des participations. Le
+[protocole de migration](study-migration.md) définit ces garanties. Un fichier
+importable ou archivé ne prouve pas que ses règles et reprises sont exécutables.
 
 **Aucun import/export n’est encore implémenté.**
 
@@ -31,14 +33,14 @@ pas que toutes ses expressions ou options sont exécutables.
 | Format         | Nature              | Priorité proposée         |
 | -------------- | ------------------- | ------------------------- |
 | `.lss`         | Structure XML       | Première cible            |
-| `.lsa`         | Archive ZIP         | Après cadrage des données |
+| `.lsa`         | Archive ZIP         | Requise pour la migration |
 | `.lsg`, `.lsq` | Groupe/question XML | Ultérieure                |
 | TSV            | Structure tabulée   | Selon usage réel          |
 | CSV/réponses   | Résultats           | Périmètre à définir       |
 
 Le [manuel officiel][manual] distingue la structure `.lss`, sans réponses, de
-l’archive `.lsa`. Le choix de commencer par `.lss` est une décision de périmètre
-proposée pour RustSurvey.
+l’archive `.lsa`. Commencer par `.lss` fixe l’ordre de développement de
+l’adaptateur, sans limiter le modèle aux structures seules.
 
 ## Points établis dans le code 6.5.14
 
@@ -48,13 +50,16 @@ de valeur `Survey`, un `DBVersion` et les langues.
 
 La structure comprend des sections pour les groupes, questions, sous-questions,
 réponses proposées, traductions, attributs, conditions, quotas et paramètres du
-questionnaire. La liste exacte des champs devra être figée avec le corpus de
-test, y compris les variantes absentes/vides.
+questionnaire. Leur structure peut être déduite du code de cette version ; le
+corpus vérifie ensuite les variantes absentes, nulles et vides. Le
+[relevé des sources](limesurvey-source-audit.md) détaille cet inventaire.
 
 Le [contrôleur d’export][export-controller] construit les archives `.lsa` avec
 un `.lss` et, selon les données disponibles, des fichiers de réponses `.lsr`, de
 participants `.lst` et de chronométrage `.lsi`. Il ne faut pas assimiler ce
-conteneur à une sauvegarde exhaustive de toute l’installation.
+conteneur à une sauvegarde exhaustive de toute l’installation. Les reprises
+`saved_control`, les fichiers téléversés et les paramètres opérationnels
+manquants font l’objet d’un complément de transfert explicite.
 
 L’[importeur de cette version][import-helper] est la référence pour vérifier ce
 qu’un fichier produit par RustSurvey devra permettre de réimporter.
@@ -70,15 +75,29 @@ qu’un fichier produit par RustSurvey devra permettre de réimporter.
 - Ne pas annoncer une préservation des thèmes ou plugins sans support dédié.
 - Définir le traitement des champs inconnus avant de promettre un aller-retour
   sans perte. Leur simple conservation brute ne garantit pas la sémantique.
+- Préserver réponses soumises et partielles, participants, usages, marqueurs
+  historiques, timings et données de reprise effectivement fournis.
+- Distinguer les champs absents, nuls et vides, les codes et nombres lexicaux.
+- Conserver les éléments source et des correspondances d’identifiants stables,
+  selon le [modèle interne](domain-model.md).
+- Garder l’étude en préparation si des données manquent ou si une fonction
+  nécessaire à son comportement n’est pas prise en charge.
 
 L’égalité recherchée est sémantique : les identifiants réattribués et les
 différences de mise en forme XML doivent être distingués des pertes réelles.
 
 ## Corpus et vérification
 
-Obtenir ou créer des fixtures anonymisées avec **la version 6.5.14**. Il n’y en
-a pas encore dans le dépôt. Consigner leur provenance, les options utilisées et
-le résultat attendu ; ne jamais inclure réponses ou jetons réels.
+Les sources et le corpus amont permettent de concevoir et de commencer les tests
+sans export utilisateur. L’[audit](limesurvey-source-audit.md) relève 65
+structures XML et plusieurs archives examinées dans le tag. Les structures
+inspectées annoncent des schémas plus anciens que 623 ; leur présence dans ce
+tag ne les transforme pas en exports de 6.5.14.
+
+Pour certifier la cible, créer ou réexporter les fixtures avec **la version
+6.5.14**. Aucun fichier amont n’a été copié dans le dépôt. Consigner provenance,
+licence, options et résultat attendu. Les exports de production anonymisés
+affineront plus tard les usages, sans bloquer l’architecture actuelle.
 
 Le corpus initial devrait couvrir texte, nombres, choix simple/multiple,
 sous-questions, champs obligatoires, deux langues, conditions et expressions

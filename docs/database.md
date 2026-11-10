@@ -51,6 +51,28 @@ La liste des migrations est actuellement **vide**. Le squelette ne définit
 aucune table métier, aucun modèle ORM de questionnaires ni commande de rollback.
 Il permet seulement d’initialiser le mécanisme et de vérifier la connexion.
 
+## Schéma métier conçu
+
+Le [modèle interne](domain-model.md) définit un schéma commun aux études :
+identités, relations, états et versions en colonnes relationnelles ; définitions
+immuables et blocs de réponses en documents JSON typés et versionnés. Ces
+documents sont stockés comme texte et validés par Rust.
+
+Ce choix évite les tables de réponses créées dynamiquement par étude ainsi que
+la dépendance aux opérateurs JSON d’un moteur. La création ou activation d’une
+étude n’exécutera pas de migration du schéma SQL de RustSurvey.
+
+Le type de stockage doit accepter les grands documents sur les trois moteurs. En
+particulier, ne pas présumer qu’une colonne `TEXT` a partout la même capacité.
+Les migrations isoleront les éventuels choix de type adaptés au moteur ; tester
+aussi un document supérieur à 64 Kio.
+
+Les changements de format des documents ont leur propre versionnement et leur
+stratégie de conversion. Ils ne se confondent ni avec les migrations SQL, ni
+avec le `DBVersion` LimeSurvey. Aucune de ces tables n’est encore créée.
+
+## Automatisation et déploiement
+
 Les migrations automatiques au démarrage conviennent à ce socle local à un
 processus. L’exécution unique avant un déploiement à plusieurs instances et la
 coordination des démarrages restent à implémenter. Ne pas supposer que deux

@@ -30,16 +30,28 @@ L’équivalence avec LimeSurvey vise d’abord les questionnaires réellement
 utilisés. Elle n’implique pas de reproduire immédiatement tous ses plugins,
 thèmes, modes d’administration ou interfaces réseau.
 
+La migration d’études en cours est une exigence acquise : conserver structure,
+réponses complètes et partielles, participants, droits de reprise et
+comportement attendu. Les ressources et états externes nécessaires font aussi
+partie de l’inventaire de transfert. Une fonction non prise en charge bloque la
+bascule concernée plutôt que provoquer une perte silencieuse.
+
 ## Périmètre initial proposé
 
-La première cible de fichiers est `.lss`, pour la structure des questionnaires.
-Les archives `.lsa`, qui peuvent inclure des réponses et des participants,
-demandent un cadrage distinct.
+Le premier adaptateur peut commencer par `.lss`, pour la structure. Les archives
+`.lsa` et leurs données associées font partie de la cible de migration dès la
+conception ; elles ne sont pas une extension facultative repoussée après une
+architecture limitée aux nouveaux questionnaires.
 
-Le premier parcours fonctionnel à concevoir couvre : importer un petit
+Le premier parcours fonctionnel à implémenter couvre : importer un petit
 questionnaire de référence, le faire remplir, enregistrer les réponses et
-réexporter sa structure. Les types de questions et les règles acceptées doivent
-être définis à partir d’un corpus représentatif.
+réexporter sa structure. Le [modèle interne](domain-model.md) couvre dès ce
+premier tour les familles identifiées dans les sources. L’implémentation et la
+certification des fonctions restent progressives.
+
+Le [protocole de migration](study-migration.md) distingue conservation,
+réexport, exécution et continuité. Le transfert complet inclut les compléments
+nécessaires lorsqu’un fichier standard ne transporte pas tout l’état utile.
 
 L’éditeur visuel avancé, les statistiques complexes, les invitations, les
 fichiers joints et les extensions seront priorisés après ce premier parcours. Ce
@@ -58,17 +70,19 @@ découpage reste une proposition, pas une exclusion définitive.
 Le matériel cible, le volume de réponses simultanées et les budgets chiffrés de
 mémoire/latence sont **à définir**. Aucun gain n’est annoncé sans mesure.
 
-## Informations à réunir avant le métier
+## Informations pour valider et dimensionner
 
 | Priorité | À préciser                | Impact                    |
 | -------- | ------------------------- | ------------------------- |
-| Haute    | `.lss` de référence       | Fonctions couvertes       |
+| Haute    | Exports de production     | Validation des usages     |
 | Haute    | Questions et expressions  | Moteur de règles          |
 | Haute    | Anonymat, jetons, reprise | Modèle des participations |
 | Haute    | Machine et charge cible   | Budget de ressources      |
 | Moyenne  | Comptes et rôles          | Accès administrateur      |
-| Moyenne  | Reprise des réponses      | Archives et données       |
+| Haute    | États de reprise source   | Continuité du transfert   |
 | Moyenne  | Conservation, sauvegarde  | Exploitation              |
 
-Ces points sont consignés pour la prochaine étape. Ils ne bloquent pas la
-préparation documentaire ni la vérification du squelette.
+Ces points affineront la validation et l’exploitation. Ils ne bloquent pas
+l’architecture, conçue à partir du code et du corpus amont de la version cible.
+L’[audit des sources](limesurvey-source-audit.md) distingue les constats
+vérifiés des comportements qui restent à tester dans une instance 6.5.14.

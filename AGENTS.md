@@ -6,9 +6,10 @@ Le premier livrable est le cadrage documentaire. Un squelette technique minimal
 est présent pour vérifier l’environnement. Ne pas étendre le métier ou créer un
 modèle de données anticipé sans demande de développement dédiée.
 
-Lire [README.md](README.md), les [besoins](docs/requirements.md) et le document
-du domaine concerné avant une modification. Distinguer les contraintes acquises,
-les propositions et les fonctionnalités réellement vérifiées.
+Lire [README.md](README.md), les [besoins](docs/requirements.md), le
+[modèle interne](docs/domain-model.md) et le document du domaine concerné avant
+une modification. Distinguer les contraintes acquises, les décisions de
+conception et les fonctionnalités réellement vérifiées.
 
 ## Contraintes du produit
 
@@ -22,17 +23,25 @@ les propositions et les fonctionnalités réellement vérifiées.
 - La sobriété serveur guide les choix ; une amélioration de performance doit
   être mesurée sur une charge documentée.
 - Les calculs déportés au client ne remplacent jamais les contrôles serveur.
+- La migration d’études en cours doit préserver données et comportement, y
+  compris les réponses partielles et les moyens de reprise nécessaires. Lire le
+  [protocole de transfert](docs/study-migration.md).
 
 ## Architecture et dépendances
 
 - Préférer la bibliothèque standard Rust et des crates ciblées. Ajouter une
   couche ou un framework seulement pour un besoin concret du projet.
+- Avancer sur l’architecture à partir des sources de la version cible ; un
+  export utilisateur n’est pas un préalable au travail de conception.
+- Séparer conservation, réexport, exécution et continuité. Une donnée inconnue
+  préservée ne suffit pas à autoriser l’ouverture d’une étude.
 - Garder le métier indépendant de HTTP, de l’ORM et des formats LimeSurvey.
 - Centraliser les particularités SQL dans l’accès aux données/migrations.
 - Ne pas ajouter Redis, une file de tâches, un runtime Node en production ou un
   autre service sans besoin démontré et décision documentée.
 - Éviter l’état de session non borné en mémoire et les sessions attachées à un
-  processus. Le mécanisme de sessions reste à concevoir et à tester.
+  processus. Le modèle de reprise est documenté ; sa mise en œuvre et ses tests
+  restent à réaliser.
 - Justifier les dépendances ajoutées et leurs options dans la décision technique
   concernée ; désactiver les fonctions inutilisées lorsque possible.
 - Versionner les lockfiles. Ne pas les régénérer sans raison liée au changement.
@@ -62,6 +71,8 @@ les propositions et les fonctionnalités réellement vérifiées.
 - Prévoir des limites explicites pour imports, archives et traitements lourds.
 - Une fonction importée non prise en charge doit produire un diagnostic ; ne
   jamais la supprimer ou modifier sa signification silencieusement.
+- Ne jamais assimiler une archive `.lsa` à un transfert complet des sessions,
+  reprises et ressources externes. Vérifier les compléments réellement fournis.
 
 ## Vérifications
 
