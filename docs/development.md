@@ -66,15 +66,17 @@ TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
 | `npm run build`        | TypeScript et build statique    |
 | `npm run lint`         | ESLint, aucun avertissement     |
 | `npm run typecheck`    | TypeScript sans génération      |
+| `npm test`             | Moteur client, sans navigateur  |
 | `npm run format`       | Formatage Prettier              |
 | `npm run format:check` | Contrôle Prettier               |
-| `npm run check`        | Formatage, lint et build client |
+| `npm run check`        | Formatage, lint, tests et build |
 | `npm run check:rust`   | Contrôles Rust, tous pilotes    |
 | `npm run check:all`    | Vérifications client et Rust    |
 
-Le squelette ne contient pas encore de tests métier. `cargo test` vérifie
-aujourd’hui la compilation de ses cibles sans constituer une couverture
-fonctionnelle. Ajouter des tests utiles avec les premiers comportements.
+Les tests Rust couvrent l’adaptateur LSS, sa CLI, la projection du viewer et
+l’API HTTP d’inspection. Les tests TypeScript couvrent les expressions,
+dépendances, validations et substitutions du moteur local. Ils sont isolés et ne
+nécessitent aucun service distant.
 
 ## Démarrage local
 
@@ -92,9 +94,10 @@ npm run dev
 - API de disponibilité : <http://127.0.0.1:3000/api/health>.
 - SQLite : `rustsurvey.db` créé dans le répertoire courant, ignoré par Git.
 
-La page de développement est volontairement statique. Son lien de contrôle
-utilise le proxy Vite vers l’API ; aucun appel périodique n’est effectué. Le
-serveur gère Ctrl+C et, sur Unix, SIGTERM pour terminer proprement.
+La page permet d’importer un `.lss` et d’essayer le [viewer](viewer.md). Son
+upload et le lien de contrôle utilisent le proxy Vite vers l’API ; les réponses
+sont uniquement en mémoire dans le navigateur. Le serveur gère Ctrl+C et, sur
+Unix, SIGTERM pour terminer proprement.
 
 ## Configuration actuelle
 
@@ -129,30 +132,32 @@ production restent à préparer ; `vite preview` n’est pas un déploiement.
 
 ## Vérifications et limites
 
-Bilan du premier tour, le 10 novembre 2026 :
+Bilan du socle et du premier viewer, le 10 novembre 2026 :
 
-| Contrôle                        | Résultat                          |
-| ------------------------------- | --------------------------------- |
-| Outillage                       | Outils requis présents            |
-| Formatage, ESLint, TypeScript   | Réussis                           |
-| Compilation Rust, trois pilotes | Réussie                           |
-| Rustfmt et Clippy               | Aucun avertissement               |
-| Tests Cargo                     | Compilation, aucun test métier    |
-| SQLite                          | Démarrage et redémarrage vérifiés |
-| HTTP, Vite et proxy             | Réponses locales vérifiées        |
-| SIGTERM                         | Arrêt propre                      |
-| PostgreSQL/MariaDB              | Exécution non testée              |
-| LimeSurvey                      | Import/export non implémenté      |
+| Contrôle                        | Résultat                                 |
+| ------------------------------- | ---------------------------------------- |
+| Outillage                       | Outils requis présents                   |
+| Formatage, ESLint, TypeScript   | Réussis                                  |
+| Compilation Rust, trois pilotes | Réussie                                  |
+| Rustfmt et Clippy               | Aucun avertissement                      |
+| Tests Cargo                     | Adaptateur, CLI, projection et API       |
+| Tests TypeScript                | Moteur et validations locales            |
+| SQLite                          | Démarrage et redémarrage vérifiés        |
+| HTTP, Vite et proxy             | Réponses locales vérifiées               |
+| SIGTERM                         | Arrêt propre                             |
+| PostgreSQL/MariaDB              | Exécution non testée                     |
+| LimeSurvey                      | Lecture LSS et réexport original         |
+| Viewer                          | Parcours HTTP vérifié, visuel à vérifier |
 
 Le contrôle SQLite a également confirmé que seule la table vide d’historique des
 migrations est créée. Les pilotes PostgreSQL/MariaDB ont été compilés sans
 serveur externe ; cela ne valide ni un schéma multi-bases ni les futures
 migrations métier.
 
-L’[audit des sources](limesurvey-source-audit.md) identifie désormais des
-fixtures amont et leurs versions. Leur intégration, la CI et les tests
-d’intégration multi-bases viendront avec les premiers comportements. Le dépôt
-n’impose pour l’instant aucun hébergeur Git ni service de CI particulier.
+L’[audit des sources](limesurvey-source-audit.md) identifie des fixtures amont
+et leurs versions. La certification d’échange, la CI et les tests de migrations
+métier multi-bases restent à réaliser. Le dépôt n’impose pour l’instant aucun
+hébergeur Git ni service de CI particulier.
 
 [vite]: https://vite.dev/guide/
 [node-releases]: https://nodejs.org/en/about/previous-releases

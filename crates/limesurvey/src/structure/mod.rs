@@ -3,12 +3,14 @@ use crate::{
     xml::Document,
 };
 
+mod details;
 mod edit;
 mod fields;
 mod project;
 mod tables;
 mod translations;
 
+pub(crate) use details::metadata;
 pub(crate) use edit::replace_title;
 
 const CHECKED: &[&str] = &[
@@ -67,8 +69,9 @@ pub(crate) fn inspect(xml: &Document, report: &mut Report) -> Option<SurveySourc
         tables::validate_table(xml, section, report);
         report.checked_sections.push(section);
     }
-    let model = project::read_model(xml, report);
+    let mut model = project::read_model(xml, report);
     translations::validate_translations(xml, &model, report);
+    details::enrich(xml, &mut model);
     Some(model)
 }
 

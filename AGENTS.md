@@ -2,15 +2,16 @@
 
 ## Phase actuelle
 
-Le développement a commencé sur l’adaptateur de fichiers LimeSurvey et son outil
-CLI. Suivre les grandes lignes documentées et livrer des incréments fonctionnels
-testés ; ne pas remplacer le travail de code demandé par un nouveau tour de
-cadrage général.
+Le développement couvre l’adaptateur LimeSurvey, son outil CLI et un premier
+viewer web avec saisie locale. Aucun compte utilisateur n’est nécessaire à cette
+étape. Suivre les grandes lignes et livrer des incréments fonctionnels testés ;
+ne pas remplacer le code demandé par un nouveau tour de cadrage général.
 
 Lire [README.md](README.md), les [besoins](docs/requirements.md), le
 [modèle interne](docs/domain-model.md) et le document du domaine concerné avant
 une modification. Distinguer les contraintes acquises, les décisions de
-conception et les fonctionnalités réellement vérifiées.
+conception et les fonctionnalités réellement vérifiées. Pour le parcours web,
+lire aussi le [périmètre du viewer](docs/viewer.md).
 
 ## Contraintes du produit
 
@@ -84,7 +85,9 @@ npm run check:rust
 ```
 
 L’adaptateur `.lss` possède des tests de lecture, de conservation, d’édition et
-de CLI. Ajouter des tests de comportement pour les nouvelles fonctions et un
+de CLI. L’API d’inspection et le moteur TypeScript ont leurs propres tests. La
+saisie reste locale : aucune API de collecte n’accepte des réponses pour
+l’instant. Ajouter des tests de comportement pour les nouvelles fonctions et un
 test de régression pour chaque bogue corrigé. Éviter les tests qui ne font que
 recopier l’implémentation.
 

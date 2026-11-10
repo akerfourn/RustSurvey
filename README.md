@@ -7,19 +7,25 @@ responsable des autorisations, de la validation et de la persistance.
 
 ## État du projet
 
-**Début d’implémentation.** Le dépôt contient un premier adaptateur `.lss`
-utilisable en bibliothèque et en ligne de commande, ainsi que le socle web :
+**Premier parcours web fonctionnel.** Le dépôt permet d’importer un `.lss`,
+d’explorer ses informations et d’essayer une saisie locale sans compte :
 
 - lecture bornée, diagnostics et modèle de lecture du schéma LimeSurvey 623 ;
 - réexport de l’original à l’octet près et modification ciblée d’un titre ;
-- un serveur Rust avec un contrôle de disponibilité HTTP/base de données ;
+- upload et analyse XML côté Rust, avec limite de 8 Mio ;
+- titres, langues, groupes, questions, traductions et choix de réponse ;
+- viewer Preact avec navigation par groupe et changement de langue ;
+- réponses en mémoire dans l’onglet, téléchargeables en JSON ;
+- premier moteur client de pertinence et de validation, avec diagnostics ;
 - une connexion SQLite par défaut et des pilotes PostgreSQL/MariaDB activables ;
 - un point d’entrée pour les migrations, sans migration métier ;
-- une page statique Preact/TypeScript et les outils de formatage/vérification.
+- un exemple synthétique bilingue pour essayer le parcours immédiatement.
 
-L’éditeur, les sessions de réponse, la collecte, la persistance métier et les
-archives `.lsa` restent à implémenter. Les tests de l’adaptateur ne constituent
-pas encore une certification d’échange avec une instance LimeSurvey 6.5.14.
+Les réponses ne sont jamais envoyées au serveur. L’éditeur, les sessions de
+réponse durables, la collecte, la persistance métier et les archives `.lsa`
+restent à implémenter. Le moteur d’aperçu couvre un sous-ensemble explicite ; il
+ne certifie pas encore le comportement complet d’une étude LimeSurvey. Voir le
+[périmètre du viewer](docs/viewer.md).
 
 ## Essayer l’adaptateur de fichiers
 
@@ -80,7 +86,7 @@ npm run check:all
 Le diagnostic vérifie la présence des outils. Les versions attendues et les
 limites de cette vérification sont détaillées dans [Développement].
 
-## Démarrer le squelette
+## Essayer le viewer
 
 Depuis la racine, dans deux terminaux :
 
@@ -92,9 +98,20 @@ cargo run -p rustsurvey-server --locked
 npm run dev
 ```
 
-Ouvrir <http://127.0.0.1:5173>. Le lien de la page appelle `/api/health` via le
-proxy de développement. Un résultat `200 ok` indique que le serveur peut joindre
-la base ; un résultat `503 unavailable` indique un échec.
+Ouvrir <http://127.0.0.1:5173>, puis cliquer sur **Essayer l’exemple** ou
+sélectionner un `.lss` et cliquer sur **Analyser le fichier**. L’exemple
+contient huit questions, trois groupes et deux langues. Choisir Rust fait
+apparaître un groupe ; cocher « Autre objectif » fait apparaître une question de
+précision.
+
+La navigation contrôle les réponses obligatoires et les contraintes prises en
+charge. Une réponse devenue non pertinente est effacée. Recharger la page ou
+importer une nouvelle étude réinitialise la saisie ; télécharger le JSON permet
+de conserver un brouillon local, sans constituer un export de réponses
+LimeSurvey.
+
+Le proxy Vite relaie `/api` au serveur Rust. Le lien d’état appelle
+`/api/health` pour vérifier HTTP et la base.
 
 Par défaut, le serveur crée `rustsurvey.db` dans le répertoire courant et
 initialise l’historique des migrations. Aucune table de questionnaires n’est

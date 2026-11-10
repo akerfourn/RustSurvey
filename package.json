@@ -16,7 +16,7 @@
   "private": true,
   "scripts": {
     "build": "npm run build --workspace web",
-    "check": "npm run format:check && npm run lint && npm run build",
+    "check": "npm run format:check && npm run lint && npm test && npm run build",
     "check:all": "npm run check && npm run check:rust",
     "check:rust": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets --all-features --locked -- -D warnings && cargo test --workspace --all-features --locked",
     "dev": "npm run dev --workspace web",
@@ -24,6 +24,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
+    "test": "npm test --workspace web",
     "typecheck": "npm run typecheck --workspace web"
   },
   "type": "module",

@@ -1,15 +1,24 @@
 //! Read model for the source format, separate from the future persistence model.
 
-use serde::Serialize;
+use serde::{Serialize, Serializer};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize)]
-#[serde(transparent)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SourceId(pub u64);
 
+impl Serialize for SourceId {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.serialize_str(&self.0.to_string())
+    }
+}
+
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Group {
     pub id: SourceId,
     pub order: u32,
+    pub relevance: String,
+    pub randomization_group: String,
+    pub labels: Vec<LocalizedGroup>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -51,6 +60,7 @@ pub enum Mandatory {
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Question {
     pub id: SourceId,
     pub group_id: SourceId,
@@ -59,15 +69,63 @@ pub struct Question {
     pub family: QuestionFamily,
     pub mandatory: Mandatory,
     pub order: u32,
+    pub relevance: String,
+    pub randomization_group: String,
+    pub validation: String,
+    pub other: bool,
+    pub labels: Vec<LocalizedQuestion>,
+    pub attributes: Vec<QuestionAttribute>,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Subquestion {
     pub id: SourceId,
     pub parent_id: SourceId,
     pub group_id: SourceId,
     pub code: String,
     pub scale: u32,
+    pub order: u32,
+    pub relevance: String,
+    pub labels: Vec<LocalizedQuestion>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LocalizedGroup {
+    pub language: String,
+    pub name: Option<String>,
+    pub description: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LocalizedQuestion {
+    pub language: String,
+    pub text: Option<String>,
+    pub help: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LocalizedText {
+    pub language: String,
+    pub text: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct QuestionAttribute {
+    pub name: String,
+    pub value: String,
+    pub language: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AnswerOption {
+    pub id: SourceId,
+    pub question_id: SourceId,
+    pub code: String,
+    pub order: u32,
+    pub scale: u32,
+    pub labels: Vec<LocalizedText>,
 }
 
 #[derive(Debug, Serialize)]
@@ -77,6 +135,7 @@ pub struct LocalizedTitle {
 }
 
 #[derive(Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SurveySource {
     pub survey_id: Option<SourceId>,
     pub base_language: Option<String>,
@@ -85,4 +144,14 @@ pub struct SurveySource {
     pub groups: Vec<Group>,
     pub questions: Vec<Question>,
     pub subquestions: Vec<Subquestion>,
+    pub answers: Vec<AnswerOption>,
+}
+
+#[derive(Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SourceMetadata {
+    pub survey_id: Option<String>,
+    pub base_language: Option<String>,
+    pub languages: Vec<String>,
+    pub titles: Vec<LocalizedTitle>,
 }

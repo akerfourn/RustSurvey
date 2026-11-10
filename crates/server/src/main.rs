@@ -16,7 +16,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .map_err(|_| io::Error::other("database migration failed; startup stopped"))?;
     let router = Router::new()
         .route("/api/health", get(health))
-        .with_state(database.clone());
+        .with_state(database.clone())
+        .merge(rustsurvey_server::inspection::routes());
     let shutdown = shutdown_signal()?;
     let listener = tokio::net::TcpListener::bind(address).await?;
     tracing::info!(address = %listener.local_addr()?, "HTTP server listening");

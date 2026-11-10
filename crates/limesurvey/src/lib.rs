@@ -8,7 +8,9 @@ mod xml;
 
 pub use error::Error;
 pub use model::{
-    Group, LocalizedTitle, Mandatory, Question, QuestionFamily, SourceId, Subquestion, SurveySource,
+    AnswerOption, Group, LocalizedGroup, LocalizedQuestion, LocalizedText, LocalizedTitle,
+    Mandatory, Question, QuestionAttribute, QuestionFamily, SourceId, SourceMetadata, Subquestion,
+    SurveySource,
 };
 pub use report::{Capability, Diagnostic, DiagnosticCode, Report, SectionSummary, Severity};
 
@@ -65,6 +67,11 @@ impl LssDocument {
 
     pub fn report(&self) -> &Report {
         &self.report
+    }
+
+    /// Read common header metadata without claiming validation of historical schemas.
+    pub fn metadata(&self) -> SourceMetadata {
+        structure::metadata(&self.xml)
     }
 
     /// Return the input bytes exactly, including extensions, comments and whitespace.

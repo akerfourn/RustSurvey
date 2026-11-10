@@ -2,7 +2,8 @@
 
 Cette documentation accompagne le développement. Elle décrit le problème à
 résoudre, les contraintes acquises et les choix à valider. Le premier code
-fonctionnel concerne l’[adaptateur `.lss`](../crates/limesurvey/README.md).
+fonctionnel couvre l’[adaptateur `.lss`](../crates/limesurvey/README.md) et le
+[viewer avec saisie locale](viewer.md).
 
 ## Parcours de lecture
 
@@ -16,6 +17,7 @@ fonctionnel concerne l’[adaptateur `.lss`](../crates/limesurvey/README.md).
 8. [Environnement de développement](development.md).
 9. [Choix de la pile technique](decisions/0001-technology-stack.md).
 10. [Feuille de route](roadmap.md).
+11. [Viewer et moteur d’aperçu](viewer.md).
 
 ## Lire les statuts
 

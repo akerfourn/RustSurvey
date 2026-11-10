@@ -14,17 +14,17 @@ départ technique de RustSurvey, à conserver sauf besoin particulier.
 
 ## Contraintes acquises
 
-| Sujet          | Attente                                                    |
-| -------------- | ---------------------------------------------------------- |
-| Serveur        | Rust minimal, ressources maîtrisées                        |
-| Navigateur     | TypeScript et Preact                                       |
-| Répartition    | Déporter les interactions et calculs sûrs côté client      |
-| Sécurité       | Contrôles serveur même lorsque le client valide déjà       |
-| Bases          | SQLite, MariaDB et PostgreSQL                              |
-| Évolution      | Migrations de base automatisées et versionnées             |
-| Échange        | Import/export de fichiers LimeSurvey                       |
-| Référence      | LimeSurvey 6.5.14 en production                            |
-| Étape actuelle | Documentation d’abord, squelette limité à l’infrastructure |
+| Sujet          | Attente                                                   |
+| -------------- | --------------------------------------------------------- |
+| Serveur        | Rust minimal, ressources maîtrisées                       |
+| Navigateur     | TypeScript et Preact                                      |
+| Répartition    | Déporter les interactions et calculs sûrs côté client     |
+| Sécurité       | Contrôles serveur même lorsque le client valide déjà      |
+| Bases          | SQLite, MariaDB et PostgreSQL                             |
+| Évolution      | Migrations de base automatisées et versionnées            |
+| Échange        | Import/export de fichiers LimeSurvey                      |
+| Référence      | LimeSurvey 6.5.14 en production                           |
+| Étape actuelle | Import LSS, viewer et moteur de saisie locale sans compte |
 
 L’équivalence avec LimeSurvey vise d’abord les questionnaires réellement
 utilisés. Elle n’implique pas de reproduire immédiatement tous ses plugins,
@@ -48,6 +48,10 @@ questionnaire de référence, le faire remplir, enregistrer les réponses et
 réexporter sa structure. Le [modèle interne](domain-model.md) couvre dès ce
 premier tour les familles identifiées dans les sources. L’implémentation et la
 certification des fonctions restent progressives.
+
+Le [viewer actuel](viewer.md) réalise un premier parcours sans persistance : le
+backend analyse la structure, le navigateur affiche les questions et évalue un
+sous-ensemble des règles. Les comptes utilisateurs sont hors de cette étape.
 
 Le [protocole de migration](study-migration.md) distingue conservation,
 réexport, exécution et continuité. Le transfert complet inclut les compléments

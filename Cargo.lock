@@ -1899,9 +1899,14 @@ name = "rustsurvey-server"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "http-body-util",
+ "rustsurvey-limesurvey",
  "rustsurvey-migration",
  "sea-orm",
+ "serde",
+ "serde_json",
  "tokio",
+ "tower",
  "tracing",
  "tracing-subscriber",
 ]

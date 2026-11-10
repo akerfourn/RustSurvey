@@ -49,14 +49,23 @@ Les rapports comptabilisent toutes les erreurs même lorsque la liste affichée
 est tronquée. Ils indiquent les sections effectivement contrôlées et ne
 reprennent pas les valeurs utilisateur dans leurs messages.
 
+Le modèle de lecture expose aussi les textes localisés, choix de réponse,
+attributs bruts et expressions de pertinence nécessaires au
+[viewer web](../../docs/viewer.md). En JSON, ses identifiants sont des chaînes
+afin de conserver leur précision dans JavaScript. `metadata()` reste disponible
+pour les autres schémas sans prétendre en valider la structure.
+
 ## Limites explicites
 
 Les autres révisions de schéma sont conservées sans projection ni contrôle
 structurel complet. Elles ne sont pas modifiables par cet outil.
 
-Conditions, attributs, quotas, thèmes et plugins sont préservés mais ne sont pas
-interprétés. Le rapport annonce l’exécution et la continuité comme non
-implémentées. Aucune route HTTP ni table SQL métier n’est ajoutée ici.
+Conditions, quotas, thèmes et plugins sont préservés sans interprétation dans
+cette bibliothèque. Les attributs et règles sont exposés comme données source ;
+un moteur TypeScript distinct en interprète un sous-ensemble pour l’aperçu. Le
+rapport de l’adaptateur continue d’annoncer l’exécution complète et la
+continuité comme non implémentées. Les routes HTTP résident dans `crates/server`
+; aucune table SQL métier n’est ajoutée.
 
 La fixture versionnée est synthétique. Les tests unitaires et CLI vérifient les
 invariants de cet adaptateur ; l’import dans une instance LimeSurvey 6.5.14

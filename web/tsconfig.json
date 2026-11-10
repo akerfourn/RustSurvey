@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "exactOptionalPropertyTypes": true,
     "jsx": "react-jsx",

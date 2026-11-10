@@ -43,6 +43,11 @@ les limites et ne transforme pas un import conservé en autorisation de collecte
 
 ## Étape 3 — Persistance et parcours exécutable
 
+Un premier [viewer local](viewer.md) est disponible : upload LSS, informations
+de structure, rendu Preact et moteur partiel de pertinence/validation. Les
+réponses restent dans le navigateur, sans compte ni collecte serveur. Ce
+parcours ne remplit pas encore le critère de progression durable ci-dessous.
+
 - Introduire le schéma conçu et ses migrations sur les trois bases.
 - Charger réponses complètes/partielles, participants et états disponibles.
 - Implémenter les règles et le rendu Preact du profil couvert.

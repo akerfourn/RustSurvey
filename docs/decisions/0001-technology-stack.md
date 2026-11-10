@@ -34,6 +34,13 @@ configuré sur un thread pour commencer ; ce choix ne dispense pas d’isoler le
 traitements bloquants. Aucun résultat de performance comparatif n’est
 revendiqué.
 
+Pour l’upload LSS, l’option `sync` de Tokio fournit un sémaphore de deux places
+qui borne la lecture et l’analyse. `http-body-util`, déjà présent
+transitivement, permet de reconnaître un dépassement de taille et de répondre
+HTTP 413. `tower` avec `util` est une dépendance de test pour appeler le routeur
+sans serveur réseau. Aucun parseur multipart ni service de stockage n’est ajouté
+: le client envoie directement le fichier XML. Voir le [viewer](../viewer.md).
+
 ## Client : Preact et Vite
 
 | Option | Avantage              | Coût                          |

@@ -1,0 +1,564 @@
+<?xml version='1.0' encoding='utf-8'?>
+<document>
+  <LimeSurveyDocType>Survey</LimeSurveyDocType>
+  <DBVersion>623</DBVersion>
+  <languages>
+    <language>fr</language>
+    <language>en</language>
+  </languages>
+  <surveys>
+    <fields>
+      <fieldname>sid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>format</fieldname>
+      <fieldname>anonymized</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <sid>900001</sid>
+        <language>fr</language>
+        <format>G</format>
+        <anonymized>Y</anonymized>
+      </row>
+    </rows>
+  </surveys>
+  <surveys_languagesettings>
+    <fields>
+      <fieldname>surveyls_survey_id</fieldname>
+      <fieldname>surveyls_language</fieldname>
+      <fieldname>surveyls_title</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <surveyls_survey_id>900001</surveyls_survey_id>
+        <surveyls_language>fr</surveyls_language>
+        <surveyls_title>Découvrir RustSurvey</surveyls_title>
+      </row>
+      <row>
+        <surveyls_survey_id>900001</surveyls_survey_id>
+        <surveyls_language>en</surveyls_language>
+        <surveyls_title>Discover RustSurvey</surveyls_title>
+      </row>
+    </rows>
+  </surveys_languagesettings>
+  <groups>
+    <fields>
+      <fieldname>gid</fieldname>
+      <fieldname>sid</fieldname>
+      <fieldname>group_order</fieldname>
+      <fieldname>grelevance</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <gid>10</gid>
+        <sid>900001</sid>
+        <group_order>0</group_order>
+        <grelevance>1</grelevance>
+      </row>
+      <row>
+        <gid>20</gid>
+        <sid>900001</sid>
+        <group_order>1</group_order>
+        <grelevance>STACK == 'rust'</grelevance>
+      </row>
+      <row>
+        <gid>30</gid>
+        <sid>900001</sid>
+        <group_order>2</group_order>
+        <grelevance>1</grelevance>
+      </row>
+    </rows>
+  </groups>
+  <group_l10ns>
+    <fields>
+      <fieldname>gid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>group_name</fieldname>
+      <fieldname>description</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <gid>10</gid>
+        <language>fr</language>
+        <group_name>Votre projet</group_name>
+        <description />
+      </row>
+      <row>
+        <gid>10</gid>
+        <language>en</language>
+        <group_name>Your project</group_name>
+        <description />
+      </row>
+      <row>
+        <gid>20</gid>
+        <language>fr</language>
+        <group_name>Votre expérience Rust</group_name>
+        <description />
+      </row>
+      <row>
+        <gid>20</gid>
+        <language>en</language>
+        <group_name>Your Rust experience</group_name>
+        <description />
+      </row>
+      <row>
+        <gid>30</gid>
+        <language>fr</language>
+        <group_name>Bilan</group_name>
+        <description />
+      </row>
+      <row>
+        <gid>30</gid>
+        <language>en</language>
+        <group_name>Summary</group_name>
+        <description />
+      </row>
+    </rows>
+  </group_l10ns>
+  <questions>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>sid</fieldname>
+      <fieldname>gid</fieldname>
+      <fieldname>parent_qid</fieldname>
+      <fieldname>title</fieldname>
+      <fieldname>type</fieldname>
+      <fieldname>mandatory</fieldname>
+      <fieldname>question_order</fieldname>
+      <fieldname>relevance</fieldname>
+      <fieldname>preg</fieldname>
+      <fieldname>other</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>101</qid>
+        <sid>900001</sid>
+        <gid>10</gid>
+        <parent_qid>0</parent_qid>
+        <title>PROJECT</title>
+        <type>S</type>
+        <mandatory>Y</mandatory>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>102</qid>
+        <sid>900001</sid>
+        <gid>10</gid>
+        <parent_qid>0</parent_qid>
+        <title>STACK</title>
+        <type>L</type>
+        <mandatory>Y</mandatory>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>103</qid>
+        <sid>900001</sid>
+        <gid>10</gid>
+        <parent_qid>0</parent_qid>
+        <title>TEAM</title>
+        <type>N</type>
+        <mandatory>Y</mandatory>
+        <question_order>2</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>104</qid>
+        <sid>900001</sid>
+        <gid>20</gid>
+        <parent_qid>0</parent_qid>
+        <title>EXPERIENCE</title>
+        <type>L</type>
+        <mandatory>Y</mandatory>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>105</qid>
+        <sid>900001</sid>
+        <gid>20</gid>
+        <parent_qid>0</parent_qid>
+        <title>GOALS</title>
+        <type>M</type>
+        <mandatory>Y</mandatory>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>106</qid>
+        <sid>900001</sid>
+        <gid>20</gid>
+        <parent_qid>0</parent_qid>
+        <title>DETAILS</title>
+        <type>T</type>
+        <mandatory>Y</mandatory>
+        <question_order>2</question_order>
+        <relevance>GOALS_other == 'Y'</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>107</qid>
+        <sid>900001</sid>
+        <gid>30</gid>
+        <parent_qid>0</parent_qid>
+        <title>SATISFACTION</title>
+        <type>5</type>
+        <mandatory>Y</mandatory>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>108</qid>
+        <sid>900001</sid>
+        <gid>30</gid>
+        <parent_qid>0</parent_qid>
+        <title>SUMMARY</title>
+        <type>X</type>
+        <mandatory>N</mandatory>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+    </rows>
+  </questions>
+  <subquestions>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>sid</fieldname>
+      <fieldname>gid</fieldname>
+      <fieldname>parent_qid</fieldname>
+      <fieldname>title</fieldname>
+      <fieldname>scale_id</fieldname>
+      <fieldname>question_order</fieldname>
+      <fieldname>relevance</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>205</qid>
+        <sid>900001</sid>
+        <gid>20</gid>
+        <parent_qid>105</parent_qid>
+        <title>perf</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>206</qid>
+        <sid>900001</sid>
+        <gid>20</gid>
+        <parent_qid>105</parent_qid>
+        <title>learn</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>207</qid>
+        <sid>900001</sid>
+        <gid>20</gid>
+        <parent_qid>105</parent_qid>
+        <title>other</title>
+        <scale_id>0</scale_id>
+        <question_order>2</question_order>
+        <relevance>1</relevance>
+      </row>
+    </rows>
+  </subquestions>
+  <question_l10ns>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>question</fieldname>
+      <fieldname>help</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>101</qid>
+        <language>fr</language>
+        <question>Comment s’appelle votre projet ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>101</qid>
+        <language>en</language>
+        <question>What is your project called?</question>
+        <help />
+      </row>
+      <row>
+        <qid>102</qid>
+        <language>fr</language>
+        <question>Quelle technologie utilisez-vous principalement ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>102</qid>
+        <language>en</language>
+        <question>What is your main technology?</question>
+        <help />
+      </row>
+      <row>
+        <qid>103</qid>
+        <language>fr</language>
+        <question>Combien de personnes composent votre équipe ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>103</qid>
+        <language>en</language>
+        <question>How many people are on your team?</question>
+        <help />
+      </row>
+      <row>
+        <qid>104</qid>
+        <language>fr</language>
+        <question>Quelle est votre expérience avec Rust ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>104</qid>
+        <language>en</language>
+        <question>What is your experience with Rust?</question>
+        <help />
+      </row>
+      <row>
+        <qid>105</qid>
+        <language>fr</language>
+        <question>Quels sont vos objectifs avec Rust ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>105</qid>
+        <language>en</language>
+        <question>What are your goals with Rust?</question>
+        <help />
+      </row>
+      <row>
+        <qid>106</qid>
+        <language>fr</language>
+        <question>Précisez votre autre objectif.</question>
+        <help />
+      </row>
+      <row>
+        <qid>106</qid>
+        <language>en</language>
+        <question>Describe your other goal.</question>
+        <help />
+      </row>
+      <row>
+        <qid>107</qid>
+        <language>fr</language>
+        <question>Comment évaluez-vous cet aperçu ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>107</qid>
+        <language>en</language>
+        <question>How would you rate this preview?</question>
+        <help />
+      </row>
+      <row>
+        <qid>108</qid>
+        <language>fr</language>
+        <question>&lt;p&gt;{PROJECT} : votre équipe compte {TEAM} personne(s).&lt;/p&gt;</question>
+        <help />
+      </row>
+      <row>
+        <qid>108</qid>
+        <language>en</language>
+        <question>&lt;p&gt;{PROJECT}: your team has {TEAM} member(s).&lt;/p&gt;</question>
+        <help />
+      </row>
+      <row>
+        <qid>205</qid>
+        <language>fr</language>
+        <question>La performance</question>
+        <help />
+      </row>
+      <row>
+        <qid>205</qid>
+        <language>en</language>
+        <question>Performance</question>
+        <help />
+      </row>
+      <row>
+        <qid>206</qid>
+        <language>fr</language>
+        <question>Apprendre le langage</question>
+        <help />
+      </row>
+      <row>
+        <qid>206</qid>
+        <language>en</language>
+        <question>Learning the language</question>
+        <help />
+      </row>
+      <row>
+        <qid>207</qid>
+        <language>fr</language>
+        <question>Un autre objectif</question>
+        <help />
+      </row>
+      <row>
+        <qid>207</qid>
+        <language>en</language>
+        <question>Another goal</question>
+        <help />
+      </row>
+    </rows>
+  </question_l10ns>
+  <answers>
+    <fields>
+      <fieldname>aid</fieldname>
+      <fieldname>qid</fieldname>
+      <fieldname>code</fieldname>
+      <fieldname>scale_id</fieldname>
+      <fieldname>sortorder</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <aid>301</aid>
+        <qid>102</qid>
+        <code>rust</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>302</aid>
+        <qid>102</qid>
+        <code>typescript</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>303</aid>
+        <qid>102</qid>
+        <code>other</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>304</aid>
+        <qid>104</qid>
+        <code>starting</code>
+        <scale_id>0</scale_id>
+        <sortorder>3</sortorder>
+      </row>
+      <row>
+        <aid>305</aid>
+        <qid>104</qid>
+        <code>regular</code>
+        <scale_id>0</scale_id>
+        <sortorder>4</sortorder>
+      </row>
+    </rows>
+  </answers>
+  <answer_l10ns>
+    <fields>
+      <fieldname>aid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>answer</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <aid>301</aid>
+        <language>fr</language>
+        <answer>Rust</answer>
+      </row>
+      <row>
+        <aid>301</aid>
+        <language>en</language>
+        <answer>Rust</answer>
+      </row>
+      <row>
+        <aid>302</aid>
+        <language>fr</language>
+        <answer>TypeScript</answer>
+      </row>
+      <row>
+        <aid>302</aid>
+        <language>en</language>
+        <answer>TypeScript</answer>
+      </row>
+      <row>
+        <aid>303</aid>
+        <language>fr</language>
+        <answer>Une autre technologie</answer>
+      </row>
+      <row>
+        <aid>303</aid>
+        <language>en</language>
+        <answer>Another technology</answer>
+      </row>
+      <row>
+        <aid>304</aid>
+        <language>fr</language>
+        <answer>Je débute</answer>
+      </row>
+      <row>
+        <aid>304</aid>
+        <language>en</language>
+        <answer>I am getting started</answer>
+      </row>
+      <row>
+        <aid>305</aid>
+        <language>fr</language>
+        <answer>Je l’utilise régulièrement</answer>
+      </row>
+      <row>
+        <aid>305</aid>
+        <language>en</language>
+        <answer>I use it regularly</answer>
+      </row>
+    </rows>
+  </answer_l10ns>
+  <question_attributes>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>attribute</fieldname>
+      <fieldname>value</fieldname>
+      <fieldname>language</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>103</qid>
+        <attribute>num_value_int_only</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>103</qid>
+        <attribute>min_num_value_n</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>103</qid>
+        <attribute>max_num_value_n</attribute>
+        <value>100</value>
+        <language />
+      </row>
+      <row>
+        <qid>105</qid>
+        <attribute>min_answers</attribute>
+        <value>1</value>
+        <language />
+      </row>
+    </rows>
+  </question_attributes>
+</document>

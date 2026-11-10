@@ -150,7 +150,16 @@ fn read_groups(xml: &Document, model: &mut SurveySource, report: &mut Report) {
                     "duplicate group identifier",
                 );
             }
-            model.groups.push(Group { id, order });
+            model.groups.push(Group {
+                id,
+                order,
+                relevance: xml.field(row, "grelevance").unwrap_or("1").to_owned(),
+                randomization_group: xml
+                    .field(row, "randomization_group")
+                    .unwrap_or("")
+                    .to_owned(),
+                labels: Vec::new(),
+            });
         }
     }
 }
@@ -229,6 +238,15 @@ fn read_question(xml: &Document, row: usize, path: &str, report: &mut Report) ->
         family,
         mandatory,
         order,
+        relevance: xml.field(row, "relevance").unwrap_or("1").to_owned(),
+        randomization_group: xml
+            .field(row, "randomization_group")
+            .unwrap_or("")
+            .to_owned(),
+        validation: xml.field(row, "preg").unwrap_or("").to_owned(),
+        other: xml.field(row, "other") == Some("Y"),
+        labels: Vec::new(),
+        attributes: Vec::new(),
     })
 }
 
@@ -274,5 +292,11 @@ fn read_subquestion(
         group_id: source_id(xml, row, "gid", path, report)?,
         code: text(xml, row, "title", path, report)?.to_owned(),
         scale: small_number(xml, row, "scale_id", path, report)?,
+        order: xml
+            .field(row, "question_order")
+            .and_then(|value| value.parse().ok())
+            .unwrap_or(0),
+        relevance: xml.field(row, "relevance").unwrap_or("1").to_owned(),
+        labels: Vec::new(),
     })
 }
