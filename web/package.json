@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "preact": "11.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.13",
+    "@preact/preset-vite": "2.10.6",
+    "@types/babel__core": "7.20.5",
+    "@types/node": "22.19.7",
+    "typescript": "6.0.3",
+    "vite": "8.3.7"
+  },
+  "name": "@rustsurvey/web",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit && vite build",
+    "dev": "vite",
+    "preview": "vite preview --host 127.0.0.1",
+    "typecheck": "tsc --noEmit"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}

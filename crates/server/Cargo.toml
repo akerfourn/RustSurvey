@@ -1,0 +1,23 @@
+[package]
+name = "rustsurvey-server"
+edition.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[features]
+default = ["db-sqlite"]
+db-mariadb = ["sea-orm/sqlx-mysql", "sea-orm/runtime-tokio-rustls", "rustsurvey-migration/db-mariadb"]
+db-postgres = ["sea-orm/sqlx-postgres", "sea-orm/runtime-tokio-rustls", "rustsurvey-migration/db-postgres"]
+db-sqlite = ["sea-orm/sqlx-sqlite", "rustsurvey-migration/db-sqlite"]
+
+[dependencies]
+axum.workspace = true
+rustsurvey-migration = { path = "../migration", default-features = false }
+sea-orm.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true

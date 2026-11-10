@@ -1,0 +1,59 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  color: #182d32;
+  background: #f3f7f5;
+  font-synthesis: none;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 44rem;
+  margin: 10vh auto;
+  padding: 2rem;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  line-height: 1.2;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.25rem;
+}
+
+section {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border: 1px solid #cad9d1;
+  border-radius: 0.75rem;
+  background: white;
+}
+
+a {
+  color: #155b43;
+  text-underline-offset: 0.2em;
+}
+
+a:focus-visible {
+  outline: 3px solid #155b43;
+  outline-offset: 4px;
+}
+
+.eyebrow {
+  font-weight: 600;
+  color: #155b43;
+}
+
+.note {
+  color: #4d6265;
+}
+
+[data-status="unavailable"] {
+  color: #922e23;
+}
