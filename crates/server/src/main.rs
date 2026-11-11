@@ -3,12 +3,16 @@ use std::{env, error::Error, future::Future, io, net::SocketAddr, time::Duration
 use axum::{Router, extract::State, http::StatusCode, routing::get};
 use rustsurvey_migration::{Migrator, MigratorTrait};
 use rustsurvey_server::settings::Settings;
+use rustsurvey_server::workspace::PasswordPolicy;
 use sea_orm::{Database, DatabaseConnection};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt().init();
     let settings = Settings::load(".env")?;
+    let password_policy = PasswordPolicy::from_development_flag(
+        settings.boolean("DEV_ALLOW_WEAK_PASSWORDS", false)?,
+    )?;
     let address: SocketAddr = settings
         .value_or("BIND_ADDRESS", "127.0.0.1:3000")?
         .parse()
@@ -18,26 +22,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Migrator::up(&database, None)
         .await
         .map_err(|_| io::Error::other("database migration failed; startup stopped"))?;
-    let secure_cookie = match settings
-        .value_or(
-            "ADMIN_COOKIE_SECURE",
-            if cfg!(debug_assertions) {
-                "false"
-            } else {
-                "true"
-            },
-        )?
-        .as_str()
-    {
-        "true" => true,
-        "false" => false,
-        _ => return Err(io::Error::other("ADMIN_COOKIE_SECURE must be true or false").into()),
-    };
+    let secure_cookie = settings.boolean("ADMIN_COOKIE_SECURE", !cfg!(debug_assertions))?;
     let workspace =
         rustsurvey_server::workspace::WorkspaceState::new(database.clone(), secure_cookie);
     if let Some(password) = settings.get("ADMIN_PASSWORD")? {
         let username = settings.value_or("ADMIN_USERNAME", "admin")?;
-        rustsurvey_server::workspace::bootstrap_admin(&workspace, &username, &password).await?;
+        rustsurvey_server::workspace::bootstrap_admin(
+            &workspace,
+            &username,
+            &password,
+            password_policy,
+        )
+        .await?;
     }
     let router = Router::new()
         .route("/api/health", get(health))

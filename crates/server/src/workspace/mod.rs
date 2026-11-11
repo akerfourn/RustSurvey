@@ -3,10 +3,12 @@ mod auth;
 mod auth_repository;
 mod error;
 mod forms;
+mod password_policy;
 mod repository;
 mod runtime;
 
 pub use error::AppError;
+pub use password_policy::PasswordPolicy;
 pub use runtime::{Runtime, SystemRuntime};
 
 use axum::{
@@ -72,8 +74,9 @@ pub async fn bootstrap_admin(
     state: &WorkspaceState,
     username: &str,
     password: &str,
+    policy: PasswordPolicy,
 ) -> Result<bool, AppError> {
-    auth::bootstrap(state, username, password).await
+    auth::bootstrap(state, username, password, policy).await
 }
 
 async fn protect(

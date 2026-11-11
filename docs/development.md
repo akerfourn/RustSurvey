@@ -118,14 +118,15 @@ conservent un port strict : un conflit arrête le démarrage.
 
 ## Configuration actuelle
 
-| Variable              | Défaut                                     |
-| --------------------- | ------------------------------------------ |
-| `BIND_ADDRESS`        | `127.0.0.1:3000`                           |
-| `DATABASE_URL`        | `sqlite://rustsurvey.db?mode=rwc`          |
-| `API_PROXY_TARGET`    | Découvert par `npm run dev`                |
-| `ADMIN_USERNAME`      | `admin`, pour le premier compte            |
-| `ADMIN_PASSWORD`      | Aucun ; initialisation explicite du compte |
-| `ADMIN_COOKIE_SECURE` | `false` en debug, `true` en release        |
+| Variable                   | Défaut                                                                   |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `BIND_ADDRESS`             | `127.0.0.1:3000`                                                         |
+| `DATABASE_URL`             | `sqlite://rustsurvey.db?mode=rwc`                                        |
+| `API_PROXY_TARGET`         | Découvert par `npm run dev`                                              |
+| `ADMIN_USERNAME`           | `admin`, pour le premier compte                                          |
+| `ADMIN_PASSWORD`           | Aucun ; initialisation explicite du compte                               |
+| `ADMIN_COOKIE_SECURE`      | `false` en debug, `true` en release                                      |
+| `DEV_ALLOW_WEAK_PASSWORDS` | `false` ; autorise un mot de passe court pour le premier compte en debug |
 
 `BIND_ADDRESS` définit l’IP et le port du serveur. `DATABASE_URL` définit la
 connexion de base ; le défaut SQLite permet de créer le fichier. Avec
@@ -138,6 +139,11 @@ Le backend Rust charge automatiquement le `.env` de son répertoire courant. Ave
 suffit pour les tests locaux : compte `admin`, mot de passe
 `rustsurvey-dev-only`. Ces identifiants publics doivent être remplacés hors des
 tests locaux ; `.env` est ignoré par Git.
+
+Pour un mot de passe court, ajouter `DEV_ALLOW_WEAK_PASSWORDS=true` dans ce
+fichier. Ce flag s’applique à la création initiale en build debug et est refusé
+en release. Le mot de passe reste non vide, limité à 1024 octets et haché en SQL
+; un compte existant conserve son mot de passe.
 
 L’environnement du processus prend priorité sur le fichier, y compris pour les
 valeurs vides. Le chargement n’altère pas l’environnement global et ne transmet

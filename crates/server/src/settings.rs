@@ -62,6 +62,18 @@ impl Settings {
     pub fn value_or(&self, name: &str, default: &str) -> io::Result<String> {
         Ok(self.get(name)?.unwrap_or_else(|| default.to_owned()))
     }
+
+    pub fn boolean(&self, name: &str, default: bool) -> io::Result<bool> {
+        match self.get(name)?.as_deref() {
+            None => Ok(default),
+            Some("true") => Ok(true),
+            Some("false") => Ok(false),
+            Some(_) => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("{name} must be true or false"),
+            )),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -139,5 +151,18 @@ mod tests {
             Some("rustsurvey-dev-only")
         );
         assert_eq!(settings.get("BIND_ADDRESS").unwrap(), None);
+        assert!(!settings.boolean("DEV_ALLOW_WEAK_PASSWORDS", false).unwrap());
+    }
+
+    #[test]
+    fn test_boolean_setting_should_require_explicit_true_or_false() {
+        let source = "ENABLED=true\nDISABLED=false\nINVALID=synthetic-private-value\n";
+        let settings = Settings::from_reader(source.as_bytes(), []).unwrap();
+        assert!(settings.boolean("ENABLED", false).unwrap());
+        assert!(!settings.boolean("DISABLED", true).unwrap());
+        assert!(!settings.boolean("MISSING", false).unwrap());
+        let error = settings.boolean("INVALID", false).unwrap_err();
+        assert_eq!(error.kind(), io::ErrorKind::InvalidInput);
+        assert_eq!(error.to_string(), "INVALID must be true or false");
     }
 }

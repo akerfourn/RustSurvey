@@ -32,17 +32,26 @@ déjà présentes dans l’environnement sont prioritaires. Les valeurs restent 
 serveur, hors du bundle client ; le fichier local est ignoré par Git. Une erreur
 de syntaxe arrête le démarrage sans afficher les valeurs du fichier.
 
-| Variable              | Comportement                                                                            |
-| --------------------- | --------------------------------------------------------------------------------------- |
-| `DATABASE_URL`        | SQLite fichier par défaut ; autres pilotes activables                                   |
-| `ADMIN_USERNAME`      | `admin` par défaut, normalisé en minuscules                                             |
-| `ADMIN_PASSWORD`      | Aucun défaut serveur ; valeur de test dans l’exemple ; crée seulement le premier compte |
-| `ADMIN_COOKIE_SECURE` | `false` en debug, `true` en release                                                     |
+| Variable                   | Comportement                                                                            |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| `DATABASE_URL`             | SQLite fichier par défaut ; autres pilotes activables                                   |
+| `ADMIN_USERNAME`           | `admin` par défaut, normalisé en minuscules                                             |
+| `ADMIN_PASSWORD`           | Aucun défaut serveur ; valeur de test dans l’exemple ; crée seulement le premier compte |
+| `ADMIN_COOKIE_SECURE`      | `false` en debug, `true` en release                                                     |
+| `DEV_ALLOW_WEAK_PASSWORDS` | `false` par défaut ; mots de passe courts pour le bootstrap en debug                    |
 
 L’identifiant accepte 1 à 64 caractères ASCII alphanumériques, tiret et
 soulignement. Le mot de passe doit contenir au moins 12 caractères et au plus
-1024 octets. Une base contenant déjà le compte ignore les identifiants de
-bootstrap : ils ne remplacent jamais le mot de passe existant.
+1024 octets. Pour les essais avec un mot de passe plus court, définir
+`DEV_ALLOW_WEAK_PASSWORDS=true` dans `.env`. Ce mode exige un mot de passe non
+vide, conserve la limite de 1024 octets et le hachage Argon2id. Il est
+disponible uniquement en build debug (`npm run dev`, `cargo run`) ; son
+activation arrête le démarrage d’un build release. Identifiants invalides et
+mots de passe refusés produisent des diagnostics distincts, sans afficher leur
+valeur.
+
+Une base contenant déjà le compte ignore les identifiants de bootstrap : ils ne
+remplacent jamais le mot de passe existant.
 
 Les questionnaires et le compte sont conservés dans `rustsurvey.db` par défaut.
 `DATABASE_URL=sqlite::memory:` fournit le même schéma en mémoire, avec une seule

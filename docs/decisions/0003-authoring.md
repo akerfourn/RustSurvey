@@ -24,6 +24,13 @@ La session SQL est retenue. Aucun état par visiteur public n’est créé. Redi
 JWT, fournisseur d’identité et framework d’authentification ne sont pas requis
 pour ce périmètre. L’administration reste volontairement limitée à un compte.
 
+La création initiale exige par défaut 12 caractères de mot de passe. Le flag
+`DEV_ALLOW_WEAK_PASSWORDS=true` autorise un mot de passe plus court et non vide
+en build debug. Il est refusé en release. La politique est explicite dans le
+bootstrap ; hachage, authentification, sessions et contrôles CSRF suivent le
+même parcours. La limite de 1024 octets et les règles d’identifiant restent
+appliquées. Le flag n’est pas un mécanisme de réinitialisation de compte.
+
 ## Dépendances ajoutées
 
 - `argon2` 0.6, options `alloc` et `password-hash`, défauts désactivés : calcul

@@ -133,6 +133,12 @@ variables déjà définies dans l’environnement sont prioritaires. Cette
 configuration n’est pas injectée dans le frontend ; le mot de passe du compte
 est conservé haché en SQL.
 
+Pour utiliser un mot de passe court pendant le développement, ajouter
+`DEV_ALLOW_WEAK_PASSWORDS=true` dans `.env`. Ce flag concerne uniquement la
+création du premier compte en build debug (`npm run dev` ou `cargo run`). Le mot
+de passe doit rester non vide ; le flag est refusé en release. La règle par
+défaut reste un minimum de 12 caractères.
+
 Le compte est créé uniquement si aucun administrateur n’existe. Ensuite,
 `ADMIN_PASSWORD` peut être retiré du `.env` et de l’environnement ; le compte et
 les sessions survivent aux redémarrages. Modifier cette variable ne réinitialise

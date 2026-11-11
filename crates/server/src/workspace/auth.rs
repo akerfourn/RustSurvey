@@ -1,4 +1,6 @@
-use super::{AppError, WorkspaceState, auth_repository as repository, runtime::hex};
+use super::{
+    AppError, PasswordPolicy, WorkspaceState, auth_repository as repository, runtime::hex,
+};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
 use axum::{
     Json,
@@ -227,6 +229,7 @@ pub(super) async fn bootstrap(
     state: &WorkspaceState,
     username: &str,
     password: &str,
+    policy: PasswordPolicy,
 ) -> Result<bool, AppError> {
     if repository::account(&state.database).await?.is_some() {
         return Ok(false);
@@ -237,14 +240,14 @@ pub(super) async fn bootstrap(
         || !username
             .bytes()
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'-')
-        || (password.chars().count() < 12 || password.len() > 1024)
     {
         return Err(AppError::new(
             StatusCode::BAD_REQUEST,
-            "invalid_administrator",
-            "Identifiant ASCII requis ; mot de passe d’au moins 12 caractères et au plus 1024 octets.",
+            "invalid_administrator_username",
+            "Identifiant de 1 à 64 caractères : lettres ASCII, chiffres, tiret ou soulignement.",
         ));
     }
+    validate_password(password, policy)?;
     let salt = state.runtime.random()?;
     let password = password.to_owned();
     let hash = tokio::task::spawn_blocking(move || {
@@ -256,4 +259,21 @@ pub(super) async fn bootstrap(
     .await
     .map_err(|_| AppError::internal())??;
     repository::insert_account(&state.database, username, hash).await
+}
+
+fn validate_password(password: &str, policy: PasswordPolicy) -> Result<(), AppError> {
+    let message = if password.is_empty() {
+        "Le mot de passe administrateur ne peut pas être vide."
+    } else if password.len() > 1024 {
+        "Le mot de passe administrateur est limité à 1024 octets."
+    } else if password.chars().count() < policy.minimum_characters() {
+        "Mot de passe d’au moins 12 caractères requis. Pour les tests en debug : DEV_ALLOW_WEAK_PASSWORDS=true."
+    } else {
+        return Ok(());
+    };
+    Err(AppError::new(
+        StatusCode::BAD_REQUEST,
+        "invalid_administrator_password",
+        message,
+    ))
 }

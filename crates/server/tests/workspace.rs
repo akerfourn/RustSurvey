@@ -4,7 +4,9 @@ use axum::{
     http::{Request, StatusCode, header},
 };
 use rustsurvey_migration::{Migrator, MigratorTrait, SchemaManager};
-use rustsurvey_server::workspace::{AppError, Runtime, WorkspaceState, bootstrap_admin, routes};
+use rustsurvey_server::workspace::{
+    AppError, PasswordPolicy, Runtime, WorkspaceState, bootstrap_admin, routes,
+};
 use sea_orm::{
     ConnectOptions, ConnectionTrait, Database, DatabaseConnection,
     sea_query::{Expr, ExprTrait, Query},
@@ -53,13 +55,118 @@ async fn initialize(database: DatabaseConnection) -> Fixture {
     Migrator::up(&database, None).await.unwrap();
     let runtime = Arc::new(FixedRuntime::new());
     let state = WorkspaceState::with_runtime(database.clone(), false, runtime.clone());
-    assert!(bootstrap_admin(&state, "admin", PASSWORD).await.unwrap());
+    assert!(
+        bootstrap_admin(&state, "admin", PASSWORD, PasswordPolicy::default())
+            .await
+            .unwrap()
+    );
     Fixture {
         app: routes(state),
         database,
         runtime,
     }
 }
+
+async fn unconfigured_workspace() -> (DatabaseConnection, WorkspaceState) {
+    let options = rustsurvey_server::database::options("sqlite::memory:".to_owned());
+    let database = Database::connect(options).await.unwrap();
+    Migrator::up(&database, None).await.unwrap();
+    let state =
+        WorkspaceState::with_runtime(database.clone(), false, Arc::new(FixedRuntime::new()));
+    (database, state)
+}
+
+#[tokio::test]
+async fn test_bootstrap_should_explain_invalid_usernames_and_reject_short_passwords_by_default() {
+    let (_, state) = unconfigured_workspace().await;
+    for (username, password, code, message) in [
+        (
+            "admin@example",
+            PASSWORD,
+            "invalid_administrator_username",
+            "lettres ASCII",
+        ),
+        (
+            "admin",
+            "dev",
+            "invalid_administrator_password",
+            "12 caractères",
+        ),
+        (
+            "admin",
+            "éééééé",
+            "invalid_administrator_password",
+            "12 caractères",
+        ),
+        ("admin", "", "invalid_administrator_password", "vide"),
+    ] {
+        let error = bootstrap_admin(&state, username, password, PasswordPolicy::default())
+            .await
+            .unwrap_err();
+        assert_eq!(error.status, StatusCode::BAD_REQUEST);
+        assert_eq!(error.code, code);
+        assert!(
+            error.message.contains(message),
+            "unexpected bootstrap diagnostic: {}",
+            error.message
+        );
+    }
+    assert!(
+        bootstrap_admin(&state, "admin", PASSWORD, PasswordPolicy::default())
+            .await
+            .unwrap()
+    );
+}
+
+#[cfg(debug_assertions)]
+#[tokio::test]
+async fn test_development_bootstrap_should_allow_short_passwords_with_normal_hashed_authentication()
+{
+    let (database, state) = unconfigured_workspace().await;
+    let policy = PasswordPolicy::from_development_flag(true).unwrap();
+    for (password, message) in [(String::new(), "vide"), ("x".repeat(1025), "1024 octets")] {
+        let error = bootstrap_admin(&state, "admin", &password, policy)
+            .await
+            .unwrap_err();
+        assert_eq!(error.code, "invalid_administrator_password");
+        assert!(error.message.contains(message));
+    }
+    assert!(
+        bootstrap_admin(&state, "admin", "dev", policy)
+            .await
+            .unwrap()
+    );
+    assert!(
+        !bootstrap_admin(&state, "admin", PASSWORD, PasswordPolicy::default())
+            .await
+            .unwrap()
+    );
+    let account = database
+        .query_one(
+            &Query::select()
+                .column("password_hash")
+                .from("administrator")
+                .to_owned(),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+    let hash: String = account.try_get("", "password_hash").unwrap();
+    assert!(hash.starts_with("$argon2id$"));
+    let app = routes(state);
+    let response = call(
+        &app,
+        "POST",
+        "/api/admin/login",
+        Some(json!({"username":"admin","password":"dev"})),
+        None,
+        None,
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(json(response).await["authenticated"], true);
+}
+
 fn definition() -> Value {
     json!({"schemaVersion":1,"title":"Questionnaire enregistré","language":"fr","welcome":"Bienvenue","end":"Merci","groups":[{"id":"g1","title":"Premier groupe","description":"","questions":[{"id":"q1","code":"NAME","title":"Un nom de projet","help":"","kind":"short_text","mandatory":"strict","choices":[]}]}]})
 }
@@ -267,9 +374,14 @@ async fn test_sessions_should_survive_router_restart_and_be_revoked_on_logout_or
     let state =
         WorkspaceState::with_runtime(fixture.database.clone(), true, fixture.runtime.clone());
     assert!(
-        !bootstrap_admin(&state, "changed", "another-synthetic-password")
-            .await
-            .unwrap()
+        !bootstrap_admin(
+            &state,
+            "changed",
+            "another-synthetic-password",
+            PasswordPolicy::default()
+        )
+        .await
+        .unwrap()
     );
     fixture.app = routes(state);
     assert_eq!(
