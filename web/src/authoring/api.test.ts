@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { ApiError, decodeDefinition, saveStudy } from "./api.ts";
-import { createDefinition } from "./model.ts";
+import { createDefinition, createQuestion } from "./model.ts";
 
 test("test_save_should_explain_oversized_payload_rejections_even_without_json", async (context) => {
   context.mock.method(globalThis, "fetch", async () => new Response("too large", { status: 413 }));
@@ -15,7 +15,7 @@ test("test_save_should_explain_oversized_payload_rejections_even_without_json", 
     (error: unknown) => {
       assert.ok(error instanceof ApiError);
       assert.equal(error.status, 413);
-      assert.match(error.message, /1 Mio/);
+      assert.match(error.message, /8 Mio/);
       return true;
     },
   );
@@ -24,16 +24,8 @@ test("test_save_should_explain_oversized_payload_rejections_even_without_json", 
 test("test_decoder_should_reject_future_versions_and_unknown_question_types", () => {
   const definition = createDefinition(() => "group-1");
   assert.deepEqual(decodeDefinition(definition), definition);
-  assert.throws(() => decodeDefinition({ ...definition, schemaVersion: 2 }), /Version/);
-  definition.groups[0]!.questions.push({
-    id: "question-1",
-    code: "Q1",
-    title: "Question",
-    help: "",
-    kind: "short_text",
-    mandatory: "no",
-    choices: [],
-  });
+  assert.throws(() => decodeDefinition({ ...definition, schemaVersion: 3 }), /Version/);
+  definition.groups[0]!.questions.push(createQuestion(definition, () => "question-1"));
   const invalid: unknown = {
     ...definition,
     groups: [

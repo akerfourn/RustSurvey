@@ -30,7 +30,11 @@ réponses LimeSurvey et sa réimportation n’est pas encore implémentée.
 L’[éditeur natif](authoring.md) utilise aussi ce viewer pour ses aperçus et ses
 liens publics. La définition est alors chargée depuis SQL ; les réponses restent
 locales dans les deux parcours. Le compte administrateur n’intervient que pour
-créer et modifier les définitions.
+créer et modifier les définitions. L’import depuis l’administration conserve la
+source et une définition v2 en SQL. Ses conditions de groupes et questions sont
+éditables ; l’aperçu reçoit aussi le rapport d’import pour garder les
+diagnostics, notamment les sections non prises en charge. L’inspection des
+valeurs et de la visibilité est réservée à l’aperçu d’administration.
 
 ## Types et règles couverts
 

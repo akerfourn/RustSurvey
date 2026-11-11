@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import { ApiError, getStudy, message, saveStudy } from "./api.ts";
-import { createDefinition, type Definition, type ValidationIssue } from "./model.ts";
+import {
+  createDefinition,
+  type Definition,
+  type ImportInfo,
+  type ValidationIssue,
+} from "./model.ts";
 
 export function useEditor(id: string | null, csrf: string | null) {
   const [definition, setDefinition] = useState<Definition>(() => createDefinition());
+  const [source, setSource] = useState<ImportInfo | null>(null);
   const [revision, setRevision] = useState(0);
   const [ready, setReady] = useState(id === null);
   const [saving, setSaving] = useState(false);
@@ -24,6 +30,7 @@ export function useEditor(id: string | null, csrf: string | null) {
         const study = await getStudy(id!, controller.signal);
         if (!controller.signal.aborted) {
           setDefinition(study.definition);
+          setSource(study.source);
           setRevision(study.revision);
           setReady(true);
           setDirty(false);
@@ -63,6 +70,7 @@ export function useEditor(id: string | null, csrf: string | null) {
       const study = await saveStudy(id, revision, definition, csrf, controller.signal);
       if (controller.signal.aborted) return;
       setDefinition(study.definition);
+      setSource(study.source);
       setRevision(study.revision);
       setDirty(false);
       if (id === null) window.location.hash = `/admin/edit/${study.id}`;
@@ -79,6 +87,7 @@ export function useEditor(id: string | null, csrf: string | null) {
   }
   return {
     definition,
+    source,
     revision,
     ready,
     saving,

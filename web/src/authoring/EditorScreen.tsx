@@ -1,3 +1,4 @@
+import { ImportDetails } from "./ImportDetails.tsx";
 import { useMemo, useState } from "preact/hooks";
 import type { Session, ValidationIssue } from "./model.ts";
 import { toViewer } from "./model.ts";
@@ -77,13 +78,17 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
   if (editor.ready) {
     content = (
       <fieldset className="editor-body" disabled={editor.saving}>
-        <DefinitionEditor definition={editor.definition} onChange={editor.change} />
+        <DefinitionEditor
+          definition={editor.definition}
+          readOnlyContent={editor.source !== null}
+          onChange={editor.change}
+        />
       </fieldset>
     );
     if (preview)
       content = (
         <ViewerBoundary key={`preview-${editor.revision}`}>
-          <StudyViewer study={study} />
+          <StudyViewer study={study} report={editor.source?.report} debug={true} />
         </ViewerBoundary>
       );
   }
@@ -135,6 +140,7 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
         {error}
       </section>
       {login}
+      <ImportDetails id={id} source={editor.source} />
       {content}
     </div>
   );

@@ -3,6 +3,7 @@ import { FUNCTIONS, evaluateFunction, validateArguments } from "./expression-fun
 export { numeric, truth, type Scalar } from "./scalars.ts";
 export type Lookup = (name: string) => Scalar;
 export interface Expression {
+  tree: ExpressionNode;
   variables: ReadonlySet<string>;
   evaluate: (lookup: Lookup) => Scalar;
 }
@@ -11,12 +12,14 @@ interface Token {
   kind: "number" | "string" | "name" | "operator" | "symbol" | "end";
   text: string;
 }
-type Node =
+export type ExpressionNode =
   | { kind: "literal"; value: Scalar }
   | { kind: "variable"; name: string }
   | { kind: "unary"; operator: string; child: Node }
   | { kind: "binary"; operator: string; left: Node; right: Node }
   | { kind: "call"; name: string; arguments: Node[] };
+
+type Node = ExpressionNode;
 
 const PRECEDENCE = new Map([
   ["or", 1],
@@ -277,6 +280,7 @@ export function compileExpression(source: string): Expression {
   const node = parser.parse();
   return {
     variables: parser.variables,
+    tree: node,
     evaluate(lookup: Lookup): Scalar {
       const value = evaluate(node, lookup);
       if (typeof value === "number" && !Number.isFinite(value))

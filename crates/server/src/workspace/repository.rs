@@ -5,6 +5,19 @@ use sea_orm::{
     sea_query::{Expr, ExprTrait, Order, Query},
 };
 use serde::Serialize;
+use serde_json::Value;
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ImportInfo {
+    pub sha256: String,
+    pub report: Value,
+}
+pub struct ImportedSource {
+    pub xml: String,
+    pub sha256: String,
+    pub report: Value,
+}
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,6 +36,7 @@ pub struct StoredStudy {
     pub created_at: i64,
     pub updated_at: i64,
     pub definition: Definition,
+    pub source: Option<ImportInfo>,
 }
 
 fn summary(row: &QueryResult) -> Result<StudySummary, AppError> {
@@ -76,13 +90,17 @@ pub async fn get(database: &DatabaseConnection, id: &str) -> Result<StoredStudy,
         .await?
         .ok_or_else(AppError::internal)?;
     let document: String = revision.try_get("", "document")?;
-    let definition = serde_json::from_str(&document).map_err(|_| AppError::internal())?;
+    let mut definition: Definition =
+        serde_json::from_str(&document).map_err(|_| AppError::internal())?;
+    definition.upgrade().map_err(|_| AppError::internal())?;
+    let source = import_info(database, id).await?;
     Ok(StoredStudy {
         id: metadata.id,
         revision: metadata.revision,
         created_at: metadata.created_at,
         updated_at: metadata.updated_at,
         definition,
+        source,
     })
 }
 async fn insert_revision(
@@ -108,6 +126,7 @@ pub async fn create(
     definition: &Definition,
     document: String,
     now: i64,
+    source: Option<ImportedSource>,
 ) -> Result<StoredStudy, AppError> {
     let transaction = database.begin().await?;
     transaction
@@ -125,6 +144,27 @@ pub async fn create(
         )
         .await?;
     insert_revision(&transaction, id, 1, document, now).await?;
+    let source = if let Some(source) = source {
+        transaction
+            .execute(
+                Query::insert()
+                    .into_table("import_sources")
+                    .columns(["study_id", "xml", "sha256", "report"])
+                    .values([
+                        id.into(),
+                        source.xml.into(),
+                        source.sha256.clone().into(),
+                        source.report.to_string().into(),
+                    ])?,
+            )
+            .await?;
+        Some(ImportInfo {
+            sha256: source.sha256,
+            report: source.report,
+        })
+    } else {
+        None
+    };
     transaction.commit().await?;
     Ok(StoredStudy {
         id: id.to_owned(),
@@ -132,6 +172,7 @@ pub async fn create(
         created_at: now,
         updated_at: now,
         definition: definition.clone(),
+        source,
     })
 }
 pub async fn update(
@@ -176,11 +217,49 @@ pub async fn update(
         .ok_or_else(AppError::internal)?;
     let created_at = row.try_get("", "created_at")?;
     transaction.commit().await?;
+    let source = import_info(database, id).await?;
     Ok(StoredStudy {
         id: id.to_owned(),
         revision: expected + 1,
         created_at,
         updated_at: now,
         definition: definition.clone(),
+        source,
     })
+}
+
+pub async fn import_info(
+    database: &DatabaseConnection,
+    id: &str,
+) -> Result<Option<ImportInfo>, AppError> {
+    let row = database
+        .query_one(
+            &Query::select()
+                .columns(["sha256", "report"])
+                .from("import_sources")
+                .and_where(Expr::col("study_id").eq(id))
+                .to_owned(),
+        )
+        .await?;
+    row.map(|row| {
+        let report: String = row.try_get("", "report")?;
+        Ok(ImportInfo {
+            sha256: row.try_get("", "sha256")?,
+            report: serde_json::from_str(&report).map_err(|_| AppError::internal())?,
+        })
+    })
+    .transpose()
+}
+pub async fn original(database: &DatabaseConnection, id: &str) -> Result<String, AppError> {
+    let row = database
+        .query_one(
+            &Query::select()
+                .column("xml")
+                .from("import_sources")
+                .and_where(Expr::col("study_id").eq(id))
+                .to_owned(),
+        )
+        .await?
+        .ok_or_else(AppError::not_found)?;
+    Ok(row.try_get("", "xml")?)
 }

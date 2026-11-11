@@ -1,3 +1,5 @@
+import { ConditionEditor } from "./ConditionEditor.tsx";
+import type { Variable } from "./conditions.ts";
 import type { TargetedEvent } from "preact";
 import {
   QUESTION_KINDS,
@@ -11,6 +13,8 @@ import { ChoiceEditor } from "./ChoiceEditor.tsx";
 
 interface QuestionEditorProps {
   question: Question;
+  variables: readonly Variable[];
+  readOnlyContent: boolean;
   index: number;
   count: number;
   onChange: (question: Question) => void;
@@ -19,12 +23,17 @@ interface QuestionEditorProps {
 }
 export function QuestionEditor({
   question,
+  variables,
+  readOnlyContent,
   index,
   count,
   onChange,
   onMove,
   onRemove,
 }: QuestionEditorProps) {
+  function handleCondition(relevance: string): void {
+    onChange({ ...question, relevance });
+  }
   function handleTitle(event: TargetedEvent<HTMLInputElement>): void {
     onChange({ ...question, title: event.currentTarget.value });
   }
@@ -41,7 +50,8 @@ export function QuestionEditor({
     onChange({ ...question, mandatory: event.currentTarget.value as Mandatory });
   }
   function handleChoices(choices: Choice[]): void {
-    onChange({ ...question, choices });
+    if (question.kind === "multiple_choice") onChange({ ...question, subquestions: choices });
+    else onChange({ ...question, choices });
   }
   function handleUp(): void {
     onMove(-1);
@@ -54,31 +64,48 @@ export function QuestionEditor({
       {label}
     </option>
   ));
+  let responseChoices = question.choices;
+  if (question.kind === "multiple_choice") responseChoices = question.subquestions;
+  let importedType = null;
+  if (!QUESTION_KINDS.has(question.kind))
+    importedType = (
+      <option value={question.kind}>{question.source?.kind ?? question.kind} · type importé</option>
+    );
   let choices = null;
   if (question.kind === "single_choice" || question.kind === "multiple_choice")
-    choices = <ChoiceEditor choices={question.choices} onChange={handleChoices} />;
+    choices = <ChoiceEditor choices={responseChoices} onChange={handleChoices} />;
   return (
-    <section className="question-editor">
+    <section className="question-editor" id={`edit-${question.id}`}>
       <div className="section-heading">
         <h3>Question {index + 1}</h3>
         <div className="button-row">
-          <button type="button" className="text-button" onClick={handleUp} disabled={index === 0}>
+          <button
+            type="button"
+            className="text-button"
+            onClick={handleUp}
+            disabled={readOnlyContent || index === 0}
+          >
             Monter
           </button>
           <button
             type="button"
             className="text-button"
             onClick={handleDown}
-            disabled={index === count - 1}
+            disabled={readOnlyContent || index === count - 1}
           >
             Descendre
           </button>
-          <button type="button" className="text-button" onClick={onRemove}>
+          <button
+            type="button"
+            className="text-button"
+            onClick={onRemove}
+            disabled={readOnlyContent}
+          >
             Retirer
           </button>
         </div>
       </div>
-      <div className="editor-fields">
+      <fieldset className="editor-fields" disabled={readOnlyContent}>
         <label>
           Intitulé
           <input value={question.title} onInput={handleTitle} />
@@ -87,6 +114,7 @@ export function QuestionEditor({
           <label>
             Type
             <select value={question.kind} onChange={handleKind}>
+              {importedType}
               {kinds}
             </select>
           </label>
@@ -112,7 +140,12 @@ export function QuestionEditor({
           <textarea rows={2} value={question.help} onInput={handleHelp} />
         </label>
         {choices}
-      </div>
+      </fieldset>
+      <ConditionEditor
+        value={question.relevance}
+        variables={variables}
+        onChange={handleCondition}
+      />
     </section>
   );
 }

@@ -43,10 +43,11 @@ et continuité sont évalués séparément. Le
 l’ouvre qu’après validation d’un instantané cohérent.
 
 L’implémentation couvre l’adaptateur `.lss` et les premières définitions natives
-en SQL, avec [éditeur et administration](authoring.md). Le modèle de collecte et
-le protocole complet restent à réaliser. Ces décisions s’appuient sur
-l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans attendre un
-export de production.
+en SQL, avec [éditeur et administration](authoring.md). Le format natif v2
+réunit créations et imports LSS ; une source XML privée est conservée à part. Le
+modèle de collecte et le protocole complet restent à réaliser. Ces décisions
+s’appuient sur l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans
+attendre un export de production.
 
 Les médias, ressources et pièces jointes passeront par un port de stockage objet
 indépendant du fournisseur. Un adaptateur compatible S3 permet le déploiement
@@ -54,7 +55,8 @@ sans volume disque persistant ; un adaptateur local représente les mêmes objet
 par des fichiers. Les métadonnées et relations restent dans SQL. La
 [décision 0002](decisions/0002-object-storage.md) fixe ce contrat. Ces
 adaptateurs restent différés. La persistance actuelle concerne les définitions
-et les sessions administrateur ; la saisie des réponses reste locale.
+les sources LSS et les sessions administrateur ; la saisie des réponses reste
+locale.
 
 ## Frontière de confiance
 
@@ -73,15 +75,18 @@ informations protégées ne doivent pas être envoyés au client.
 
 Les expressions LimeSurvey devront être traduites vers un langage borné et
 testable. L’évaluation arbitraire de PHP ou de JavaScript importé est exclue. La
-façon de partager la sémantique des règles entre Rust et TypeScript reste à
-concevoir ; WASM n’est pas une dépendance imposée à ce stade.
+syntaxe et les références des conditions sont contrôlées par Rust et TypeScript
+avec un corpus commun. Leur évaluation reste côté client ; un moteur
+d’évaluation serveur sera requis avant la collecte. WASM n’est pas une
+dépendance imposée à ce stade.
 
 ## Modèle et dépendances
 
 Le modèle de questionnaires est conçu indépendamment du format `.lss` et du
-schéma interne de LimeSurvey. Un adaptateur traduira les fichiers vers ce modèle
-et produira des diagnostics de compatibilité explicites. La représentation
-source conservée ne remplacera jamais la validation du modèle exécutable.
+schéma interne de LimeSurvey. L’adaptateur du serveur traduit les LSS vers ce
+modèle et produira des diagnostics de compatibilité explicites. La
+représentation source conservée ne remplacera jamais la validation du modèle
+exécutable.
 
 La séparation des modules suit les besoins :
 
@@ -95,8 +100,10 @@ Créer ces modules au rythme des besoins. Le dépôt contient aujourd’hui
 `crates/domain`, `crates/server`, `crates/migration`, `crates/limesurvey` et
 `web`. Le domaine natif ne dépend que de Serde. L’accès SQL et les sessions sont
 isolés dans `crates/server/src/workspace`. Le modèle de lecture de l’adaptateur
-reste propre au format source ; sa conversion et ses correspondances restent à
-faire.
+reste propre au format source. Les alias d’identifiants sont conservés dans la
+définition v2 ; le réexport LSS modifié et les correspondances de réponses
+restent à réaliser. Voir la
+[décision 0004](decisions/0004-rich-definitions-and-lss.md).
 
 ## Sessions et progression
 

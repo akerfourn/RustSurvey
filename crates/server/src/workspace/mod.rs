@@ -3,6 +3,8 @@ mod auth;
 mod auth_repository;
 mod error;
 mod forms;
+mod imports;
+mod lss_projection;
 mod password_policy;
 mod repository;
 mod runtime;
@@ -27,6 +29,7 @@ pub struct WorkspaceState {
     login_slots: Arc<Semaphore>,
     secure_cookie: bool,
     writes: Arc<Semaphore>,
+    imports: Arc<Semaphore>,
 }
 
 impl WorkspaceState {
@@ -43,6 +46,7 @@ impl WorkspaceState {
             runtime,
             login_slots: Arc::new(Semaphore::new(1)),
             writes: Arc::new(Semaphore::new(2)),
+            imports: Arc::new(Semaphore::new(2)),
             secure_cookie,
         }
     }
@@ -55,15 +59,25 @@ pub fn routes(state: WorkspaceState) -> Router {
         .route("/api/admin/logout", post(auth::logout))
         .layer(DefaultBodyLimit::max(4096));
     let protected = Router::new()
-        .route("/api/admin/studies", post(forms::create))
+        .route(
+            "/api/admin/studies",
+            post(forms::create).layer(DefaultBodyLimit::max(
+                rustsurvey_domain::MAX_DOCUMENT_BYTES + 4096,
+            )),
+        )
+        .route("/api/admin/imports/lss", post(imports::import))
         .route("/api/admin/studies/{id}", put(forms::update))
         .route_layer(axum::middleware::from_fn_with_state(state.clone(), protect));
     Router::new()
         .route("/api/studies", get(forms::list))
         .route("/api/studies/{id}", get(forms::get))
+        .route(
+            "/api/admin/studies/{id}/original.lss",
+            get(imports::original),
+        )
         .merge(protected)
         .layer(DefaultBodyLimit::max(
-            rustsurvey_domain::MAX_DOCUMENT_BYTES + 4096,
+            imports::MAX_IMPORTED_DOCUMENT_BYTES + 4096,
         ))
         .merge(authentication)
         .layer(axum::middleware::from_fn(api_headers))

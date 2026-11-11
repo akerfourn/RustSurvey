@@ -24,6 +24,7 @@ l’[éditeur avec administration](authoring.md).
 14. [Stockage objet des médias et fichiers](decisions/0002-object-storage.md).
 15. [Administration, éditeur natif et API SQL](authoring.md).
 16. [Choix de persistance et d’authentification](decisions/0003-authoring.md).
+17. [Définition enrichie, import LSS et conditions](decisions/0004-rich-definitions-and-lss.md).
 
 ## Lire les statuts
 

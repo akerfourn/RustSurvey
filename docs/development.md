@@ -200,6 +200,15 @@ l’authentification, CSRF, historique, expiration et révocation. Les sessions 
 définitions ont été relues après redémarrage du processus HTTP sur une base
 fichier temporaire, à travers le proxy Vite.
 
+Le lot d’import persistant vérifie aussi l’archive XML privée, ses octets
+exacts, la conversion v1 vers v2 et les conditions éditées. Le corpus de syntaxe
+des règles est partagé entre Rust et TypeScript. Une comparaison entre
+inspection LSS, définition enregistrée et projection client couvre les 28 types,
+deux langues, les options, règles et sous-questions ; elle a aussi été effectuée
+en mémoire sur la fixture locale privée sans journaliser ses textes. Les
+sessions, conditions et originaux ont été relus après redémarrage du processus
+HTTP.
+
 L’hôte d’automatisation du navigateur n’est pas disponible sur cette machine.
 Les contrôles HTTP, les tests du moteur et le build TypeScript ne constituent
 pas une validation visuelle du parcours d’édition.

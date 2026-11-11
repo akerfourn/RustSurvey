@@ -4,10 +4,12 @@
 
 Le modèle général ci-dessous prépare la migration d’études en cours et un
 backend sobre sur les trois bases. Le premier sous-ensemble implémenté couvre
-`studies`, `definition_revisions` et l’administration, avec migrations SQL. Le
-[domaine natif de l’éditeur](authoring.md) porte huit types de questions et un
-document versionné indépendant du format LSS. Les autres concepts de ce document
-restent des décisions de conception.
+`studies`, `definition_revisions`, `import_sources` et l’administration, avec
+migrations SQL. Le [domaine natif de l’éditeur](authoring.md) v2 est commun aux
+créations et imports : types, traductions, sous-questions, options et règles. La
+création visuelle propose huit types ; les imports conservent le modèle de
+lecture complet et permettent l’édition des conditions de groupes/questions. Les
+autres concepts de ce document restent des décisions de conception.
 
 Le modèle découle de l’[analyse du code 6.5.14](limesurvey-source-audit.md). Un
 export utilisateur enrichira les cas de validation ; il n’est pas un prérequis

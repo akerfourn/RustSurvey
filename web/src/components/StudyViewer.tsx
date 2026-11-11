@@ -1,3 +1,4 @@
+import { RuntimeInspector } from "../authoring/RuntimeInspector.tsx";
 import { useMemo, useState } from "preact/hooks";
 import { createRuntime, evaluateSnapshot, runtimeIssues } from "../survey/engine.ts";
 import {
@@ -8,7 +9,7 @@ import {
 } from "../survey/capabilities.ts";
 import { downloadAnswers } from "../survey/download.ts";
 import { localized, pipeText, plainText } from "../survey/text.ts";
-import type { Inspection, SurveyStudy } from "../survey/types.ts";
+import type { Inspection, InspectionReport, SurveyStudy } from "../survey/types.ts";
 import { validate } from "../survey/validation.ts";
 import { StudyPage } from "./StudyPage.tsx";
 import { ViewerActions, ViewerHeader } from "./ViewerControls.tsx";
@@ -17,6 +18,8 @@ import { SurveyMessage } from "./SurveyMessage.tsx";
 interface StudyViewerProps {
   study: SurveyStudy;
   inspection?: Inspection;
+  report?: InspectionReport | undefined;
+  debug?: boolean;
 }
 
 function focusQuestion(id: string | undefined): void {
@@ -26,8 +29,13 @@ function focusQuestion(id: string | undefined): void {
   element?.scrollIntoView({ block: "center" });
 }
 
-export function StudyViewer({ study, inspection }: StudyViewerProps) {
-  const report = inspection?.report ?? { errors: 0, sections: [] };
+export function StudyViewer({
+  study,
+  inspection,
+  report: sourceReport,
+  debug = false,
+}: StudyViewerProps) {
+  const report = sourceReport ?? inspection?.report ?? { errors: 0, sections: [] };
   const runtime = useMemo(() => createRuntime(study), [study]);
   const textProblems = useMemo(() => studyTextIssues(runtime), [runtime]);
   const notices = useMemo(() => presentationNotices(runtime), [runtime]);
@@ -197,8 +205,11 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
         onNext={handleNext}
       />
     );
+  let inspector = null;
+  if (debug) inspector = <RuntimeInspector runtime={runtime} snapshot={snapshot} />;
   return (
     <section className="viewer panel" aria-labelledby="viewer-title">
+      {inspector}
       <ViewerHeader
         language={language}
         languages={study.languages}

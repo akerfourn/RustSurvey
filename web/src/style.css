@@ -718,3 +718,90 @@ footer {
     position: static;
   }
 }
+
+/* Shared authoring rules, imports and local preview diagnostics. */
+fieldset.editor-fields {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+}
+fieldset.panel {
+  margin-bottom: 1rem;
+}
+.condition-editor {
+  padding: 1rem;
+  border: 1px solid var(--border, #d8e0e8);
+  border-radius: 10px;
+  margin-top: 0.8rem;
+  background: #f7fafc;
+}
+.condition-editor summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.7rem;
+}
+.condition-editor textarea {
+  width: 100%;
+  font-family: monospace;
+}
+.condition-editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.condition-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1.5fr) minmax(9rem, 1fr) minmax(8rem, 1fr) auto;
+  gap: 0.6rem;
+  margin: 0.8rem 0;
+  align-items: end;
+}
+.condition-expression {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  padding: 0.7rem 0;
+}
+.variable-panel,
+.runtime-inspector,
+.editor-outline {
+  overflow: auto;
+}
+.variable-panel table,
+.runtime-inspector table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.variable-panel td,
+.variable-panel th,
+.runtime-inspector td,
+.runtime-inspector th {
+  text-align: left;
+  padding: 0.5rem;
+  border-bottom: 1px solid #d8e0e8;
+}
+.runtime-inspector code {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.editor-outline ul {
+  list-style: none;
+  margin: 0.2rem 0;
+  padding-left: 1rem;
+}
+.editor-outline button {
+  text-align: left;
+}
+.group-editor,
+.question-editor {
+  scroll-margin-top: 2rem;
+}
+.import-details code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 760px) {
+  .condition-row {
+    grid-template-columns: 1fr;
+  }
+}

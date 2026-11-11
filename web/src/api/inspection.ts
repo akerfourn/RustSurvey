@@ -3,6 +3,7 @@ import type {
   Diagnostic,
   GroupLabel,
   Inspection,
+  InspectionReport,
   LocalizedTitle,
   QuestionAttribute,
   QuestionLabel,
@@ -177,7 +178,7 @@ function diagnostic(value: unknown): Diagnostic {
 export function decodeInspection(value: unknown): Inspection {
   const result = record(value);
   const metadata = record(result.metadata);
-  const report = record(result.report);
+
   let survey: SurveyStudy | null = null;
   if (result.study !== null) survey = study(result.study);
   return {
@@ -188,19 +189,24 @@ export function decodeInspection(value: unknown): Inspection {
       titles: array(metadata.titles, title),
     },
     study: survey,
-    report: {
-      sourceSchema: number(report.sourceSchema),
-      targetSchema: number(report.targetSchema),
-      errors: number(report.errors),
-      warnings: number(report.warnings),
-      omittedDiagnostics: number(report.omittedDiagnostics),
-      checkedSections: array(report.checkedSections, string),
-      diagnostics: array(report.diagnostics, diagnostic),
-      sections: array(report.sections, (value) => {
-        const section = record(value);
-        return { name: string(section.name), rows: number(section.rows) };
-      }),
-    },
+    report: decodeReport(result.report),
+  };
+}
+
+export function decodeReport(value: unknown): InspectionReport {
+  const report = record(value);
+  return {
+    sourceSchema: number(report.sourceSchema),
+    targetSchema: number(report.targetSchema),
+    errors: number(report.errors),
+    warnings: number(report.warnings),
+    omittedDiagnostics: number(report.omittedDiagnostics),
+    checkedSections: array(report.checkedSections, string),
+    diagnostics: array(report.diagnostics, diagnostic),
+    sections: array(report.sections, (value) => {
+      const section = record(value);
+      return { name: string(section.name), rows: number(section.rows) };
+    }),
   };
 }
 

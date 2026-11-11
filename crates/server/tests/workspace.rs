@@ -168,7 +168,10 @@ async fn test_development_bootstrap_should_allow_short_passwords_with_normal_has
 }
 
 fn definition() -> Value {
-    json!({"schemaVersion":1,"title":"Questionnaire enregistré","language":"fr","welcome":"Bienvenue","end":"Merci","groups":[{"id":"g1","title":"Premier groupe","description":"","questions":[{"id":"q1","code":"NAME","title":"Un nom de projet","help":"","kind":"short_text","mandatory":"strict","choices":[]}]}]})
+    let legacy = json!({"schemaVersion":1,"title":"Questionnaire enregistré","language":"fr","welcome":"Bienvenue","end":"Merci","groups":[{"id":"g1","title":"Premier groupe","description":"","questions":[{"id":"q1","code":"NAME","title":"Un nom de projet","help":"","kind":"short_text","mandatory":"strict","choices":[]}]}]});
+    let mut definition: rustsurvey_domain::Definition = serde_json::from_value(legacy).unwrap();
+    definition.upgrade().unwrap();
+    serde_json::to_value(definition).unwrap()
 }
 async fn call(
     app: &Router,
@@ -532,7 +535,7 @@ async fn test_invalid_definitions_and_oversized_bodies_should_not_create_records
     let fixture = fixture().await;
     let (cookie, csrf) = login(&fixture).await;
     let mut invalid = definition();
-    invalid["schemaVersion"] = json!(2);
+    invalid["schemaVersion"] = json!(3);
     let response = call(
         &fixture.app,
         "POST",
@@ -548,7 +551,7 @@ async fn test_invalid_definitions_and_oversized_bodies_should_not_create_records
         "schemaVersion"
     );
     let mut invalid = definition();
-    invalid["end"] = json!("x".repeat(1100000));
+    invalid["end"] = json!("x".repeat(rustsurvey_domain::MAX_DOCUMENT_BYTES + 1));
     assert_eq!(
         call(
             &fixture.app,
@@ -575,6 +578,10 @@ async fn large_document_roundtrip(fixture: &Fixture) {
     let mut document = definition();
     document["title"] = json!("Unicode é ' ; DROP TABLE studies; --");
     document["groups"][0]["questions"] = json!((0..12).map(|index| json!({"id":format!("q{index}"),"code":format!("Q{index}"),"title":"Question","help":"é".repeat(9000),"kind":"short_text","mandatory":"no","choices":[]})).collect::<Vec<_>>());
+    let document = serde_json::to_value(
+        serde_json::from_value::<rustsurvey_domain::Definition>(document).unwrap(),
+    )
+    .unwrap();
     assert!(document.to_string().len() > 65536);
     let stored = create(fixture, &cookie, &csrf, document.clone()).await;
     let public = json(
@@ -660,6 +667,300 @@ async fn concurrent_updates(fixture: &Fixture) {
     );
 }
 
+fn reference_lss() -> Vec<u8> {
+    let original = include_str!("../../../examples/surveys/controls.lss");
+    let position = original.rfind("</document>").unwrap();
+    let mut xml = original.to_owned();
+    xml.insert_str(
+        position,
+        &format!("<!--SOURCE_ONLY_ORIGINAL{}-->", "x".repeat(70000)),
+    );
+    xml.into_bytes()
+}
+
+async fn import_request(
+    fixture: &Fixture,
+    xml: Vec<u8>,
+    cookie: Option<&str>,
+    csrf: Option<&str>,
+) -> axum::response::Response {
+    let mut request = Request::builder()
+        .method("POST")
+        .uri("/api/admin/imports/lss")
+        .header(header::CONTENT_TYPE, "application/xml");
+    if let Some(cookie) = cookie {
+        request = request.header(header::COOKIE, cookie);
+    }
+    if let Some(csrf) = csrf {
+        request = request.header("x-csrf-token", csrf);
+    }
+    fixture
+        .app
+        .clone()
+        .oneshot(request.body(Body::from(xml)).unwrap())
+        .await
+        .unwrap()
+}
+
+async fn import_roundtrip(fixture: &Fixture) {
+    let xml = reference_lss();
+    assert_eq!(
+        import_request(fixture, xml.clone(), None, None)
+            .await
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    let (cookie, csrf) = login(fixture).await;
+    assert_eq!(
+        import_request(fixture, xml.clone(), Some(&cookie), None)
+            .await
+            .status(),
+        StatusCode::FORBIDDEN
+    );
+    let response = import_request(fixture, xml.clone(), Some(&cookie), Some(&csrf)).await;
+    let status = response.status();
+    let stored = json(response).await;
+    assert_eq!(status, StatusCode::CREATED, "{stored}");
+    assert_eq!(stored["definition"]["schemaVersion"], 2);
+    assert_eq!(stored["definition"]["languages"], json!(["fr", "en"]));
+    let id = stored["id"].as_str().unwrap();
+    assert!(
+        !stored.to_string().contains("SOURCE_ONLY_ORIGINAL"),
+        "the original XML must stay private"
+    );
+    let all_questions: Vec<_> = stored["definition"]["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|group| group["questions"].as_array().unwrap())
+        .collect();
+    assert_eq!(all_questions.len(), 28);
+    assert!(
+        all_questions
+            .iter()
+            .any(|question| question["kind"] == "dual_scale")
+    );
+    assert!(
+        all_questions
+            .iter()
+            .any(|question| question["kind"] == "equation")
+    );
+    assert!(
+        all_questions
+            .iter()
+            .any(|question| !question["subquestions"].as_array().unwrap().is_empty())
+    );
+    let original_path = format!("/api/admin/studies/{id}/original.lss");
+    assert_eq!(
+        call(&fixture.app, "GET", &original_path, None, None, None)
+            .await
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    let response = call(
+        &fixture.app,
+        "GET",
+        &original_path,
+        None,
+        Some(&cookie),
+        None,
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        to_bytes(response.into_body(), 2 * 1024 * 1024)
+            .await
+            .unwrap()
+            .as_ref(),
+        xml
+    );
+    let public_path = format!("/api/studies/{id}");
+    let public = json(call(&fixture.app, "GET", &public_path, None, None, None).await).await;
+    assert_eq!(public, stored);
+    let mut invalid = stored["definition"].clone();
+    invalid["title"] = json!("Forbidden content edit");
+    let update_path = format!("/api/admin/studies/{id}");
+    assert_eq!(
+        call(
+            &fixture.app,
+            "PUT",
+            &update_path,
+            Some(json!({"expectedRevision":1,"definition":invalid})),
+            Some(&cookie),
+            Some(&csrf)
+        )
+        .await
+        .status(),
+        StatusCode::UNPROCESSABLE_ENTITY
+    );
+    let mut edited = stored["definition"].clone();
+    edited["groups"][2]["questions"][0]["relevance"] = json!("MISSING_VARIABLE == 'Y'");
+    assert_eq!(
+        call(
+            &fixture.app,
+            "PUT",
+            &update_path,
+            Some(json!({"expectedRevision":1,"definition":edited})),
+            Some(&cookie),
+            Some(&csrf)
+        )
+        .await
+        .status(),
+        StatusCode::UNPROCESSABLE_ENTITY
+    );
+    let first_code = all_questions[0]["code"].as_str().unwrap();
+    edited["groups"][2]["questions"][0]["relevance"] = json!(format!("{first_code} == 'visible'"));
+    edited["groups"][2]["relevance"] = json!(format!("!is_empty({first_code})"));
+    let response = call(
+        &fixture.app,
+        "PUT",
+        &update_path,
+        Some(json!({"expectedRevision":1,"definition":edited})),
+        Some(&cookie),
+        Some(&csrf),
+    )
+    .await;
+    let status = response.status();
+    let saved = json(response).await;
+    assert_eq!(status, StatusCode::OK, "{saved}");
+    assert_eq!(saved["revision"], 2);
+    assert_eq!(saved["definition"], edited);
+    let state =
+        WorkspaceState::with_runtime(fixture.database.clone(), false, fixture.runtime.clone());
+    let restarted = routes(state);
+    assert_eq!(
+        json(call(&restarted, "GET", &public_path, None, None, None).await).await,
+        saved
+    );
+    let response = call(&restarted, "GET", &original_path, None, Some(&cookie), None).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    assert_eq!(
+        to_bytes(response.into_body(), 2 * 1024 * 1024)
+            .await
+            .unwrap()
+            .as_ref(),
+        xml
+    );
+}
+
+#[tokio::test]
+async fn test_import_should_preserve_all_types_original_xml_and_reopen_edited_conditions() {
+    import_roundtrip(&fixture().await).await;
+}
+
+#[tokio::test]
+async fn test_invalid_lss_and_cycles_should_not_create_partial_records_or_revisions() {
+    let fixture = fixture().await;
+    let (cookie, csrf) = login(&fixture).await;
+    assert_eq!(
+        import_request(&fixture, b"<broken>".to_vec(), Some(&cookie), Some(&csrf))
+            .await
+            .status(),
+        StatusCode::UNPROCESSABLE_ENTITY
+    );
+    assert_eq!(
+        import_request(
+            &fixture,
+            vec![b'x'; 8 * 1024 * 1024 + 1],
+            Some(&cookie),
+            Some(&csrf)
+        )
+        .await
+        .status(),
+        StatusCode::PAYLOAD_TOO_LARGE
+    );
+    let mut definition = definition();
+    definition["groups"][0]["relevance"] = json!("!is_empty(NAME)");
+    let response = call(
+        &fixture.app,
+        "POST",
+        "/api/admin/studies",
+        Some(definition),
+        Some(&cookie),
+        Some(&csrf),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::UNPROCESSABLE_ENTITY);
+    assert!(
+        json(response).await["error"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["message"].as_str().unwrap().contains("cycle"))
+    );
+    assert!(
+        json(call(&fixture.app, "GET", "/api/studies", None, None, None).await).await["items"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[tokio::test]
+async fn test_second_migration_should_preserve_v1_documents_and_upgrade_them_on_read() {
+    let database = Database::connect(rustsurvey_server::database::options(
+        "sqlite::memory:".to_owned(),
+    ))
+    .await
+    .unwrap();
+    Migrator::up(&database, Some(1)).await.unwrap();
+    let legacy=json!({"schemaVersion":1,"title":"Legacy","language":"fr","welcome":"","end":"","groups":[]}).to_string();
+    let id = "00000000-0000-4000-8000-000000000001";
+    database
+        .execute(
+            Query::insert()
+                .into_table("studies")
+                .columns(["id", "title", "revision", "created_at", "updated_at"])
+                .values([
+                    id.into(),
+                    "Legacy".into(),
+                    1_i64.into(),
+                    0_i64.into(),
+                    0_i64.into(),
+                ])
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    database
+        .execute(
+            Query::insert()
+                .into_table("definition_revisions")
+                .columns(["study_id", "revision", "document", "created_at"])
+                .values([id.into(), 1_i64.into(), legacy.clone().into(), 0_i64.into()])
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    Migrator::up(&database, None).await.unwrap();
+    Migrator::up(&database, None).await.unwrap();
+    let app = routes(WorkspaceState::with_runtime(
+        database.clone(),
+        false,
+        std::sync::Arc::new(FixedRuntime::new()),
+    ));
+    let stored =
+        json(call(&app, "GET", &format!("/api/studies/{id}"), None, None, None).await).await;
+    assert_eq!(stored["definition"]["schemaVersion"], 2);
+    assert_eq!(stored["definition"]["title"], "Legacy");
+    assert_eq!(stored["revision"], 1);
+    let row = database
+        .query_one(
+            &Query::select()
+                .column("document")
+                .from("definition_revisions")
+                .to_owned(),
+        )
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        row.try_get::<String>("", "document").unwrap(),
+        legacy,
+        "historical revisions must not be rewritten"
+    );
+}
+
 #[tokio::test]
 async fn test_concurrent_updates_should_commit_exactly_one_revision() {
     concurrent_updates(&fixture().await).await;
@@ -717,6 +1018,7 @@ async fn test_external_database_should_apply_migrations_and_roundtrip_large_docu
     );
     let fixture = initialize(database).await;
     large_document_roundtrip(&fixture).await;
+    import_roundtrip(&fixture).await;
     concurrent_updates(&fixture).await;
     let (cookie, csrf) = login(&fixture).await;
     let stored = create(&fixture, &cookie, &csrf, definition()).await;

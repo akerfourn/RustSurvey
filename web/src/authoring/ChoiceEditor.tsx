@@ -1,5 +1,5 @@
 import type { TargetedEvent } from "preact";
-import { createId, type Choice } from "./model.ts";
+import { createChoice, type Choice } from "./model.ts";
 
 interface ChoiceRowProps {
   choice: Choice;
@@ -46,7 +46,7 @@ export function ChoiceEditor({
     let number = choices.length + 1;
     const codes = new Set(choices.map((choice) => choice.code));
     while (codes.has(`A${number}`)) number += 1;
-    onChange([...choices, { id: createId(), code: `A${number}`, label: "Nouveau choix" }]);
+    onChange([...choices, createChoice(`A${number}`, "Nouveau choix")]);
   }
   const rows = choices.map((choice, index) => {
     function handleChange(updated: Choice): void {

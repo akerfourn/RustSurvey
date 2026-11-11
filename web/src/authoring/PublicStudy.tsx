@@ -43,7 +43,7 @@ export function PublicStudy({ id }: { id: string }) {
         <section className="panel">
           <h1>{stored.definition.title}</h1>
         </section>
-        <StudyViewer study={study} />
+        <StudyViewer study={study} report={stored.source?.report} />
       </ViewerBoundary>
     );
   return (

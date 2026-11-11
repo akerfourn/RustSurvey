@@ -1,9 +1,13 @@
+import { ConditionEditor } from "./ConditionEditor.tsx";
+import type { Variable } from "./conditions.ts";
 import type { TargetedEvent } from "preact";
 import { moveItem, type Group, type Question } from "./model.ts";
 import { QuestionEditor } from "./QuestionEditor.tsx";
 
 interface GroupEditorProps {
   group: Group;
+  variables: readonly Variable[];
+  readOnlyContent: boolean;
   index: number;
   count: number;
   canAddQuestion: boolean;
@@ -14,6 +18,8 @@ interface GroupEditorProps {
 }
 export function GroupEditor({
   group,
+  variables,
+  readOnlyContent,
   index,
   count,
   canAddQuestion,
@@ -22,6 +28,9 @@ export function GroupEditor({
   onRemove,
   onAddQuestion,
 }: GroupEditorProps) {
+  function handleCondition(relevance: string): void {
+    onChange({ ...group, relevance });
+  }
   function handleTitle(event: TargetedEvent<HTMLInputElement>): void {
     onChange({ ...group, title: event.currentTarget.value });
   }
@@ -54,6 +63,8 @@ export function GroupEditor({
     return (
       <QuestionEditor
         key={question.id}
+        variables={variables}
+        readOnlyContent={readOnlyContent}
         question={question}
         index={questionIndex}
         count={group.questions.length}
@@ -64,27 +75,37 @@ export function GroupEditor({
     );
   });
   return (
-    <section className="panel group-editor">
+    <section className="panel group-editor" id={`edit-${group.id}`}>
       <div className="section-heading">
         <h2>Groupe {index + 1}</h2>
         <div className="button-row">
-          <button type="button" className="text-button" onClick={handleUp} disabled={index === 0}>
+          <button
+            type="button"
+            className="text-button"
+            onClick={handleUp}
+            disabled={readOnlyContent || index === 0}
+          >
             Monter
           </button>
           <button
             type="button"
             className="text-button"
             onClick={handleDown}
-            disabled={index === count - 1}
+            disabled={readOnlyContent || index === count - 1}
           >
             Descendre
           </button>
-          <button type="button" className="text-button" onClick={onRemove}>
+          <button
+            type="button"
+            className="text-button"
+            onClick={onRemove}
+            disabled={readOnlyContent}
+          >
             Retirer le groupe
           </button>
         </div>
       </div>
-      <div className="editor-fields">
+      <fieldset className="editor-fields" disabled={readOnlyContent}>
         <label>
           Titre du groupe
           <input value={group.title} maxLength={500} onInput={handleTitle} />
@@ -93,13 +114,14 @@ export function GroupEditor({
           Description
           <textarea rows={2} value={group.description} onInput={handleDescription} />
         </label>
-      </div>
+      </fieldset>
+      <ConditionEditor value={group.relevance} variables={variables} onChange={handleCondition} />
       {questions}
       <button
         type="button"
         className="secondary"
         onClick={onAddQuestion}
-        disabled={!canAddQuestion}
+        disabled={readOnlyContent || !canAddQuestion}
       >
         Ajouter une question
       </button>

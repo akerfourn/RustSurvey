@@ -62,6 +62,16 @@ l’étude. Les sessions référencent l’administrateur et possèdent un index
 d’expiration. Les instants utilisent des secondes Unix UTC en entier 64 bits.
 L’historique SQL est distinct de la version du document natif.
 
+La migration `m20261111_000002_import_sources` ajoute `import_sources`, liée par
+clé étrangère à `studies`. Elle conserve le XML LSS original, son empreinte
+SHA-256 et le rapport d’import. Le XML est privé et immuable. Étude, première
+révision et source sont créées dans une même transaction. XML et rapport
+utilisent `LONGTEXT` sur MariaDB, `TEXT` sur SQLite/PostgreSQL.
+
+La migration 0002 ne modifie aucune révision existante. Le document v1 est
+converti en v2 à la lecture ; seule une nouvelle sauvegarde ajoute une révision
+v2.
+
 La sauvegarde compare la version attendue et insère le document dans une même
 transaction. Un conflit ne crée pas de révision. Aucun opérateur JSON SQL n’est
 utilisé. Le compte n’est initialisé que si aucun administrateur n’existe.
@@ -90,8 +100,8 @@ document Unicode supérieur à 64 Kio sur les trois moteurs.
 
 Les changements de format des documents ont leur propre versionnement et leur
 stratégie de conversion. Ils ne se confondent ni avec les migrations SQL, ni
-avec le `DBVersion` LimeSurvey. Seules les études, leurs révisions et
-l’administration sont implémentées. Campagnes, réponses, participants et
+avec le `DBVersion` LimeSurvey. Études, révisions, sources LSS privées et
+administration sont implémentées. Campagnes, réponses, participants et
 transferts restent à réaliser.
 
 ## Automatisation et déploiement
@@ -141,7 +151,11 @@ fichier temporaire convient mieux aux tests de concurrence.
 Le 11 novembre 2026, les tests ont été exécutés sur SQLite embarqué, PostgreSQL
 17 et MariaDB 11.4 en conteneurs locaux jetables : installation vierge, deuxième
 passage sans changement, connexion administrateur, documents UTF-8 de plus de 64
-Kio, lecture publique et sauvegarde versionnée.
+Kio, lecture publique et sauvegarde versionnée. Le deuxième incrément vérifie
+également les deux migrations, un original XML de plus de 64 Kio, l’édition des
+conditions et la protection des propriétés importées sur les trois moteurs.
+SQLite vérifie la montée de 0001 vers 0002 avec un document v1 déjà présent, sa
+projection v2 et la conservation de la révision historique.
 
 Les tests courants utilisent SQLite mémoire, un temps et une entropie injectés.
 Ils couvrent aussi sessions, révocation, expiration, CSRF, validation, limites

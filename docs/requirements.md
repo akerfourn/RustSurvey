@@ -38,14 +38,14 @@ thèmes et plugins personnalisés nécessitent un inventaire et une adaptation
 explicites ; leur code importé n’est pas exécuté automatiquement.
 
 La persistance actuelle couvre les définitions et les sessions d’un unique
-administrateur, avec un premier éditeur natif. Les questionnaires sont publics
-sans compte participant. Les réponses restent locales ; collecte, reprise et
-fonctions de formulaire nécessitant un état durable sont différées. Leur
-présence dans un import continue à être diagnostiquée. Les médias et pièces
-jointes utiliseront un port de stockage objet, avec adaptateurs S3 et fichiers
-locaux, selon la [décision 0002](decisions/0002-object-storage.md). Le
-déploiement S3 ne doit pas dépendre d’un volume disque persistant attaché au
-serveur.
+administrateur et les sources LSS, avec un éditeur natif et les premières
+conditions de groupes/questions. Les questionnaires sont publics sans compte
+participant. Les réponses restent locales ; collecte, reprise et fonctions de
+formulaire nécessitant un état durable sont différées. Leur présence dans un
+import continue à être diagnostiquée. Les médias et pièces jointes utiliseront
+un port de stockage objet, avec adaptateurs S3 et fichiers locaux, selon la
+[décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne doit pas
+dépendre d’un volume disque persistant attaché au serveur.
 
 La migration d’études en cours est une exigence acquise : conserver structure,
 réponses complètes et partielles, participants, droits de reprise et
@@ -69,7 +69,8 @@ certification des fonctions restent progressives.
 Le [viewer actuel](viewer.md) réalise un premier parcours sans persistance : le
 backend analyse la structure, le navigateur affiche les questions et évalue un
 sous-ensemble des règles. L’[éditeur](authoring.md) ajoute création et
-sauvegarde SQL, sans changer le périmètre local des réponses.
+sauvegarde SQL, import persistant et conditions éditables, sans changer le
+périmètre local des réponses.
 
 Le [protocole de migration](study-migration.md) distingue conservation,
 réexport, exécution et continuité. Le transfert complet inclut les compléments

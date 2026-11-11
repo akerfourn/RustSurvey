@@ -5,8 +5,10 @@
 Le développement couvre l’adaptateur LimeSurvey, son outil CLI et un premier
 viewer web avec saisie locale, stockage SQL et premier éditeur natif. Un compte
 administrateur protège les écritures ; les questionnaires restent publics.
-Suivre les grandes lignes et livrer des incréments fonctionnels testés ; ne pas
-remplacer le code demandé par un nouveau tour de cadrage général.
+L’administration importe les LSS en SQL et édite les conditions de groupes et
+questions. Les autres réglages importés restent protégés dans ce lot. Suivre les
+grandes lignes et livrer des incréments fonctionnels testés ; ne pas remplacer
+le code demandé par un nouveau tour de cadrage général.
 
 Lire [README.md](README.md), les [besoins](docs/requirements.md), le
 [modèle interne](docs/domain-model.md) et le document du domaine concerné avant
@@ -20,9 +22,11 @@ et son [catalogue](docs/form-catalog.md). Un LSS sans blocage détecté ne prouv
 pas la parité ; distinguer options interprétées, tolérées et non projetées.
 
 La persistance actuelle couvre les définitions versionnées et les sessions
-administrateur. Lire le [périmètre de l’éditeur](docs/authoring.md) avant une
-modification de ces fonctions. Collecte et reprise des réponses restent à faire.
-Pour les futurs médias et fichiers, suivre la
+administrateur, ainsi que les originaux LSS privés. Le format natif v2 est
+commun aux créations et imports ; convertir explicitement la v1 sans réécrire
+les révisions historiques. Lire le [périmètre de l’éditeur](docs/authoring.md)
+avant une modification de ces fonctions. Collecte et reprise des réponses
+restent à faire. Pour les futurs médias et fichiers, suivre la
 [décision de stockage objet](docs/decisions/0002-object-storage.md) : port
 commun, adaptateur compatible S3 et adaptateur local sur fichiers.
 
@@ -86,6 +90,8 @@ commun, adaptateur compatible S3 et adaptateur local sur fichiers.
 - Prévoir des limites explicites pour imports, archives et traitements lourds.
 - Une fonction importée non prise en charge doit produire un diagnostic ; ne
   jamais la supprimer ou modifier sa signification silencieusement.
+- L’original LSS archivé est immuable et accessible seulement à
+  l’administrateur. Ne pas le présenter comme un export des modifications.
 - Ne jamais assimiler une archive `.lsa` à un transfert complet des sessions,
   reprises et ressources externes. Vérifier les compléments réellement fournis.
 

@@ -22,7 +22,7 @@ fn test_definition_should_reject_unknown_fields_and_types_instead_of_dropping_th
             .contains("unknown field")
     );
     let mut value = fixture();
-    value["groups"][0]["questions"][0]["kind"] = json!("file_upload");
+    value["groups"][0]["questions"][0]["kind"] = json!("future_type");
     assert!(
         serde_json::from_value::<Definition>(value)
             .unwrap_err()
@@ -82,7 +82,7 @@ fn test_definition_should_reject_ambiguous_answer_names_and_required_information
 #[test]
 fn test_definition_should_bound_structure_text_and_schema_versions() {
     let mut value = fixture();
-    value["schemaVersion"] = json!(2);
+    value["schemaVersion"] = json!(3);
     value["title"] = json!("a".repeat(201));
     let issues = serde_json::from_value::<Definition>(value)
         .unwrap()

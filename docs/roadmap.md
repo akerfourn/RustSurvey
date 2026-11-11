@@ -18,13 +18,16 @@ décrit le profil effectivement implémenté.
 
 Un [premier éditeur natif](authoring.md) et la persistance SQL des définitions
 et de l’administration sont présents. Il permet de créer des questionnaires
-publics avec huit types de questions et un aperçu. Le parcours LSS conserve ses
-28 types sans fichiers. Les réponses restent en mémoire dans le navigateur.
+publics avec huit types de questions et un aperçu. L’administration importe les
+LSS en SQL dans un format natif enrichi, conserve l’original privé et permet
+d’éditer les conditions de groupes/questions. Le parcours LSS conserve ses 28
+types sans fichiers. Les réponses restent en mémoire dans le navigateur.
 
 F5/F6 restent différés pour la collecte, la reprise, les fichiers, les
 ressources durables, les quotas globaux et les effets serveur. Les prochaines
-étapes d’édition devront préserver les imports LSS avant de les rendre
-modifiables, puis étendre le document natif et l’éditeur.
+étapes d’édition devront étendre les propriétés modifiables des imports,
+introduire l’édition des calculs/paramètres et préparer le réexport LSS modifié
+avec un contrôle d’impact sur les références préservées.
 
 La persistance des participations et leur migration restent des objectifs
 ultérieurs. Les futurs médias et pièces jointes suivront la

@@ -1,16 +1,6 @@
-import {
-  QUESTION_KINDS,
-  type Definition,
-  type Group,
-  type Question,
-  type Session,
-  type StoredStudy,
-  type StudySummary,
-  type ValidationIssue,
-  type Choice,
-  type QuestionKind,
-  type Mandatory,
-} from "./model.ts";
+import type { Definition, Session, StoredStudy, StudySummary, ValidationIssue } from "./model.ts";
+import { decodeDefinition, decodeSourceInfo } from "./definition-codec.ts";
+export { decodeDefinition } from "./definition-codec.ts";
 
 function object(value: unknown): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value))
@@ -30,48 +20,6 @@ function array<T>(value: unknown, decode: (item: unknown) => T): T[] {
   if (!Array.isArray(value)) throw new Error("Liste du serveur invalide.");
   return value.map(decode);
 }
-function choice(value: unknown): Choice {
-  const item = object(value);
-  return { id: text(item.id), code: text(item.code), label: text(item.label) };
-}
-function question(value: unknown): Question {
-  const item = object(value);
-  const kind = text(item.kind);
-  if (!QUESTION_KINDS.has(kind as QuestionKind)) throw new Error("Type de question inconnu.");
-  const mandatory = text(item.mandatory);
-  if (!["no", "soft", "strict"].includes(mandatory))
-    throw new Error("Caractère obligatoire inconnu.");
-  return {
-    id: text(item.id),
-    code: text(item.code),
-    title: text(item.title),
-    help: text(item.help),
-    kind: kind as QuestionKind,
-    mandatory: mandatory as Mandatory,
-    choices: array(item.choices, choice),
-  };
-}
-function group(value: unknown): Group {
-  const item = object(value);
-  return {
-    id: text(item.id),
-    title: text(item.title),
-    description: text(item.description),
-    questions: array(item.questions, question),
-  };
-}
-export function decodeDefinition(value: unknown): Definition {
-  const item = object(value);
-  if (item.schemaVersion !== 1) throw new Error("Version de questionnaire non prise en charge.");
-  return {
-    schemaVersion: 1,
-    title: text(item.title),
-    language: text(item.language),
-    welcome: text(item.welcome),
-    end: text(item.end),
-    groups: array(item.groups, group),
-  };
-}
 function stored(value: unknown): StoredStudy {
   const item = object(value);
   return {
@@ -80,6 +28,7 @@ function stored(value: unknown): StoredStudy {
     createdAt: number(item.createdAt),
     updatedAt: number(item.updatedAt),
     definition: decodeDefinition(item.definition),
+    source: decodeSourceInfo(item.source),
   };
 }
 function summary(value: unknown): StudySummary {
@@ -120,7 +69,7 @@ async function request(url: string, options: RequestInit = {}): Promise<unknown>
     body = await response.json();
   } catch {
     if (response.status === 413)
-      throw new ApiError(413, "Le questionnaire dépasse la taille maximale autorisée (1 Mio).");
+      throw new ApiError(413, "Le questionnaire dépasse la taille maximale autorisée (8 Mio).");
     throw new ApiError(response.status, "Réponse du serveur illisible.");
   }
   if (!response.ok) {
@@ -191,4 +140,25 @@ export function message(error: unknown): string {
     return "Le serveur est injoignable. Réessayez après avoir vérifié sa connexion.";
   if (error instanceof Error) return error.message;
   return "L’opération a échoué.";
+}
+
+export async function importLss(
+  file: File,
+  csrf: string,
+  signal?: AbortSignal,
+): Promise<StoredStudy> {
+  if (file.size === 0) throw new Error("Le fichier sélectionné est vide.");
+  if (file.size > 8 * 1024 * 1024) throw new Error("Import LSS limité à 8 Mio.");
+  return stored(
+    await request("/api/admin/imports/lss", {
+      method: "POST",
+      body: file,
+      signal: signal ?? null,
+      headers: {
+        "Content-Type": "application/xml",
+        "X-Requested-With": "RustSurvey",
+        "X-CSRF-Token": csrf,
+      },
+    }),
+  );
 }

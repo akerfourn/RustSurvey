@@ -1,6 +1,6 @@
 use crate::{
     Definition, Group, MAX_ANSWER_CELLS, MAX_QUESTIONS, Mandatory, Question, QuestionKind,
-    ValidationIssue,
+    SCHEMA_VERSION, ValidationIssue,
 };
 use std::collections::BTreeSet;
 
@@ -67,7 +67,7 @@ impl Validator {
     }
 
     fn metadata(&mut self, definition: &Definition) {
-        if definition.schema_version != 1 {
+        if definition.schema_version != SCHEMA_VERSION {
             self.issue(
                 "schemaVersion",
                 "Version de définition non prise en charge.",
@@ -76,6 +76,35 @@ impl Validator {
         self.text("title", &definition.title, 200, true);
         self.text("welcome", &definition.welcome, 20000, false);
         self.text("end", &definition.end, 20000, false);
+        if definition.languages.len() > 32 || definition.translations.len() > 32 {
+            self.issue("translations", "Maximum de 32 langues.");
+        }
+        let mut languages = BTreeSet::new();
+        for translation in definition.translations.iter().take(32) {
+            if !languages.insert(&translation.language) {
+                self.issue("translations", "Langue dupliquée.");
+            }
+            self.text("translations", &translation.language, 32, true);
+            self.text(
+                "translations",
+                translation.title.as_deref().unwrap_or(""),
+                20000,
+                false,
+            );
+            self.text(
+                "translations",
+                translation.welcome.as_deref().unwrap_or(""),
+                20000,
+                false,
+            );
+            self.text(
+                "translations",
+                translation.end.as_deref().unwrap_or(""),
+                20000,
+                false,
+            );
+        }
+
         if definition.language.is_empty()
             || definition.language.len() > 32
             || !definition
@@ -105,11 +134,7 @@ impl Validator {
             .groups
             .iter()
             .flat_map(|group| &group.questions)
-            .map(|question| match question.kind {
-                QuestionKind::MultipleChoice => question.choices.len(),
-                QuestionKind::Information => 0,
-                _ => 1,
-            })
+            .map(|question| crate::rules::fields(question).len())
             .sum();
         if cells > MAX_ANSWER_CELLS {
             self.issue("groups", "Maximum de 20000 cellules de réponse.");
@@ -120,6 +145,8 @@ impl Validator {
 
     fn group(&mut self, group: &Group, path: &str) {
         self.identifier(path, &group.id);
+        self.text(&format!("{path}.relevance"), &group.relevance, 4096, false);
+        self.translations(path, &group.translations);
         self.text(&format!("{path}.title"), &group.title, 500, true);
         self.text(
             &format!("{path}.description"),
@@ -134,6 +161,20 @@ impl Validator {
 
     fn question(&mut self, question: &Question, path: &str) {
         self.identifier(path, &question.id);
+        self.text(
+            &format!("{path}.relevance"),
+            &question.relevance,
+            4096,
+            false,
+        );
+        self.translations(path, &question.translations);
+        if question.attributes.len() > 200 {
+            self.issue(path, "Maximum de 200 options par question.");
+        }
+        for attribute in question.attributes.iter().take(200) {
+            self.text(path, &attribute.name, 128, true);
+            self.text(path, &attribute.value, 20000, false);
+        }
         if !valid_question_code(&question.code) || !self.codes.insert(question.code.clone()) {
             self.issue(format!("{path}.code"), "Code invalide ou dupliqué.");
         }
@@ -146,45 +187,76 @@ impl Validator {
             );
         }
         self.choices(question, path);
-        if !matches!(
-            question.kind,
-            QuestionKind::MultipleChoice | QuestionKind::Information
-        ) {
-            self.field(path, question.code.clone());
+        let fields = crate::rules::fields(question);
+        if fields.len() > 2000 {
+            self.issue(path, "Maximum de 2000 cellules par question.");
+        }
+        for field in fields {
+            self.field(path, field);
+        }
+    }
+
+    fn translations(&mut self, path: &str, translations: &[crate::Translation]) {
+        if translations.len() > 32 {
+            self.issue(path, "Maximum de 32 traductions.");
+        }
+        for translation in translations.iter().take(32) {
+            self.text(path, &translation.language, 32, true);
+            self.text(
+                path,
+                translation.text.as_deref().unwrap_or(""),
+                20000,
+                false,
+            );
+            self.text(
+                path,
+                translation.help.as_deref().unwrap_or(""),
+                20000,
+                false,
+            );
         }
     }
 
     fn choices(&mut self, question: &Question, path: &str) {
-        let accepts_choices = matches!(
+        if matches!(
             question.kind,
-            QuestionKind::SingleChoice | QuestionKind::MultipleChoice
-        );
-        if accepts_choices && !(2..=200).contains(&question.choices.len()) {
-            self.issue(format!("{path}.choices"), "Prévoir entre 2 et 200 choix.");
+            QuestionKind::SingleChoice | QuestionKind::Dropdown | QuestionKind::SingleChoiceComment
+        ) && question.choices.is_empty()
+        {
+            self.issue(format!("{path}.choices"), "Prévoir au moins un choix.");
         }
-        if !accepts_choices && !question.choices.is_empty() {
-            self.issue(
-                format!("{path}.choices"),
-                "Ce type n’accepte pas de choix personnalisés.",
-            );
-        }
-        let mut codes = BTreeSet::new();
-        for (index, choice) in question.choices.iter().take(200).enumerate() {
-            let choice_path = format!("{path}.choices[{index}]");
-            self.identifier(&choice_path, &choice.id);
-            if choice.code.is_empty()
-                || choice.code.len() > 32
-                || !choice.code.bytes().all(|byte| byte.is_ascii_alphanumeric())
-                || !codes.insert(&choice.code)
-            {
-                self.issue(
-                    format!("{choice_path}.code"),
-                    "Code de choix invalide ou dupliqué.",
-                );
+        for (role, choices) in [
+            ("choices", &question.choices),
+            ("subquestions", &question.subquestions),
+        ] {
+            if choices.len() > 200 {
+                self.issue(format!("{path}.{role}"), "Maximum de 200 éléments par axe.");
             }
-            self.text(&format!("{choice_path}.label"), &choice.label, 2000, true);
-            if question.kind == QuestionKind::MultipleChoice {
-                self.field(path, format!("{}_{}", question.code, choice.code));
+            let mut codes = BTreeSet::new();
+            for (index, choice) in choices.iter().take(200).enumerate() {
+                let choice_path = format!("{path}.{role}[{index}]");
+                self.identifier(&choice_path, &choice.id);
+                if choice.code.is_empty()
+                    || choice.code.len() > 128
+                    || !codes.insert((choice.scale, &choice.code))
+                {
+                    self.issue(
+                        format!("{choice_path}.code"),
+                        "Code de choix invalide ou dupliqué.",
+                    );
+                }
+                if choice.scale > 1 {
+                    self.issue(&choice_path, "Échelle non prise en charge.");
+                }
+                self.text(&format!("{choice_path}.label"), &choice.label, 10000, false);
+                self.text(&format!("{choice_path}.help"), &choice.help, 10000, false);
+                self.text(
+                    &format!("{choice_path}.relevance"),
+                    &choice.relevance,
+                    4096,
+                    false,
+                );
+                self.translations(&choice_path, &choice.translations);
             }
         }
     }

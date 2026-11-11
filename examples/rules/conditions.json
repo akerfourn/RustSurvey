@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "source": "AGE >= 18 && CONSENT == 'Y'",
+      "variables": ["AGE", "CONSENT"]
+    },
+    {
+      "source": "not is_empty(NAME)",
+      "variables": ["NAME"]
+    },
+    {
+      "source": "AMOUNT.NAOK gt 0 and (CHOICES_A1 == 'Y' or CHOICES_A2 == 'Y')",
+      "variables": ["AMOUNT.NAOK", "CHOICES_A1", "CHOICES_A2"]
+    },
+    {
+      "source": "if(is_empty(AGE), 0, round(AGE / 10, 0)) > 1",
+      "variables": ["AGE"]
+    },
+    {
+      "source": "countif('Y', A, B) >= 1",
+      "variables": ["A", "B"]
+    },
+    {
+      "source": "str_replace('a', 'b', NAME) == 'b'",
+      "variables": ["NAME"]
+    },
+    {
+      "source": "NAME == 'l\\'été'",
+      "variables": ["NAME"]
+    },
+    {
+      "source": "1.e2 + .5 - 2E-3 > 0",
+      "variables": []
+    },
+    {
+      "source": "TRUE or false and null",
+      "variables": []
+    },
+    {
+      "source": "is_empty()",
+      "variables": null
+    },
+    {
+      "source": "if(AGE)",
+      "variables": null
+    },
+    {
+      "source": "unknown_function(AGE)",
+      "variables": null
+    },
+    {
+      "source": "AGE = 18",
+      "variables": null
+    },
+    {
+      "source": "AGE >=",
+      "variables": null
+    },
+    {
+      "source": "(AGE > 0",
+      "variables": null
+    },
+    {
+      "source": "NAME == 'unterminated",
+      "variables": null
+    },
+    {
+      "source": "NAME == '\\q'",
+      "variables": null
+    },
+    {
+      "source": "1e999",
+      "variables": null
+    },
+    {
+      "source": "AGE > 0; 1",
+      "variables": null
+    },
+    {
+      "source": "﻿AGE > 1﻿",
+      "variables": ["AGE"]
+    },
+    {
+      "source": "AGE > 1",
+      "variables": null
+    }
+  ]
+}

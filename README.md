@@ -14,6 +14,9 @@ et modifier des questionnaires. Ils sont publics dès leur enregistrement :
 - huit types : texte court/long, nombre, date, choix unique/multiples, oui/non
   et information ;
 - caractère facultatif, recommandé ou obligatoire ; aperçu avec le viewer ;
+- import LSS depuis l’administration, conservé en SQL avec son original ;
+- conditions de groupes/questions : constructeur ET/OU et mode expression ;
+- catalogue des variables et inspection locale des valeurs dans l’aperçu ;
 - définitions natives validées côté Rust et versions immuables en SQL ;
 - sauvegarde protégée contre l’écrasement entre deux onglets ;
 - sessions administrateur en SQL, mot de passe Argon2id et protection CSRF ;
@@ -36,11 +39,12 @@ une saisie locale sans compte :
 - un exemple synthétique bilingue pour essayer le parcours immédiatement.
 
 Les réponses ne sont jamais envoyées au serveur. La collecte, les sessions de
-réponse durables et les archives `.lsa` restent à implémenter. L’éditeur natif
-ne sait pas encore enregistrer ou modifier un LSS importé, ni produire un LSS.
-Le moteur d’aperçu couvre un sous-ensemble explicite ; il ne certifie pas encore
-le comportement complet d’une étude LimeSurvey. Voir le
-[périmètre du viewer](docs/viewer.md).
+réponse durables et les archives `.lsa` restent à implémenter. Les conditions
+des études importées sont éditables ; leurs autres réglages sont conservés et
+protégés. Le téléchargement restitue le LSS original inchangé : le réexport LSS
+intégrant les modifications reste à réaliser. Le moteur d’aperçu couvre un
+sous-ensemble explicite ; il ne certifie pas encore le comportement complet
+d’une étude LimeSurvey. Voir le [périmètre du viewer](docs/viewer.md).
 
 La cible couvre l’ensemble des formulaires natifs de la version de référence.
 L’[audit de couverture](docs/form-coverage.md) détaille les types, rendus et
@@ -127,6 +131,13 @@ locaux. Choisir un mot de passe privé hors de ces tests. Après connexion,
 cliquer sur **Créer un questionnaire**, ajouter les questions et enregistrer. Le
 questionnaire apparaît dans le catalogue public ; son lien permet une saisie
 locale sans compte. Les modifications sont publiques dès leur sauvegarde.
+
+Pour reprendre un LSS, utiliser **Importer une étude LimeSurvey** dans
+l’administration. Après enregistrement, **Modifier** ouvre ses groupes et
+questions. Le panneau **Conditions d’affichage** propose les règles courantes ou
+une expression avancée. **Aperçu** permet d’essayer le parcours et d’inspecter
+les variables. Le LSS original se télécharge depuis cette même page, après
+connexion. Le parcours **Essayer un LSS** reste une inspection temporaire.
 
 Le backend Rust charge automatiquement le `.env` du répertoire courant. Les
 variables déjà définies dans l’environnement sont prioritaires. Cette

@@ -107,6 +107,16 @@ pub(super) async fn authorize_write(
     }
     Ok(())
 }
+
+pub(super) async fn authorize_read(
+    state: &WorkspaceState,
+    headers: &HeaderMap,
+) -> Result<(), AppError> {
+    authenticated(state, headers)
+        .await?
+        .ok_or_else(AppError::unauthorized)?;
+    Ok(())
+}
 pub(super) async fn session(
     State(state): State<WorkspaceState>,
     headers: HeaderMap,

@@ -48,7 +48,7 @@ test("test_kind_changes_should_preserve_choice_identities_and_clear_inapplicable
   single.choices[0]!.code = "01";
   single.mandatory = "strict";
   const multiple = changeKind(single, "multiple_choice", makeId);
-  assert.deepEqual(multiple.choices, single.choices);
+  assert.deepEqual(multiple.subquestions, single.choices);
   assert.equal(multiple.id, question.id);
   const information = changeKind(multiple, "information", makeId);
   assert.equal(information.mandatory, "no");

@@ -1,3 +1,4 @@
+import { ImportPanel } from "./ImportPanel.tsx";
 import { useEffect, useState } from "preact/hooks";
 import { getSession, logout, message } from "./api.ts";
 import type { Session } from "./model.ts";
@@ -43,6 +44,9 @@ export function Administration({ id, editing }: { id: string | null; editing: bo
       setBusy(false);
     }
   }
+  function handleExpired(): void {
+    setSession(EMPTY_SESSION);
+  }
   let content = (
     <p className="panel" role="status">
       Vérification de la session…
@@ -51,7 +55,12 @@ export function Administration({ id, editing }: { id: string | null; editing: bo
   if (!pending) {
     content = <LoginPanel configured={session.configured} onLogin={setSession} />;
     if (session.authenticated) {
-      let workspace = <Catalogue administrator={true} />;
+      let workspace = (
+        <>
+          <ImportPanel csrf={session.csrfToken ?? ""} onExpired={handleExpired} />
+          <Catalogue administrator={true} />
+        </>
+      );
       if (editing)
         workspace = (
           <EditorScreen key={id ?? "new"} id={id} session={session} onSession={setSession} />

@@ -12,7 +12,8 @@ compatibilité complète. La base de comparaison est le commit `62e21e0`, examin
 le 11 novembre 2026, puis complétée par l’incrément local sans stockage du même
 jour. Les états ci-dessous décrivent le moteur de formulaire. L’incrément
 d’[édition native](authoring.md) ajoute ensuite le stockage SQL des définitions
-et de l’administration, sans ajouter de collecte de réponses.
+et de l’administration, puis les sources LSS privées et les conditions éditables
+de groupes/questions dans le format v2, sans ajouter de collecte de réponses.
 
 Les fonctions F5/F6 demandant un stockage des participations restent différées ;
 les propositions correspondantes ci-dessous décrivent la cible future. Les
