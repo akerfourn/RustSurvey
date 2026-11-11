@@ -20,7 +20,7 @@ export function App() {
   const sequence = useRef(0);
   useEffect(() => () => request.current?.abort(), []);
 
-  async function analyze(example: boolean): Promise<void> {
+  async function analyze(example: "example" | "controls" | null): Promise<void> {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
@@ -28,7 +28,7 @@ export function App() {
     setError(null);
     try {
       let selected = file;
-      if (example) selected = await loadExample(controller.signal);
+      if (example !== null) selected = await loadExample(controller.signal, example);
       if (selected === null) throw new Error("Sélectionnez un fichier LSS.");
       const inspection = await inspectFile(selected, controller.signal);
       if (controller.signal.aborted) return;
@@ -48,10 +48,13 @@ export function App() {
     setError(null);
   }
   function handleInspect(): void {
-    void analyze(false);
+    void analyze(null);
   }
   function handleExample(): void {
-    void analyze(true);
+    void analyze("example");
+  }
+  function handleControls(): void {
+    void analyze("controls");
   }
   let resultContent = (
     <section className="empty-state">
@@ -99,6 +102,7 @@ export function App() {
           onFile={handleFile}
           onInspect={handleInspect}
           onExample={handleExample}
+          onControls={handleControls}
         />
         {resultContent}
       </main>

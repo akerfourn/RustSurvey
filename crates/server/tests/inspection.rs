@@ -148,3 +148,27 @@ async fn test_example_should_download_the_authored_fixture_when_requested() {
         DEMO.as_bytes()
     );
 }
+
+#[tokio::test]
+async fn test_controls_should_download_and_inspect_all_non_file_question_types() {
+    let expected = include_bytes!("../../../examples/surveys/controls.lss");
+    let response = routes()
+        .oneshot(
+            Request::get("/api/surveys/controls.lss")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = to_bytes(response.into_body(), MAX_UPLOAD_BYTES)
+        .await
+        .unwrap();
+    assert_eq!(body.as_ref(), expected);
+
+    let response = inspect(expected.as_slice(), "application/xml").await;
+    let result = json(response).await;
+    assert_eq!(result["report"]["errors"], 0, "{}", result["report"]);
+    assert_eq!(result["study"]["questions"].as_array().unwrap().len(), 28);
+    assert_eq!(result["study"]["questions"][0]["theme"], "core");
+}

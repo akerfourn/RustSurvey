@@ -13,9 +13,15 @@ flowchart LR
     Assets["Fichiers statiques : build TypeScript"]
     API["Serveur Rust : contrôles et persistance"]
     Storage["SQLite, MariaDB ou PostgreSQL"]
+    Objects["Port de stockage objet"]
+    S3["Service compatible S3"]
+    Disk["Adaptateur fichiers locaux"]
     Browser --> Assets
     Browser -->|HTTP| API
     API -->|Accès aux données| Storage
+    API -->|Médias et fichiers, à implémenter| Objects
+    Objects --> S3
+    Objects --> Disk
 ```
 
 En production, le client pourra être distribué comme des fichiers statiques sur
@@ -40,6 +46,14 @@ La première implémentation porte sur l’adaptateur `.lss`. Le modèle de stoc
 et le protocole complet restent à réaliser. Ces décisions s’appuient sur
 l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans attendre un
 export de production.
+
+Les médias, ressources et pièces jointes passeront par un port de stockage objet
+indépendant du fournisseur. Un adaptateur compatible S3 permet le déploiement
+sans volume disque persistant ; un adaptateur local représente les mêmes objets
+par des fichiers. Les métadonnées et relations restent dans SQL. La
+[décision 0002](decisions/0002-object-storage.md) fixe ce contrat. Ces
+adaptateurs et la persistance métier sont différés : les prochains incréments
+concernent les formulaires et leur saisie locale.
 
 ## Frontière de confiance
 

@@ -13,6 +13,16 @@ une modification. Distinguer les contraintes acquises, les décisions de
 conception et les fonctionnalités réellement vérifiées. Pour le parcours web,
 lire aussi le [périmètre du viewer](docs/viewer.md).
 
+La cible couvre tous les formulaires natifs de la version de référence. Pour les
+types, rendus et règles, suivre l’[audit de couverture](docs/form-coverage.md)
+et son [catalogue](docs/form-catalog.md). Un LSS sans blocage détecté ne prouve
+pas la parité ; distinguer options interprétées, tolérées et non projetées.
+
+Priorité actuelle : types, règles et rendus sans persistance métier. Différer
+les fonctions nécessitant du stockage. Pour les futurs médias et fichiers,
+suivre la [décision de stockage objet](docs/decisions/0002-object-storage.md) :
+port commun, adaptateur compatible S3 et adaptateur local sur fichiers.
+
 ## Contraintes du produit
 
 - Rust minimal côté serveur ; TypeScript et Preact côté navigateur.

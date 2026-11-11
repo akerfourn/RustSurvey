@@ -1,5 +1,11 @@
 # Viewer et saisie locale
 
+Ce document décrit l’implémentation actuelle.
+L’[audit de couverture](form-coverage.md) compare les formulaires natifs de
+6.5.14 à cette implémentation et planifie les manques ; son
+[catalogue](form-catalog.md) distingue les options interprétées, tolérées et non
+gérées. Zéro blocage détecté ne certifie pas l’équivalence d’un formulaire.
+
 ## Essayer le parcours
 
 Démarrer le backend et Vite avec les commandes du [README](../README.md). Le
@@ -22,90 +28,154 @@ réponses LimeSurvey et sa réimportation n’est pas encore implémentée.
 
 ## Types et règles couverts
 
-| Types LSS | Saisie dans cet aperçu                        |
-| --------- | --------------------------------------------- |
-| S, T, U   | Texte court ou multiligne                     |
-| N         | Nombre                                        |
-| D         | Date calendaire ISO, sans heure               |
-| L, !      | Choix simple, liste ou menu                   |
-| 5, Y, G   | Note 1–5, oui/non, genre historique           |
-| M         | Cases à cocher par sous-question              |
-| Q, K      | Textes ou nombres multiples                   |
-| F, H      | Tableau de choix par lignes/colonnes          |
-| :         | Matrice à cases si `multiflexible_checkbox=1` |
-| X         | Information sans réponse                      |
+Le viewer admet les **28 types natifs sans fichiers**, dans un profil local
+partiel. Les variantes avancées ne sont pas toutes implémentées.
 
-Les libellés, aides et choix utilisent la langue sélectionnée, puis la langue de
-base en repli. Le HTML importé est converti en texte dans un élément `template`
-inerte ; aucun HTML importé n’est inséré dans le DOM actif. La mise en forme,
-les images et les scripts de thèmes ne sont pas reproduits.
+| Types LSS  | Saisie dans cet aperçu                                    |
+| ---------- | --------------------------------------------------------- |
+| S, T, U    | Texte court ou multiligne                                 |
+| N          | Nombre                                                    |
+| D          | Date calendaire ISO, sans heure                           |
+| L, !       | Choix simple radio ou menu, avec autre                    |
+| 5, Y, G    | Note 1–5, oui/non, genre historique                       |
+| M, P       | Choix multiples, avec autre et commentaires pour P        |
+| O          | Choix simple avec commentaire facultatif                  |
+| Q, K       | Textes/nombres multiples ; curseurs K à bornes littérales |
+| A, B, C, E | Tableaux à domaines fixes natifs                          |
+| F, H       | Choix par ligne ou colonne, menus possibles par ligne     |
+| 1          | Tableau à deux échelles indépendantes                     |
+| :          | Matrice numérique par menu/champ, ou cases à cocher       |
+| ;          | Matrice de textes, éventuellement numériques              |
+| R          | Classement par positions, sans doublons ni trous          |
+| I          | Changement de langue du questionnaire                     |
+| *          | Équation simple, résultat calculé non modifiable          |
+| X          | Information sans réponse                                  |
 
-Le moteur TypeScript prend en charge :
+Le bouton **Essayer les 28 types** importe `examples/surveys/controls.lss` par
+le même parcours HTTP que les autres fichiers. Il contient 28 questions, 3
+groupes, 2 langues et 52 cellules. La fixture initiale reste disponible avec
+**Essayer l’exemple**.
 
-- pertinence de groupe et question, dépendances et effacement des réponses
-  devenues masquées ; cycles et variables inconnues signalés ;
-- obligatoire strict, obligatoire souple avec avertissement avant de continuer ;
-- nombres finis, entier seul, limites `min_num_value_n`/`max_num_value_n` ;
-- `min_answers`, `max_answers`, `maximum_chars` et `em_validation_q` ;
-- substitutions de texte entre accolades avec les expressions prises en charge.
+### Cellules, commentaires et validation
 
-Les réponses F et H sont adressées par `CODE_sousquestion`. Les cellules d’une
-matrice sont adressées par `CODE_ligne_colonne`, avec les deux axes source
-`scale_id=0` et `scale_id=1`. H transpose l’affichage sans changer les réponses.
-Les codes de choix sont conservés comme chaînes, y compris les zéros initiaux.
+Les cellules portent un rôle et une échelle explicites. Le JSON local utilise
+`CODE_ligne` pour un tableau simple, `CODE_ligne_0`/`CODE_ligne_1` pour les deux
+échelles, `CODE_ligne_colonne` pour une matrice et `CODE_position` pour le
+classement. Les commentaires utilisent `CODE_comment` pour O et
+`CODE_lignecomment` pour P. Le champ autre est `CODE_other`, accompagné de
+`CODE_othercomment` pour P. Ces noms locaux ne constituent pas encore un
+`FieldBinding` complet vers les colonnes de réponses LimeSurvey.
 
-Une matrice conserve l’absence de saisie, la valeur cochée `1` et la valeur
-décochée `0`. Effacer une question remet ses cellules à vide ; masquer la
-question supprime toutes ses réponses. Une matrice obligatoire demande au moins
-une case cochée par ligne ; une question F/H obligatoire demande une réponse par
-sous-question. Le caractère facultatif reste respecté.
+Les codes sont des chaînes, avec conservation des zéros initiaux. Les domaines
+fixes utilisent 1–5, 1–10, Y/U/N et I/S/D selon le type. Une double échelle
+valide chaque cellule contre sa propre liste de choix. L’option autre d’un choix
+simple utilise `-oth-` et demande une précision, sauf désactivation explicite de
+`other_comment_mandatory`. Pour M/P, saisir le texte autre ajoute cette réponse
+; ce rendu ne reproduit pas un état transitoire de case autre cochée sans texte.
 
-Le viewer restitue les textes d’accueil/fin dans la langue choisie. L’accueil
-est présenté si `showwelcome` l’autorise et si un texte est présent. Modifier
-des réponses après validation conserve la saisie, tandis que « Recommencer »
-revient au début. Les libellés sont convertis en texte selon la même règle que
-ceux des questions.
+Les commentaires O restent facultatifs. Pour P, les modes `checked`, `unchecked`
+et `allways` contrôlent la saisie ; les commentaires devenus inaccessibles sont
+effacés. Le mode `commented_checkbox_auto=0`, qui demande une autre sémantique
+de conservation, est explicitement refusé. Les commentaires ne gonflent pas le
+nombre de choix sélectionnés.
 
-Les choix simples et multiples respectent `display_columns`, avec repli sur une
-colonne sur petit écran. Les tableaux restent accessibles par défilement
-horizontal. Les groupes possèdent une navigation en haut et en bas ; un contrôle
-en échec ramène à la première question à corriger.
+La validation couvre l’obligatoire N/S/Y, les domaines, les nombres finis,
+l’entier seul, la date ISO, les limites par nombre et les contraintes de somme
+`min_num_value`, `max_num_value`, `equals_num_value`. Elle couvre aussi
+`min_answers`, `max_answers`, `maximum_chars` et `em_validation_q`. Le
+classement peut rester partiel s’il est facultatif, avec des positions remplies
+depuis la première, uniques et sans trou. Une limite littérale
+`max_subquestions` réduit les positions. Avec une contrainte min/max de
+réponses, l’obligatoire demande au moins un choix, puis la contrainte contrôle
+le nombre. Le rendu utilise des menus accessibles au clavier ; le
+glisser-déposer et les filtres de classement restent à faire.
 
-Les réglages de largeur (`input_size`) et les préférences d’édition
-(`save_as_default`, `clear_default`) ne bloquent plus l’exécution. Les options
-secondaires de minuterie restent sans effet quand aucune durée n’est définie.
-Une minuterie active et les attributs d’exécution inconnus restent
-diagnostiqués.
+Les matrices numériques à menus utilisent des bornes/pas littéraux, par défaut
+1–10 avec un pas de 1. Les champs `input_boxes=1` restent sans borne implicite
+et respectent les minimum/maximum explicitement fournis. Les cases conservent
+absence, coché `1` et décoché `0`. Une matrice de cases obligatoire demande une
+case par ligne active ; les autres tableaux obligatoires demandent les cellules
+actives. Les curseurs K respectent leurs bornes et leur pas ; leur affichage
+initial ne crée pas une réponse avant interaction.
 
-La grammaire bornée accepte nombres, chaînes, booléens, parenthèses,
-comparaisons, arithmétique et opérateurs booléens `and`, `or`, `not`, `&&`,
-`||`, `!`. Les fonctions disponibles sont `if`, `is_empty`, `sum`, `count`,
-`min`, `max`, `strlen`, `abs` et `round` à un argument. Les variables utilisent
-les codes de questions, `CODE_sousquestion` et le suffixe `.NAOK`.
+### Pertinence, filtres et calculs
 
-C’est un moteur d’aperçu partiel : conversions et fonctions doivent encore être
-confrontées à un corpus exécuté dans LimeSurvey 6.5.14. Les comparaisons de
-chaînes, les règles sur les valeurs vides et les variantes de fonctions ne sont
-pas une garantie de sémantique ExpressionScript complète.
+Le graphe inclut pertinence de groupe/question/sous-question, sources des
+filtres et équations. Il détecte les cycles et variables inconnues. Les réponses
+masquées sont effacées avant les règles dépendantes. La pertinence des deux axes
+de matrice est prise en compte.
 
-Les autres variantes de tableaux, classements, fichiers, équations, champs «
-autre » natifs, expressions régulières, filtres et pertinence de sous-questions,
-ordres aléatoires et attributs actifs inconnus produisent des limites
-explicites. Les questions concernées sont consultables avec saisie désactivée ;
-la validation finale locale reste désactivée. Les conditions historiques,
-valeurs par défaut et quotas présents bloquent également cette validation. Le
-viewer impose sa navigation par groupe : il ne reproduit pas tous les paramètres
-de collecte.
+`array_filter` et `array_filter_exclude` acceptent des codes de questions M/P,
+séparés par `;`, pour les lignes des tableaux et saisies multiples. Les filtres
+successifs se combinent par intersection. Un code de ligne absent d’une source
+n’ajoute pas de restriction pour cette source. Le style 0 masque la ligne ; le
+style 1 la laisse désactivée. Ses réponses sont effacées et elle ne reste pas
+obligatoire. Les sources de filtre d’autres types, les filtres de choix
+simples/classement et les sélecteurs avancés restent diagnostiqués.
 
-Une erreur de structure désactive toute saisie. Un schéma différent de 623
-permet seulement l’inspection des métadonnées et du rapport ; aucune conversion
-implicite de schéma n’est effectuée.
+Le type `*` utilise l’attribut `equation` ou une expression simple du texte de
+base. Les équations sont recalculées après leurs dépendances ; une valeur
+fournie dans la carte de réponses ne peut pas remplacer leur résultat.
+`hidden=1` masque une question sans assimiler son état à une absence de
+pertinence : une équation cachée conserve son résultat. Les affectations, les
+équations composites et celles différentes par langue restent hors profil.
 
-Le programme client est borné à 2 000 questions, 2 000 cellules par question, 2
-000 choix affichés par tableau F/H et 20 000 cellules pour l’ensemble de
-l’étude. Les produits d’axes sont vérifiés avant leur allocation ; un
-dépassement permet seulement l’inspection et ne rend pas un grand tableau
-désactivé.
+### Présentation et textes
+
+Les libellés utilisent la langue choisie et la langue de base en repli. Le
+changement de langue conserve la saisie et synchronise les questions I. Accueil,
+fin, aides, descriptions de groupe, options et sous-questions prennent en charge
+les substitutions du profil d’expression. Le HTML est converti en texte dans un
+`template` inerte ; aucun HTML importé n’est inséré dans le DOM actif. Les
+médias et le rendu HTML enrichi restent à réaliser.
+
+`display_columns`, `display_rows`, `input_size`, préfixes, suffixes et
+placeholders sont appliqués. Les en-têtes de double échelle peuvent être
+localisés. Les tableaux peuvent défiler horizontalement. La navigation reste par
+groupe ; les modes tout sur une page/question par question, le paramétrage
+complet de collecte et les variantes de thème restent à faire.
+
+Les noms des 29 rendus de base, tels que `listradio` ou `arrays/column`, sont
+reconnus avec leur type. `question_theme_name` est projeté par Rust ; un thème
+de question supplémentaire non implémenté bloque explicitement sa saisie.
+Certaines options cosmétiques conservées mais non reproduites apparaissent dans
+un rapport de différences de présentation.
+
+Les substitutions de toutes les langues sont préanalysées avant d’ouvrir une
+page. Les expressions des textes affichables sont compilées une fois par langue
+et leurs erreurs d’évaluation bloquent la validation finale. Le résultat reste
+du texte échappé par Preact. Aucun `eval`, script ou appel externe importé n’est
+exécuté.
+
+### Expressions et limites
+
+Le registre local comporte **47 des 81 noms de fonction** natifs, chacun dans un
+profil à vérifier contre LimeSurvey : calculs usuels, arrondis avec précision,
+conditions à deux/trois arguments, chaînes, recherche, agrégats conditionnels et
+unicité. Les comparateurs textuels `eq`, `ne`, `lt`, `le`, `gt`, `ge` sont
+acceptés. Le [catalogue](form-catalog.md) donne les noms et les manques. `trim`
+et ses variantes n’acceptent encore qu’un argument ; `strrev` est limité à ASCII
+pour éviter de changer silencieusement la sémantique des octets source. Les
+détails de conversion et de casse Unicode restent à confronter au corpus amont.
+
+Les variables utilisent les cellules connues et le suffixe `.NAOK`, sans
+reproduire encore toute la sémantique ExpressionScript de pertinence. Les alias
+SGQA, attributs `.shown`/`.value`, variables réservées, évaluations natives et
+extensions ne sont pas implémentés. Les valeurs par défaut, anciennes
+conditions, regex, ordres aléatoires, quotas et minuteries actives restent
+diagnostiqués. Les fonctions avec stockage demeurent différées.
+
+Un attribut inconnu de valeur `0` n’est plus supposé désactivé. Seuls les noms
+et valeurs neutres explicitement reconnus sont tolérés. Les options secondaires
+de minuterie restent sans effet sans durée. Les compteurs statistiques et les
+préférences d’édition sont distincts du comportement du formulaire.
+
+Une erreur de structure désactive la saisie. Un schéma différent de 623 permet
+seulement l’inspection. Le programme reste borné à 2 000 questions, 2 000
+cellules par question et 20 000 cellules par étude ; listes et produits de choix
+rendus sont aussi bornés. Les matrices et classements sont contrôlés avant leur
+expansion. Les expressions sont limitées en taille, profondeur et nombre de
+jetons ; les textes calculés sont bornés à 65 536 unités UTF-16.
 
 ## Frontière HTTP
 
@@ -135,8 +205,8 @@ déportées dans `spawn_blocking`. Aucun fichier, questionnaire ou état de sais
 n’est conservé après la requête. Les réponses d’analyse utilisent `no-store`.
 Les limites XML existantes restent applicables.
 
-`GET /api/surveys/example.lss` sert uniquement la fixture synthétique
-versionnée.
+`GET /api/surveys/example.lss` et `GET /api/surveys/controls.lss` servent les
+fixtures synthétiques versionnées.
 
 ## Vérifications et suite
 

@@ -1,4 +1,6 @@
-export type Scalar = string | number | boolean | null;
+import { numeric, truth, compare, type Scalar } from "./scalars.ts";
+import { FUNCTIONS, evaluateFunction, validateArguments } from "./expression-functions.ts";
+export { numeric, truth, type Scalar } from "./scalars.ts";
 export type Lookup = (name: string) => Scalar;
 export interface Expression {
   variables: ReadonlySet<string>;
@@ -16,22 +18,17 @@ type Node =
   | { kind: "binary"; operator: string; left: Node; right: Node }
   | { kind: "call"; name: string; arguments: Node[] };
 
-const FUNCTIONS = new Set([
-  "if",
-  "is_empty",
-  "sum",
-  "count",
-  "min",
-  "max",
-  "strlen",
-  "abs",
-  "round",
-]);
 const PRECEDENCE = new Map([
   ["or", 1],
   ["||", 1],
   ["and", 2],
   ["&&", 2],
+  ["eq", 3],
+  ["ne", 3],
+  ["lt", 3],
+  ["le", 3],
+  ["gt", 3],
+  ["ge", 3],
   ["==", 3],
   ["!=", 3],
   ["<", 3],
@@ -71,7 +68,8 @@ function tokenize(source: string): Token[] {
       } else if (name !== undefined) {
         const lower = name.toLowerCase();
         let kind: Token["kind"] = "name";
-        if (["and", "or", "not"].includes(lower)) kind = "operator";
+        if (["and", "or", "not", "eq", "ne", "lt", "le", "gt", "ge"].includes(lower))
+          kind = "operator";
         let text = name;
         if (kind === "operator") text = lower;
         tokens.push({ kind, text });
@@ -191,37 +189,9 @@ class Parser {
       }
     }
     if (this.take().text !== ")") throw new Error("Parenthèse de fonction manquante.");
-    if (
-      (name === "if" && arguments_.length !== 3) ||
-      (["is_empty", "strlen", "abs", "round"].includes(name) && arguments_.length !== 1) ||
-      (["min", "max"].includes(name) && arguments_.length === 0)
-    ) {
-      throw new Error(`Nombre d’arguments incorrect pour ${name}.`);
-    }
+    validateArguments(name, arguments_.length);
     return { kind: "call", name, arguments: arguments_ };
   }
-}
-
-export function truth(value: Scalar): boolean {
-  if (value === null) return false;
-  if (typeof value === "boolean") return value;
-  if (typeof value === "number") return Number.isFinite(value) && value !== 0;
-  return value !== "" && value !== "0";
-}
-
-export function numeric(value: Scalar): number {
-  if (value === null || value === "") return 0;
-  if (typeof value === "boolean") return Number(value);
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) throw new Error("Résultat numérique non fini.");
-    return value;
-  }
-  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim())) {
-    throw new Error("Une règle attend un nombre.");
-  }
-  const result = Number(value);
-  if (!Number.isFinite(result)) throw new Error("Résultat numérique non fini.");
-  return result;
 }
 
 function equal(left: Scalar, right: Scalar): boolean {
@@ -240,25 +210,38 @@ function equal(left: Scalar, right: Scalar): boolean {
   return false;
 }
 
+function finiteNumber(value: number): number {
+  if (!Number.isFinite(value)) throw new Error("Résultat numérique non fini.");
+  return value;
+}
+
 function binary(operator: string, left: Scalar, right: Scalar): Scalar {
+  const aliases: Record<string, string> = {
+    eq: "==",
+    ne: "!=",
+    lt: "<",
+    le: "<=",
+    gt: ">",
+    ge: ">=",
+  };
+  operator = aliases[operator] ?? operator;
   if (operator === "==") return equal(left, right);
   if (operator === "!=") return !equal(left, right);
   if (["<", "<=", ">", ">="].includes(operator)) {
-    const a = numeric(left);
-    const b = numeric(right);
-    if (operator === "<") return a < b;
-    if (operator === "<=") return a <= b;
-    if (operator === ">") return a > b;
-    return a >= b;
+    const result = compare(left, right);
+    if (operator === "<") return result < 0;
+    if (operator === "<=") return result <= 0;
+    if (operator === ">") return result > 0;
+    return result >= 0;
   }
   const a = numeric(left);
   const b = numeric(right);
-  if (operator === "+") return a + b;
-  if (operator === "-") return a - b;
-  if (operator === "*") return a * b;
+  if (operator === "+") return finiteNumber(a + b);
+  if (operator === "-") return finiteNumber(a - b);
+  if (operator === "*") return finiteNumber(a * b);
   if (b === 0) throw new Error("Division par zéro dans une règle.");
-  if (operator === "/") return a / b;
-  return a % b;
+  if (operator === "/") return finiteNumber(a / b);
+  return finiteNumber(a % b);
 }
 
 function evaluate(node: Node, lookup: Lookup): Scalar {
@@ -280,23 +263,13 @@ function evaluate(node: Node, lookup: Lookup): Scalar {
   }
   if (node.name === "if") {
     const [condition, yes, no] = node.arguments;
-    if (condition === undefined || yes === undefined || no === undefined)
-      throw new Error("Condition invalide.");
+    if (condition === undefined || yes === undefined) throw new Error("Condition invalide.");
     if (truth(evaluate(condition, lookup))) return evaluate(yes, lookup);
+    if (no === undefined) return "";
     return evaluate(no, lookup);
   }
   const values = node.arguments.map((argument) => evaluate(argument, lookup));
-  const first = values[0] ?? null;
-  if (node.name === "is_empty") return first === null || first === "";
-  if (node.name === "strlen") return [...String(first ?? "")].length;
-  if (node.name === "count") return values.filter((value) => value !== null && value !== "").length;
-  const numbers = values.map(numeric);
-  if (node.name === "sum") return numbers.reduce((sum, value) => sum + value, 0);
-  if (node.name === "min") return Math.min(...numbers);
-  if (node.name === "max") return Math.max(...numbers);
-  if (node.name === "abs") return Math.abs(numeric(first));
-  const number = numeric(first);
-  return Math.sign(number) * Math.round(Math.abs(number));
+  return evaluateFunction(node.name, values);
 }
 
 export function compileExpression(source: string): Expression {

@@ -28,9 +28,17 @@ importable ou archivé ne prouve pas que ses règles et reprises sont exécutabl
 
 **Première implémentation `.lss` disponible** dans
 [`crates/limesurvey`](../crates/limesurvey/README.md) : lecture bornée, modèle
-source du schéma 623, diagnostics, export original et édition d’un titre. Le
-rendu, la persistance métier, les archives et le moteur de règles ne sont pas
-encore implémentés ; l’échange avec une instance 6.5.14 reste à certifier.
+source du schéma 623, diagnostics, export original et édition d’un titre. Un
+[viewer avec moteur local partiel](viewer.md) permet la saisie dans le
+navigateur. La persistance métier, les archives et le moteur de validation
+serveur restent à implémenter ; l’échange avec une instance 6.5.14 reste à
+certifier.
+
+La parité des formulaires natifs est la cible, au-delà des seuls exports déjà
+essayés. L’[audit de couverture](form-coverage.md) et le
+[catalogue des options](form-catalog.md) détaillent les manques et leur plan de
+réalisation. Les diagnostics actuels ne constituent pas encore un contrôle
+exhaustif de toutes les dépendances d’une étude.
 
 ## Formats et priorités proposées
 

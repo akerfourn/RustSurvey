@@ -49,7 +49,7 @@ test("expressions should reject executable code, unknown functions and propertie
   assert.throws(() => compileExpression("A; alert(1)"), /Syntaxe/);
   assert.throws(() => compileExpression("A = 1"), /Syntaxe/);
   assert.throws(() => compileExpression("'unfinished"), /non terminée/);
-  assert.throws(() => compileExpression("if(1, 2)"), /arguments/);
+  assert.throws(() => compileExpression("if(1)"), /arguments/);
 });
 
 test("expressions should enforce complexity and numeric limits", () => {

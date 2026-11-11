@@ -26,9 +26,23 @@ départ technique de RustSurvey, à conserver sauf besoin particulier.
 | Référence      | LimeSurvey 6.5.14 en production                           |
 | Étape actuelle | Import LSS, viewer et moteur de saisie locale sans compte |
 
-L’équivalence avec LimeSurvey vise d’abord les questionnaires réellement
-utilisés. Elle n’implique pas de reproduire immédiatement tous ses plugins,
-thèmes, modes d’administration ou interfaces réseau.
+La cible fonctionnelle couvre tous les formulaires natifs de la version 6.5.14 :
+types de questions, variantes de rendu, règles et parcours. Les questionnaires
+réellement utilisés orientent l’ordre de réalisation, sans limiter cette cible.
+L’[inventaire des manques](form-coverage.md) et son [catalogue](form-catalog.md)
+distinguent l’existant, les travaux restants et les fonctions nécessitant du
+stockage ou une autorité serveur.
+
+Les interfaces d’administration et réseau sont des chantiers distincts. Les
+thèmes et plugins personnalisés nécessitent un inventaire et une adaptation
+explicites ; leur code importé n’est pas exécuté automatiquement.
+
+La priorité actuelle est la couverture des formulaires **sans persistance
+métier**. Les fonctions nécessitant du stockage sont différées ; leur présence
+dans un import continue à être diagnostiquée. Les médias et pièces jointes
+utiliseront un port de stockage objet, avec adaptateurs S3 et fichiers locaux,
+selon la [décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne
+doit pas dépendre d’un volume disque persistant attaché au serveur.
 
 La migration d’études en cours est une exigence acquise : conserver structure,
 réponses complètes et partielles, participants, droits de reprise et

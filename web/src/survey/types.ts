@@ -41,6 +41,7 @@ export interface SurveyQuestion {
   groupId: string;
   code: string;
   sourceType: string;
+  theme?: string;
   family: string;
   mandatory: "no" | "soft" | "strict";
   order: number;

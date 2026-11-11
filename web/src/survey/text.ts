@@ -62,3 +62,21 @@ export function pipeText(
   });
   return { text: rendered, issues };
 }
+
+export function textIssues(text: string, fields: ReadonlyMap<string, string>): string[] {
+  const issues: string[] = [];
+  const substitutions = [...text.matchAll(/\{([^{}]+)\}/g)];
+  if (substitutions.length > 100) return ["Trop de substitutions dans un texte."];
+  for (const substitution of substitutions) {
+    try {
+      const expression = compileExpression(substitution[1] ?? "");
+      for (const variable of expression.variables) {
+        if (!fields.has(variable.replace(/\.NAOK$/, "")))
+          throw new Error(`Variable de texte non prise en charge : ${variable}.`);
+      }
+    } catch (error) {
+      issues.push(errorMessage(error));
+    }
+  }
+  return issues;
+}

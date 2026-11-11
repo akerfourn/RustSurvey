@@ -66,6 +66,7 @@ pub struct Question {
     pub group_id: SourceId,
     pub code: String,
     pub source_type: String,
+    pub theme: String,
     pub family: QuestionFamily,
     pub mandatory: Mandatory,
     pub order: u32,

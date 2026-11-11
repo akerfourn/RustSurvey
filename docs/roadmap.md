@@ -3,6 +3,31 @@
 L’ordre ci-dessous privilégie les preuves de compatibilité et le cadrage des
 sessions avant une interface complète. Il ne constitue pas un calendrier.
 
+La cible des formulaires couvre le natif de LimeSurvey 6.5.14, pas seulement le
+profil d’un export de production. L’[audit de couverture](form-coverage.md)
+définit les lots F0–F7 : capacités, cellules et types, expressions, règles,
+rendus, collecte durable, fonctions avec état et certification. Ils précisent
+les travaux des étapes 2 à 5 ci-dessous, avec leurs dépendances et critères de
+sortie. Un incrément sans stockage couvre maintenant les 28 types de base hors
+fichiers, 47 fonctions d’expression, les filtres M/P et la pertinence des
+sous-questions. Les variantes restantes, les valeurs par défaut, les anciennes
+conditions et la certification restent à réaliser ; le [viewer](viewer.md)
+décrit le profil effectivement implémenté.
+
+## Priorité du cycle actuel
+
+Avancer sur F0–F4 pour les capacités, types de questions, expressions, filtres
+et rendus autonomes, avec saisie en mémoire. Les fonctions nécessitant une
+persistance métier sont **différées** : F5/F6, reprise, fichiers, ressources
+durables, quotas globaux et effets serveur. Une simulation locale des calculs ou
+de l’ordre reste possible, sans annoncer leur continuité après fermeture.
+
+Les étapes de persistance et de migration ci-dessous restent des objectifs
+ultérieurs. Les futurs médias et pièces jointes suivront la
+[décision de stockage objet](decisions/0002-object-storage.md) : port commun,
+adaptateur S3 et adaptateur fichiers locaux, sans volume persistant requis pour
+le déploiement S3. Aucun moteur de stockage n’est ajouté pendant ce cycle.
+
 ## Étape 0 — Cadrage et squelette
 
 Livrable du premier tour : README, consignes AGENTS, besoins, architecture,
@@ -73,9 +98,15 @@ Critère de sortie : le périmètre complet demandé par une étude est validé,
 bascule est bloquée avec un diagnostic précis. Un sous-ensemble de questions
 compatible ne suffit pas à annoncer une migration générale.
 
-## Étape 5 — Extension selon les usages
+## Étape 5 — Parité des formulaires et outils complémentaires
 
-Étendre les types et règles couverts, l’éditeur, les invitations et les outils
-d’exploitation. Chaque extension précise son impact sur les échanges, les
+Compléter les types, variantes de rendu et règles du
+[catalogue des formulaires](form-catalog.md), puis vérifier leurs interactions
+dans le corpus 6.5.14. La réussite d’une étude ne clôt pas cet objectif général.
+Les lots de formulaire peuvent avancer dès les étapes précédentes ; cette étape
+n’impose pas d’attendre la migration pour développer les types manquants.
+
+L’éditeur, les invitations et les outils d’exploitation restent des chantiers
+complémentaires. Chaque extension précise son impact sur les échanges, les
 données et le coût serveur. Les exports utilisateur affinent la priorité des cas
 réels ; ils ne remplacent pas l’analyse des sources de référence.

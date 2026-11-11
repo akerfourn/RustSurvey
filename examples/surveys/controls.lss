@@ -1,0 +1,2128 @@
+<?xml version='1.0' encoding='utf-8'?>
+<document>
+  <LimeSurveyDocType>Survey</LimeSurveyDocType>
+  <DBVersion>623</DBVersion>
+  <languages>
+    <language>fr</language>
+    <language>en</language>
+  </languages>
+  <surveys>
+    <fields>
+      <fieldname>sid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>format</fieldname>
+      <fieldname>anonymized</fieldname>
+      <fieldname>showwelcome</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <sid>900002</sid>
+        <language>fr</language>
+        <format>G</format>
+        <anonymized>Y</anonymized>
+        <showwelcome>Y</showwelcome>
+      </row>
+    </rows>
+  </surveys>
+  <surveys_languagesettings>
+    <fields>
+      <fieldname>surveyls_survey_id</fieldname>
+      <fieldname>surveyls_language</fieldname>
+      <fieldname>surveyls_title</fieldname>
+      <fieldname>surveyls_welcometext</fieldname>
+      <fieldname>surveyls_endtext</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <surveyls_survey_id>900002</surveyls_survey_id>
+        <surveyls_language>fr</surveyls_language>
+        <surveyls_title>Les contrôles de formulaire RustSurvey</surveyls_title>
+        <surveyls_welcometext>Exemple synthétique des 28 types sans stockage. Les fichiers restent hors périmètre.</surveyls_welcometext>
+        <surveyls_endtext>Saisie locale terminée. Calcul : {TOTAL}.</surveyls_endtext>
+      </row>
+      <row>
+        <surveyls_survey_id>900002</surveyls_survey_id>
+        <surveyls_language>en</surveyls_language>
+        <surveyls_title>RustSurvey form controls</surveyls_title>
+        <surveyls_welcometext>A synthetic example of 28 types without storage. Files remain out of scope.</surveyls_welcometext>
+        <surveyls_endtext>Local answers completed. Calculation: {TOTAL}.</surveyls_endtext>
+      </row>
+    </rows>
+  </surveys_languagesettings>
+  <groups>
+    <fields>
+      <fieldname>gid</fieldname>
+      <fieldname>sid</fieldname>
+      <fieldname>group_order</fieldname>
+      <fieldname>grelevance</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <gid>50</gid>
+        <sid>900002</sid>
+        <group_order>0</group_order>
+        <grelevance>1</grelevance>
+      </row>
+      <row>
+        <gid>60</gid>
+        <sid>900002</sid>
+        <group_order>1</group_order>
+        <grelevance>1</grelevance>
+      </row>
+      <row>
+        <gid>70</gid>
+        <sid>900002</sid>
+        <group_order>2</group_order>
+        <grelevance>1</grelevance>
+      </row>
+    </rows>
+  </groups>
+  <group_l10ns>
+    <fields>
+      <fieldname>gid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>group_name</fieldname>
+      <fieldname>description</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <gid>50</gid>
+        <language>fr</language>
+        <group_name>Saisies et choix</group_name>
+        <description>Toutes les saisies restent en mémoire.</description>
+      </row>
+      <row>
+        <gid>50</gid>
+        <language>en</language>
+        <group_name>Text and choices</group_name>
+        <description>All answers stay in memory.</description>
+      </row>
+      <row>
+        <gid>60</gid>
+        <language>fr</language>
+        <group_name>Tableaux</group_name>
+        <description>Toutes les saisies restent en mémoire.</description>
+      </row>
+      <row>
+        <gid>60</gid>
+        <language>en</language>
+        <group_name>Arrays</group_name>
+        <description>All answers stay in memory.</description>
+      </row>
+      <row>
+        <gid>70</gid>
+        <language>fr</language>
+        <group_name>Commentaires, classement et calcul</group_name>
+        <description>Toutes les saisies restent en mémoire.</description>
+      </row>
+      <row>
+        <gid>70</gid>
+        <language>en</language>
+        <group_name>Comments, ranking and calculation</group_name>
+        <description>All answers stay in memory.</description>
+      </row>
+    </rows>
+  </group_l10ns>
+  <questions>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>sid</fieldname>
+      <fieldname>gid</fieldname>
+      <fieldname>parent_qid</fieldname>
+      <fieldname>title</fieldname>
+      <fieldname>type</fieldname>
+      <fieldname>mandatory</fieldname>
+      <fieldname>question_order</fieldname>
+      <fieldname>relevance</fieldname>
+      <fieldname>preg</fieldname>
+      <fieldname>other</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>101</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>SHORT</title>
+        <type>S</type>
+        <mandatory>N</mandatory>
+        <question_order>101</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>102</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>LONG</title>
+        <type>T</type>
+        <mandatory>N</mandatory>
+        <question_order>102</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>103</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>HUGE</title>
+        <type>U</type>
+        <mandatory>N</mandatory>
+        <question_order>103</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>104</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>NUMBER</title>
+        <type>N</type>
+        <mandatory>N</mandatory>
+        <question_order>104</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>105</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>DATE</title>
+        <type>D</type>
+        <mandatory>N</mandatory>
+        <question_order>105</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>106</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>GATE</title>
+        <type>Y</type>
+        <mandatory>N</mandatory>
+        <question_order>106</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>107</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>GENDER</title>
+        <type>G</type>
+        <mandatory>N</mandatory>
+        <question_order>107</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>108</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>RATING</title>
+        <type>5</type>
+        <mandatory>N</mandatory>
+        <question_order>108</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>109</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>RADIO</title>
+        <type>L</type>
+        <mandatory>N</mandatory>
+        <question_order>109</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>Y</other>
+      </row>
+      <row>
+        <qid>110</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>DROPDOWN</title>
+        <type>!</type>
+        <mandatory>N</mandatory>
+        <question_order>110</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>111</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>PICK</title>
+        <type>M</type>
+        <mandatory>N</mandatory>
+        <question_order>111</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>112</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>TEXTS</title>
+        <type>Q</type>
+        <mandatory>N</mandatory>
+        <question_order>112</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>113</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>NUMBERS</title>
+        <type>K</type>
+        <mandatory>N</mandatory>
+        <question_order>113</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>114</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>0</parent_qid>
+        <title>INFO</title>
+        <type>X</type>
+        <mandatory>N</mandatory>
+        <question_order>114</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>115</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>FIVE</title>
+        <type>A</type>
+        <mandatory>N</mandatory>
+        <question_order>115</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>116</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>TEN</title>
+        <type>B</type>
+        <mandatory>N</mandatory>
+        <question_order>116</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>117</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>UNCERTAIN</title>
+        <type>C</type>
+        <mandatory>N</mandatory>
+        <question_order>117</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>118</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>CHANGE</title>
+        <type>E</type>
+        <mandatory>N</mandatory>
+        <question_order>118</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>119</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>FILTERED</title>
+        <type>F</type>
+        <mandatory>N</mandatory>
+        <question_order>119</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>120</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>COLUMNS</title>
+        <type>H</type>
+        <mandatory>N</mandatory>
+        <question_order>120</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>121</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>DUAL</title>
+        <type>1</type>
+        <mandatory>N</mandatory>
+        <question_order>121</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>122</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>MATRIX</title>
+        <type>:</type>
+        <mandatory>N</mandatory>
+        <question_order>122</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>123</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>0</parent_qid>
+        <title>GRIDTEXT</title>
+        <type>;</type>
+        <mandatory>N</mandatory>
+        <question_order>123</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>124</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>0</parent_qid>
+        <title>COMMENT</title>
+        <type>O</type>
+        <mandatory>N</mandatory>
+        <question_order>124</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>125</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>0</parent_qid>
+        <title>COMMENTS</title>
+        <type>P</type>
+        <mandatory>N</mandatory>
+        <question_order>125</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>126</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>0</parent_qid>
+        <title>RANK</title>
+        <type>R</type>
+        <mandatory>N</mandatory>
+        <question_order>126</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>127</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>0</parent_qid>
+        <title>LANGUAGE</title>
+        <type>I</type>
+        <mandatory>N</mandatory>
+        <question_order>127</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+      <row>
+        <qid>128</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>0</parent_qid>
+        <title>TOTAL</title>
+        <type>*</type>
+        <mandatory>N</mandatory>
+        <question_order>128</question_order>
+        <relevance>1</relevance>
+        <preg />
+        <other>N</other>
+      </row>
+    </rows>
+  </questions>
+  <subquestions>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>sid</fieldname>
+      <fieldname>gid</fieldname>
+      <fieldname>parent_qid</fieldname>
+      <fieldname>title</fieldname>
+      <fieldname>scale_id</fieldname>
+      <fieldname>question_order</fieldname>
+      <fieldname>relevance</fieldname>
+      <fieldname>type</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>1001</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>111</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>M</type>
+      </row>
+      <row>
+        <qid>1002</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>111</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>M</type>
+      </row>
+      <row>
+        <qid>1003</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>112</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>Q</type>
+      </row>
+      <row>
+        <qid>1004</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>112</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>Q</type>
+      </row>
+      <row>
+        <qid>1005</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>113</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>K</type>
+      </row>
+      <row>
+        <qid>1006</qid>
+        <sid>900002</sid>
+        <gid>50</gid>
+        <parent_qid>113</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>K</type>
+      </row>
+      <row>
+        <qid>1007</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>115</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>A</type>
+      </row>
+      <row>
+        <qid>1008</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>115</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>A</type>
+      </row>
+      <row>
+        <qid>1009</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>116</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>B</type>
+      </row>
+      <row>
+        <qid>1010</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>116</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>B</type>
+      </row>
+      <row>
+        <qid>1011</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>117</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>C</type>
+      </row>
+      <row>
+        <qid>1012</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>117</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>C</type>
+      </row>
+      <row>
+        <qid>1013</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>118</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>E</type>
+      </row>
+      <row>
+        <qid>1014</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>118</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>E</type>
+      </row>
+      <row>
+        <qid>1015</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>119</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>F</type>
+      </row>
+      <row>
+        <qid>1016</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>119</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>GATE == 'Y'</relevance>
+        <type>F</type>
+      </row>
+      <row>
+        <qid>1017</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>120</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>H</type>
+      </row>
+      <row>
+        <qid>1018</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>120</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>H</type>
+      </row>
+      <row>
+        <qid>1019</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>121</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>1</type>
+      </row>
+      <row>
+        <qid>1020</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>121</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>1</type>
+      </row>
+      <row>
+        <qid>1021</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>122</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>:</type>
+      </row>
+      <row>
+        <qid>1022</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>122</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>:</type>
+      </row>
+      <row>
+        <qid>1023</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>122</parent_qid>
+        <title>X</title>
+        <scale_id>1</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>:</type>
+      </row>
+      <row>
+        <qid>1024</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>122</parent_qid>
+        <title>Y</title>
+        <scale_id>1</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>:</type>
+      </row>
+      <row>
+        <qid>1025</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>123</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>;</type>
+      </row>
+      <row>
+        <qid>1026</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>123</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>;</type>
+      </row>
+      <row>
+        <qid>1027</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>123</parent_qid>
+        <title>X</title>
+        <scale_id>1</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>;</type>
+      </row>
+      <row>
+        <qid>1028</qid>
+        <sid>900002</sid>
+        <gid>60</gid>
+        <parent_qid>123</parent_qid>
+        <title>Y</title>
+        <scale_id>1</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>;</type>
+      </row>
+      <row>
+        <qid>1029</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>125</parent_qid>
+        <title>A</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+        <type>P</type>
+      </row>
+      <row>
+        <qid>1030</qid>
+        <sid>900002</sid>
+        <gid>70</gid>
+        <parent_qid>125</parent_qid>
+        <title>B</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+        <type>P</type>
+      </row>
+    </rows>
+  </subquestions>
+  <question_l10ns>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>question</fieldname>
+      <fieldname>help</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>101</qid>
+        <language>fr</language>
+        <question>Un texte court</question>
+        <help />
+      </row>
+      <row>
+        <qid>101</qid>
+        <language>en</language>
+        <question>A short text</question>
+        <help />
+      </row>
+      <row>
+        <qid>102</qid>
+        <language>fr</language>
+        <question>Un texte long</question>
+        <help />
+      </row>
+      <row>
+        <qid>102</qid>
+        <language>en</language>
+        <question>A long text</question>
+        <help />
+      </row>
+      <row>
+        <qid>103</qid>
+        <language>fr</language>
+        <question>Un texte très long</question>
+        <help />
+      </row>
+      <row>
+        <qid>103</qid>
+        <language>en</language>
+        <question>A very long text</question>
+        <help />
+      </row>
+      <row>
+        <qid>104</qid>
+        <language>fr</language>
+        <question>Un nombre utilisé dans le calcul final</question>
+        <help />
+      </row>
+      <row>
+        <qid>104</qid>
+        <language>en</language>
+        <question>A number used in the final calculation</question>
+        <help />
+      </row>
+      <row>
+        <qid>105</qid>
+        <language>fr</language>
+        <question>Une date</question>
+        <help />
+      </row>
+      <row>
+        <qid>105</qid>
+        <language>en</language>
+        <question>A date</question>
+        <help />
+      </row>
+      <row>
+        <qid>106</qid>
+        <language>fr</language>
+        <question>Afficher le critère B du tableau filtré ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>106</qid>
+        <language>en</language>
+        <question>Show criterion B in the filtered array?</question>
+        <help />
+      </row>
+      <row>
+        <qid>107</qid>
+        <language>fr</language>
+        <question>Codes de genre historiques</question>
+        <help />
+      </row>
+      <row>
+        <qid>107</qid>
+        <language>en</language>
+        <question>Historical gender codes</question>
+        <help />
+      </row>
+      <row>
+        <qid>108</qid>
+        <language>fr</language>
+        <question>Une note de 1 à 5</question>
+        <help />
+      </row>
+      <row>
+        <qid>108</qid>
+        <language>en</language>
+        <question>A rating from 1 to 5</question>
+        <help />
+      </row>
+      <row>
+        <qid>109</qid>
+        <language>fr</language>
+        <question>Un choix avec précision autre</question>
+        <help />
+      </row>
+      <row>
+        <qid>109</qid>
+        <language>en</language>
+        <question>A choice with an other field</question>
+        <help />
+      </row>
+      <row>
+        <qid>110</qid>
+        <language>fr</language>
+        <question>Un menu</question>
+        <help />
+      </row>
+      <row>
+        <qid>110</qid>
+        <language>en</language>
+        <question>A dropdown</question>
+        <help />
+      </row>
+      <row>
+        <qid>111</qid>
+        <language>fr</language>
+        <question>Choix pour filtrer le tableau</question>
+        <help />
+      </row>
+      <row>
+        <qid>111</qid>
+        <language>en</language>
+        <question>Choices used to filter the array</question>
+        <help />
+      </row>
+      <row>
+        <qid>1001</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1001</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1002</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1002</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>112</qid>
+        <language>fr</language>
+        <question>Deux textes</question>
+        <help />
+      </row>
+      <row>
+        <qid>112</qid>
+        <language>en</language>
+        <question>Two texts</question>
+        <help />
+      </row>
+      <row>
+        <qid>1003</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1003</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1004</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1004</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>113</qid>
+        <language>fr</language>
+        <question>Deux curseurs facultatifs</question>
+        <help />
+      </row>
+      <row>
+        <qid>113</qid>
+        <language>en</language>
+        <question>Two optional sliders</question>
+        <help />
+      </row>
+      <row>
+        <qid>1005</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1005</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1006</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1006</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>114</qid>
+        <language>fr</language>
+        <question>Le nombre saisi est {NUMBER}.</question>
+        <help />
+      </row>
+      <row>
+        <qid>114</qid>
+        <language>en</language>
+        <question>The entered number is {NUMBER}.</question>
+        <help />
+      </row>
+      <row>
+        <qid>115</qid>
+        <language>fr</language>
+        <question>Tableau de 1 à 5</question>
+        <help />
+      </row>
+      <row>
+        <qid>115</qid>
+        <language>en</language>
+        <question>An array from 1 to 5</question>
+        <help />
+      </row>
+      <row>
+        <qid>1007</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1007</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1008</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1008</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>116</qid>
+        <language>fr</language>
+        <question>Tableau de 1 à 10</question>
+        <help />
+      </row>
+      <row>
+        <qid>116</qid>
+        <language>en</language>
+        <question>An array from 1 to 10</question>
+        <help />
+      </row>
+      <row>
+        <qid>1009</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1009</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1010</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1010</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>117</qid>
+        <language>fr</language>
+        <question>Oui, non ou incertain</question>
+        <help />
+      </row>
+      <row>
+        <qid>117</qid>
+        <language>en</language>
+        <question>Yes, no or uncertain</question>
+        <help />
+      </row>
+      <row>
+        <qid>1011</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1011</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1012</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1012</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>118</qid>
+        <language>fr</language>
+        <question>Augmenter, identique ou diminuer</question>
+        <help />
+      </row>
+      <row>
+        <qid>118</qid>
+        <language>en</language>
+        <question>Increase, same or decrease</question>
+        <help />
+      </row>
+      <row>
+        <qid>1013</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1013</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1014</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1014</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>119</qid>
+        <language>fr</language>
+        <question>Tableau filtré par les choix A/B</question>
+        <help />
+      </row>
+      <row>
+        <qid>119</qid>
+        <language>en</language>
+        <question>An array filtered by choices A/B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1015</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1015</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1016</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1016</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>120</qid>
+        <language>fr</language>
+        <question>Tableau par colonne</question>
+        <help />
+      </row>
+      <row>
+        <qid>120</qid>
+        <language>en</language>
+        <question>An array by column</question>
+        <help />
+      </row>
+      <row>
+        <qid>1017</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1017</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1018</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1018</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>121</qid>
+        <language>fr</language>
+        <question>Deux échelles indépendantes</question>
+        <help />
+      </row>
+      <row>
+        <qid>121</qid>
+        <language>en</language>
+        <question>Two independent scales</question>
+        <help />
+      </row>
+      <row>
+        <qid>1019</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1019</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1020</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1020</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>122</qid>
+        <language>fr</language>
+        <question>Matrice numérique avec pas de 0,5</question>
+        <help />
+      </row>
+      <row>
+        <qid>122</qid>
+        <language>en</language>
+        <question>A numerical matrix with step 0.5</question>
+        <help />
+      </row>
+      <row>
+        <qid>1021</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1021</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1022</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1022</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1023</qid>
+        <language>fr</language>
+        <question>Colonne X</question>
+        <help />
+      </row>
+      <row>
+        <qid>1023</qid>
+        <language>en</language>
+        <question>Column X</question>
+        <help />
+      </row>
+      <row>
+        <qid>1024</qid>
+        <language>fr</language>
+        <question>Colonne Y</question>
+        <help />
+      </row>
+      <row>
+        <qid>1024</qid>
+        <language>en</language>
+        <question>Column Y</question>
+        <help />
+      </row>
+      <row>
+        <qid>123</qid>
+        <language>fr</language>
+        <question>Matrice de textes</question>
+        <help />
+      </row>
+      <row>
+        <qid>123</qid>
+        <language>en</language>
+        <question>A text matrix</question>
+        <help />
+      </row>
+      <row>
+        <qid>1025</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1025</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1026</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1026</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1027</qid>
+        <language>fr</language>
+        <question>Colonne X</question>
+        <help />
+      </row>
+      <row>
+        <qid>1027</qid>
+        <language>en</language>
+        <question>Column X</question>
+        <help />
+      </row>
+      <row>
+        <qid>1028</qid>
+        <language>fr</language>
+        <question>Colonne Y</question>
+        <help />
+      </row>
+      <row>
+        <qid>1028</qid>
+        <language>en</language>
+        <question>Column Y</question>
+        <help />
+      </row>
+      <row>
+        <qid>124</qid>
+        <language>fr</language>
+        <question>Choix avec commentaire facultatif</question>
+        <help />
+      </row>
+      <row>
+        <qid>124</qid>
+        <language>en</language>
+        <question>A choice with an optional comment</question>
+        <help />
+      </row>
+      <row>
+        <qid>125</qid>
+        <language>fr</language>
+        <question>Choix multiples avec commentaires</question>
+        <help />
+      </row>
+      <row>
+        <qid>125</qid>
+        <language>en</language>
+        <question>Multiple choices with comments</question>
+        <help />
+      </row>
+      <row>
+        <qid>1029</qid>
+        <language>fr</language>
+        <question>Critère A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1029</qid>
+        <language>en</language>
+        <question>Criterion A</question>
+        <help />
+      </row>
+      <row>
+        <qid>1030</qid>
+        <language>fr</language>
+        <question>Critère B</question>
+        <help />
+      </row>
+      <row>
+        <qid>1030</qid>
+        <language>en</language>
+        <question>Criterion B</question>
+        <help />
+      </row>
+      <row>
+        <qid>126</qid>
+        <language>fr</language>
+        <question>Classez les options sans doublon</question>
+        <help />
+      </row>
+      <row>
+        <qid>126</qid>
+        <language>en</language>
+        <question>Rank the options without duplicates</question>
+        <help />
+      </row>
+      <row>
+        <qid>127</qid>
+        <language>fr</language>
+        <question>Changer de langue</question>
+        <help />
+      </row>
+      <row>
+        <qid>127</qid>
+        <language>en</language>
+        <question>Change language</question>
+        <help />
+      </row>
+      <row>
+        <qid>128</qid>
+        <language>fr</language>
+        <question>Résultat : nombre + 2</question>
+        <help />
+      </row>
+      <row>
+        <qid>128</qid>
+        <language>en</language>
+        <question>Result: number + 2</question>
+        <help />
+      </row>
+    </rows>
+  </question_l10ns>
+  <answers>
+    <fields>
+      <fieldname>aid</fieldname>
+      <fieldname>qid</fieldname>
+      <fieldname>code</fieldname>
+      <fieldname>scale_id</fieldname>
+      <fieldname>sortorder</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <aid>2001</aid>
+        <qid>109</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2002</aid>
+        <qid>109</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2003</aid>
+        <qid>109</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2004</aid>
+        <qid>110</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2005</aid>
+        <qid>110</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2006</aid>
+        <qid>110</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2007</aid>
+        <qid>119</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2008</aid>
+        <qid>119</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2009</aid>
+        <qid>119</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2010</aid>
+        <qid>120</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2011</aid>
+        <qid>120</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2012</aid>
+        <qid>120</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2013</aid>
+        <qid>121</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2014</aid>
+        <qid>121</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2015</aid>
+        <qid>121</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2016</aid>
+        <qid>121</qid>
+        <code>01</code>
+        <scale_id>1</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2017</aid>
+        <qid>121</qid>
+        <code>02</code>
+        <scale_id>1</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2018</aid>
+        <qid>121</qid>
+        <code>03</code>
+        <scale_id>1</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2019</aid>
+        <qid>124</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2020</aid>
+        <qid>124</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2021</aid>
+        <qid>124</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+      <row>
+        <aid>2022</aid>
+        <qid>126</qid>
+        <code>01</code>
+        <scale_id>0</scale_id>
+        <sortorder>0</sortorder>
+      </row>
+      <row>
+        <aid>2023</aid>
+        <qid>126</qid>
+        <code>02</code>
+        <scale_id>0</scale_id>
+        <sortorder>1</sortorder>
+      </row>
+      <row>
+        <aid>2024</aid>
+        <qid>126</qid>
+        <code>03</code>
+        <scale_id>0</scale_id>
+        <sortorder>2</sortorder>
+      </row>
+    </rows>
+  </answers>
+  <answer_l10ns>
+    <fields>
+      <fieldname>aid</fieldname>
+      <fieldname>language</fieldname>
+      <fieldname>answer</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <aid>2001</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2001</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2002</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2002</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2003</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2003</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2004</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2004</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2005</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2005</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2006</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2006</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2007</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2007</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2008</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2008</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2009</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2009</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2010</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2010</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2011</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2011</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2012</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2012</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2013</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2013</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2014</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2014</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2015</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2015</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2016</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 2)</answer>
+      </row>
+      <row>
+        <aid>2016</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 2)</answer>
+      </row>
+      <row>
+        <aid>2017</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 2)</answer>
+      </row>
+      <row>
+        <aid>2017</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 2)</answer>
+      </row>
+      <row>
+        <aid>2018</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 2)</answer>
+      </row>
+      <row>
+        <aid>2018</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 2)</answer>
+      </row>
+      <row>
+        <aid>2019</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2019</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2020</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2020</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2021</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2021</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2022</aid>
+        <language>fr</language>
+        <answer>Option 01 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2022</aid>
+        <language>en</language>
+        <answer>Option 01 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2023</aid>
+        <language>fr</language>
+        <answer>Option 02 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2023</aid>
+        <language>en</language>
+        <answer>Option 02 (scale 1)</answer>
+      </row>
+      <row>
+        <aid>2024</aid>
+        <language>fr</language>
+        <answer>Option 03 (échelle 1)</answer>
+      </row>
+      <row>
+        <aid>2024</aid>
+        <language>en</language>
+        <answer>Option 03 (scale 1)</answer>
+      </row>
+    </rows>
+  </answer_l10ns>
+  <question_attributes>
+    <fields>
+      <fieldname>qid</fieldname>
+      <fieldname>attribute</fieldname>
+      <fieldname>value</fieldname>
+      <fieldname>language</fieldname>
+    </fields>
+    <rows>
+      <row>
+        <qid>101</qid>
+        <attribute>input_size</attribute>
+        <value>18</value>
+        <language />
+      </row>
+      <row>
+        <qid>101</qid>
+        <attribute>placeholder</attribute>
+        <value>Exemple</value>
+        <language />
+      </row>
+      <row>
+        <qid>102</qid>
+        <attribute>display_rows</attribute>
+        <value>6</value>
+        <language />
+      </row>
+      <row>
+        <qid>104</qid>
+        <attribute>min_num_value_n</attribute>
+        <value>0</value>
+        <language />
+      </row>
+      <row>
+        <qid>104</qid>
+        <attribute>prefix</attribute>
+        <value>Valeur :</value>
+        <language />
+      </row>
+      <row>
+        <qid>111</qid>
+        <attribute>display_columns</attribute>
+        <value>2</value>
+        <language />
+      </row>
+      <row>
+        <qid>113</qid>
+        <attribute>slider_layout</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>113</qid>
+        <attribute>slider_min</attribute>
+        <value>0</value>
+        <language />
+      </row>
+      <row>
+        <qid>113</qid>
+        <attribute>slider_max</attribute>
+        <value>10</value>
+        <language />
+      </row>
+      <row>
+        <qid>113</qid>
+        <attribute>slider_accuracy</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>113</qid>
+        <attribute>slider_reset</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>119</qid>
+        <attribute>array_filter</attribute>
+        <value>PICK</value>
+        <language />
+      </row>
+      <row>
+        <qid>119</qid>
+        <attribute>array_filter_style</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>119</qid>
+        <attribute>use_dropdown</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>121</qid>
+        <attribute>dualscale_headerA</attribute>
+        <value>Première échelle</value>
+        <language />
+      </row>
+      <row>
+        <qid>121</qid>
+        <attribute>dualscale_headerB</attribute>
+        <value>Seconde échelle</value>
+        <language />
+      </row>
+      <row>
+        <qid>122</qid>
+        <attribute>multiflexible_min</attribute>
+        <value>0</value>
+        <language />
+      </row>
+      <row>
+        <qid>122</qid>
+        <attribute>multiflexible_max</attribute>
+        <value>2</value>
+        <language />
+      </row>
+      <row>
+        <qid>122</qid>
+        <attribute>multiflexible_step</attribute>
+        <value>0.5</value>
+        <language />
+      </row>
+      <row>
+        <qid>125</qid>
+        <attribute>commented_checkbox</attribute>
+        <value>checked</value>
+        <language />
+      </row>
+      <row>
+        <qid>125</qid>
+        <attribute>commented_checkbox_auto</attribute>
+        <value>1</value>
+        <language />
+      </row>
+      <row>
+        <qid>128</qid>
+        <attribute>equation</attribute>
+        <value>sum(NUMBER, 2)</value>
+        <language />
+      </row>
+    </rows>
+  </question_attributes>
+</document>

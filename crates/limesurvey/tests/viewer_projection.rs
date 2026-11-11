@@ -114,3 +114,40 @@ fn test_projection_should_report_invalid_welcome_flag_when_source_setting_is_unk
             )
     );
 }
+
+#[test]
+fn test_projection_should_preserve_question_theme_names_for_capability_checks() {
+    let source = DEMO
+        .replace(
+            "<fieldname>type</fieldname>",
+            "<fieldname>type</fieldname><fieldname>question_theme_name</fieldname>",
+        )
+        .replace(
+            "<type>S</type>",
+            "<type>S</type><question_theme_name>browserdetect</question_theme_name>",
+        );
+    let document = LssDocument::parse(source.as_bytes(), Limits::default()).unwrap();
+    let model = document.source_model().unwrap();
+
+    assert!(!document.report().has_errors(), "{:?}", document.report());
+    assert_eq!(model.questions[0].theme, "browserdetect");
+    assert_eq!(document.original_xml(), source.as_bytes());
+}
+
+#[test]
+fn test_controls_fixture_should_project_all_non_file_types_without_structural_errors() {
+    let source = include_bytes!("../../../examples/surveys/controls.lss");
+    let document = LssDocument::parse(source, Limits::default()).unwrap();
+    let model = document.source_model().unwrap();
+    let types: std::collections::BTreeSet<&str> = model
+        .questions
+        .iter()
+        .map(|question| question.source_type.as_str())
+        .collect();
+
+    assert!(!document.report().has_errors(), "{:?}", document.report());
+    assert_eq!(model.questions.len(), 28);
+    assert_eq!(types.len(), 28);
+    assert!(!types.contains("|"));
+    assert!(types.contains("1") && types.contains("*") && types.contains(";"));
+}

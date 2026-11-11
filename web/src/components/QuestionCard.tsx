@@ -1,3 +1,4 @@
+import { attribute } from "../survey/attributes.ts";
 import type { RuntimeQuestion } from "../survey/engine.ts";
 import { localized, pipeText, plainText } from "../survey/text.ts";
 import { QuestionInput, type QuestionInputProps } from "./QuestionInput.tsx";
@@ -12,6 +13,7 @@ interface QuestionCardProps extends QuestionInputProps {
 
 function requirement(question: RuntimeQuestion): string {
   if (question.source.sourceType === "X") return "Information";
+  if (question.source.sourceType === "*") return "Calculé";
   if (question.source.mandatory === "strict") return "Obligatoire";
   if (question.source.mandatory === "soft") return "Recommandé";
   return "Facultatif";
@@ -40,7 +42,7 @@ export function QuestionCard(props: QuestionCardProps) {
     </p>
   ));
   let helpContent = null;
-  if (help.text !== "")
+  if (help.text !== "" && attribute(question.source, "hide_help") !== "1")
     helpContent = (
       <p className="question-help" id={`help-${question.source.id}`}>
         {help.text}
@@ -62,7 +64,7 @@ export function QuestionCard(props: QuestionCardProps) {
   let clearContent = null;
   let inputContent = null;
   if (question.issues.length === 0) inputContent = <QuestionInput {...props} />;
-  if (question.issues.length === 0 && !readOnly)
+  if (question.issues.length === 0 && !readOnly && question.source.sourceType !== "*")
     clearContent = (
       <button type="button" className="text-button" onClick={handleClear}>
         Effacer la réponse

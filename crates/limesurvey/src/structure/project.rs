@@ -248,6 +248,10 @@ fn read_question(xml: &Document, row: usize, path: &str, report: &mut Report) ->
         group_id,
         code,
         source_type,
+        theme: xml
+            .field(row, "question_theme_name")
+            .unwrap_or("core")
+            .to_owned(),
         family,
         mandatory,
         order,

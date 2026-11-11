@@ -1,11 +1,17 @@
 import { useMemo, useState } from "preact/hooks";
-import type { TargetedEvent } from "preact";
 import { createRuntime, evaluateSnapshot, runtimeIssues } from "../survey/engine.ts";
+import {
+  studyTextIssues,
+  presentationNotices,
+  compileRuntimeTexts,
+  textExecutionIssues,
+} from "../survey/capabilities.ts";
 import { downloadAnswers } from "../survey/download.ts";
 import { localized, pipeText, plainText } from "../survey/text.ts";
 import type { Inspection, SurveyStudy } from "../survey/types.ts";
 import { validate } from "../survey/validation.ts";
 import { StudyPage } from "./StudyPage.tsx";
+import { ViewerActions, ViewerHeader } from "./ViewerControls.tsx";
 import { SurveyMessage } from "./SurveyMessage.tsx";
 
 interface StudyViewerProps {
@@ -22,6 +28,8 @@ function focusQuestion(id: string | undefined): void {
 
 export function StudyViewer({ study, inspection }: StudyViewerProps) {
   const runtime = useMemo(() => createRuntime(study), [study]);
+  const textProblems = useMemo(() => studyTextIssues(runtime), [runtime]);
+  const notices = useMemo(() => presentationNotices(runtime), [runtime]);
   const [answers, setAnswers] = useState(new Map<string, string>());
   const [language, setLanguage] = useState(study.baseLanguage ?? study.languages[0] ?? "fr");
   const [groupId, setGroupId] = useState<string | undefined>(study.groups[0]?.id);
@@ -29,6 +37,7 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
   const [attempted, setAttempted] = useState(false);
   const [complete, setComplete] = useState(false);
   const snapshot = useMemo(() => evaluateSnapshot(runtime, answers), [runtime, answers]);
+  const compiledTexts = useMemo(() => compileRuntimeTexts(runtime, language), [runtime, language]);
   const currentGroup = snapshot.groups.find((group) => group.id === groupId) ?? snapshot.groups[0];
   const position = snapshot.groups.findIndex((group) => group.id === currentGroup?.id);
   const currentValidation = validate(runtime, snapshot, currentGroup?.id);
@@ -36,7 +45,13 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
   const welcome = pipeText(plainText(messages?.welcome), snapshot.answers, runtime.fields);
   const ending = pipeText(plainText(messages?.end), snapshot.answers, runtime.fields);
   const hasWelcome = study.showWelcome && welcome.text !== "";
-  const issues = [...runtimeIssues(runtime, snapshot), ...welcome.issues, ...ending.issues];
+  const issues = [
+    ...runtimeIssues(runtime, snapshot),
+    ...textProblems,
+    ...textExecutionIssues(compiledTexts, snapshot),
+    ...welcome.issues,
+    ...ending.issues,
+  ];
   for (const section of inspection.report.sections) {
     if (
       ["conditions", "defaultvalues", "quota", "quota_members", "quota_languagesettings"].includes(
@@ -65,8 +80,15 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
   function handleClear(fields: readonly string[]): void {
     changeAnswers(fields.map((field) => [field, ""]));
   }
-  function handleLanguage(event: TargetedEvent<HTMLSelectElement>): void {
-    setLanguage(event.currentTarget.value);
+  function handleLanguageCode(value: string): void {
+    setAnswers((previous) => {
+      const updated = new Map(previous);
+      for (const question of runtime.questions.values()) {
+        if (question.source.sourceType === "I") updated.set(question.source.code, value);
+      }
+      return evaluateSnapshot(runtime, updated).answers;
+    });
+    setLanguage(value);
   }
   function handleStart(): void {
     setStarted(true);
@@ -112,11 +134,6 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
     setAttempted(false);
     setComplete(false);
   }
-  const languageOptions = study.languages.map((value) => (
-    <option key={value} value={value}>
-      {value.toUpperCase()}
-    </option>
-  ));
   const issueItems = issues.map((issue, index) => <li key={`${index}-${issue}`}>{issue}</li>);
   let issueContent = null;
   if (issues.length > 0)
@@ -125,6 +142,18 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
         <summary>{issues.length} limite(s) du moteur d’aperçu</summary>
         <ul>{issueItems}</ul>
         <p>Les questions concernées restent consultables. La validation finale est désactivée.</p>
+      </details>
+    );
+  let noticeContent = null;
+  if (notices.length > 0)
+    noticeContent = (
+      <details className="notice">
+        <summary>{notices.length} différence(s) de présentation</summary>
+        <ul>
+          {notices.map((notice) => (
+            <li key={notice}>{notice}</li>
+          ))}
+        </ul>
       </details>
     );
   let readOnlyContent = null;
@@ -159,6 +188,7 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
         readOnly={readOnly}
         onAnswer={handleAnswer}
         onClear={handleClear}
+        onLanguage={handleLanguageCode}
         previousDisabled={position <= 0 && !hasWelcome}
         nextDisabled={readOnly || (position === snapshot.groups.length - 1 && cannotComplete)}
         nextLabel={nextLabel}
@@ -168,33 +198,16 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
     );
   return (
     <section className="viewer panel" aria-labelledby="viewer-title">
-      <div className="section-heading">
-        <div>
-          <p className="eyebrow">Saisie dans le navigateur</p>
-          <h2 id="viewer-title">Aperçu de l’étude</h2>
-        </div>
-        <label className="language-control">
-          Langue
-          <select value={language} onChange={handleLanguage}>
-            {languageOptions}
-          </select>
-        </label>
-      </div>
-      <p className="notice">
-        Aperçu partiel, sans compte. Les réponses restent dans cet onglet et disparaissent au
-        rechargement. Aucun enregistrement serveur.
-      </p>
+      <ViewerHeader
+        language={language}
+        languages={study.languages}
+        onLanguage={handleLanguageCode}
+      />
       {readOnlyContent}
       {issueContent}
+      {noticeContent}
       {pageContent}
-      <div className="local-actions">
-        <button type="button" className="secondary" onClick={handleDownload}>
-          Télécharger les réponses (JSON)
-        </button>
-        <button type="button" className="text-button" onClick={handleReset}>
-          Recommencer la saisie
-        </button>
-      </div>
+      <ViewerActions onDownload={handleDownload} onReset={handleReset} />
     </section>
   );
 }

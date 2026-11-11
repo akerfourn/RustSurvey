@@ -6,24 +6,16 @@ import {
   type Snapshot,
   type SurveyRuntime,
 } from "./engine.ts";
+import { isCheckboxMatrix } from "./attributes.ts";
+import { choiceCodes } from "./question-kinds.ts";
+import { matrixInputBounds, matrixRange } from "./matrix-options.ts";
 import { numeric, truth } from "./expressions.ts";
+import type { ResponseCell } from "./cells.ts";
 import type { Answers } from "./types.ts";
 
 export interface Validation {
   errors: Map<string, string[]>;
   warnings: Map<string, string[]>;
-}
-
-function allowedValues(question: RuntimeQuestion): Set<string> | null {
-  const type = question.source.sourceType;
-  if (["L", "!", "F", "H"].includes(type))
-    return new Set(question.choices.map((choice) => choice.code));
-  if (type === "5") return new Set(["1", "2", "3", "4", "5"]);
-  if (type === "Y") return new Set(["Y", "N"]);
-  if (type === "G") return new Set(["M", "F"]);
-  if (type === "M") return new Set(["Y"]);
-  if (type === ":") return new Set(["0", "1"]);
-  return null;
 }
 
 function isDate(value: string): boolean {
@@ -32,18 +24,78 @@ function isDate(value: string): boolean {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
-function validateValues(question: RuntimeQuestion, answers: Answers): string[] {
+function validateValues(
+  question: RuntimeQuestion,
+  cells: ResponseCell[],
+  answers: Answers,
+  languages: string[],
+): string[] {
   const errors: string[] = [];
-  const allowed = allowedValues(question);
-  for (const cell of question.cells) {
+  for (const cell of cells) {
     const value = answers.get(cell.key) ?? "";
     if (value === "") continue;
-    if (allowed !== null && !allowed.has(value)) errors.push("Choix de réponse inconnu.");
-    if (cell.kind === "number") {
+    if (cell.kind === "choice") {
+      let allowed = choiceCodes(question.source.sourceType, question.choices, cell.scale);
+      if (question.source.sourceType === "I") allowed = languages;
+      if (
+        question.source.other &&
+        cell.role === "answer" &&
+        ["L", "!"].includes(question.source.sourceType)
+      )
+        allowed.push("-oth-");
+      if (!allowed.includes(value)) errors.push("Choix de réponse inconnu.");
+    }
+    if (cell.kind === "multiple" && value !== "Y") errors.push("Choix de réponse inconnu.");
+    if (cell.kind === "checkbox" && !["0", "1"].includes(value))
+      errors.push("Choix de réponse inconnu.");
+    if (
+      cell.kind === "number" ||
+      (cell.role === "other" && attribute(question.source, "other_numbers_only") === "1")
+    ) {
       try {
         const number = numeric(value);
-        if (attribute(question.source, "num_value_int_only") === "1" && !Number.isInteger(number)) {
+        if (attribute(question.source, "num_value_int_only") === "1" && !Number.isInteger(number))
           errors.push("Un nombre entier est attendu.");
+        if (
+          question.source.sourceType === "K" &&
+          attribute(question.source, "slider_layout") === "1"
+        ) {
+          const min = Number(attribute(question.source, "slider_min") || "0");
+          const max = Number(attribute(question.source, "slider_max") || "100");
+          const step = Number(attribute(question.source, "slider_accuracy") || "1");
+          const position = (number - min) / step;
+          if (number < min || number > max || Math.abs(position - Math.round(position)) > 1e-7)
+            errors.push("La valeur ne respecte pas les bornes ou le pas du curseur.");
+        }
+        if (
+          question.source.sourceType === "K" &&
+          attribute(question.source, "slider_layout") !== "1"
+        ) {
+          for (const [name, constraint] of [
+            ["slider_min", "min_num_value_n"],
+            ["slider_max", "max_num_value_n"],
+          ] as const) {
+            const setting = attribute(question.source, name);
+            if (setting === "" || question.constraints.has(constraint)) continue;
+            const limit = Number(setting);
+            if (
+              (name === "slider_min" && number < limit) ||
+              (name === "slider_max" && number > limit)
+            )
+              errors.push("La valeur ne respecte pas les bornes numériques.");
+          }
+        }
+        if (question.source.sourceType === ":" && !isCheckboxMatrix(question.source)) {
+          if (attribute(question.source, "input_boxes") === "1") {
+            const { min, max } = matrixInputBounds(question.source);
+            if ((min !== undefined && number < min) || (max !== undefined && number > max))
+              errors.push("La valeur ne respecte pas les bornes de la matrice.");
+            continue;
+          }
+          const { min, max, step } = matrixRange(question.source);
+          const position = (number - min) / step;
+          if (number < min || number > max || Math.abs(position - Math.round(position)) > 1e-7)
+            errors.push("La valeur ne respecte pas les bornes ou le pas de la matrice.");
         }
       } catch {
         errors.push("Un nombre valide est attendu.");
@@ -54,20 +106,38 @@ function validateValues(question: RuntimeQuestion, answers: Answers): string[] {
   return errors;
 }
 
-function validateConstraints(question: RuntimeQuestion, answers: Answers): string[] {
+function validateConstraints(
+  question: RuntimeQuestion,
+  cells: ResponseCell[],
+  answers: Answers,
+): string[] {
   const errors: string[] = [];
-  const values = question.fields
-    .map((field) => answers.get(field) ?? "")
-    .filter((value) => value !== "");
+  const primary = cells.filter((cell) => cell.role !== "comment" && cell.role !== "computed");
+  const values = primary.map((cell) => answers.get(cell.key) ?? "").filter((value) => value !== "");
   let answerCount = values.length;
-  if (question.source.sourceType === ":")
+  if (isCheckboxMatrix(question.source))
     answerCount = values.filter((value) => value === "1").length;
+  if (question.source.sourceType === "1") {
+    const rows = new Set(primary.map((cell) => cell.rowId));
+    answerCount = [...rows].filter((row) =>
+      primary
+        .filter((cell) => cell.rowId === row)
+        .every((cell) => (answers.get(cell.key) ?? "") !== ""),
+    ).length;
+  }
+  const numericValues = cells
+    .filter((cell) => cell.kind === "number")
+    .map((cell) => answers.get(cell.key) ?? "")
+    .filter((value) => value !== "");
   for (const [name, expression] of question.constraints) {
     try {
       const result = expression.evaluate(answerLookup(answers));
       if (name === "em_validation_q") {
         if (!truth(result))
-          errors.push("La règle de validation de cette question n’est pas satisfaite.");
+          errors.push(
+            attribute(question.source, "em_validation_q_tip") ||
+              "La règle de validation de cette question n’est pas satisfaite.",
+          );
         continue;
       }
       const limit = numeric(result);
@@ -75,13 +145,28 @@ function validateConstraints(question: RuntimeQuestion, answers: Answers): strin
         errors.push(`Sélectionnez au moins ${limit} réponse(s).`);
       if (name === "max_answers" && answerCount > limit)
         errors.push(`Sélectionnez au plus ${limit} réponse(s).`);
-      for (const value of values) {
+      for (const cell of cells) {
+        const value = answers.get(cell.key) ?? "";
+        if (value === "") continue;
         if (name === "maximum_chars" && [...value].length > limit)
           errors.push(`La réponse est limitée à ${limit} caractères.`);
+        if (cell.kind !== "number") continue;
         if (name === "min_num_value_n" && numeric(value) < limit)
           errors.push(`La valeur minimale est ${limit}.`);
         if (name === "max_num_value_n" && numeric(value) > limit)
           errors.push(`La valeur maximale est ${limit}.`);
+      }
+      if (
+        ["min_num_value", "max_num_value", "equals_num_value"].includes(name) &&
+        numericValues.length > 0
+      ) {
+        const sum = numericValues.reduce((total, value) => total + numeric(value), 0);
+        if (
+          (name === "min_num_value" && sum < limit) ||
+          (name === "max_num_value" && sum > limit) ||
+          (name === "equals_num_value" && Math.abs(sum - limit) > 1e-9)
+        )
+          errors.push(`La somme des réponses ne respecte pas la contrainte (${limit}).`);
       }
     } catch (error) {
       errors.push(errorMessage(error));
@@ -90,35 +175,78 @@ function validateConstraints(question: RuntimeQuestion, answers: Answers): strin
   return errors;
 }
 
+function isUnanswered(question: RuntimeQuestion, cells: ResponseCell[], answers: Answers): boolean {
+  const primary = cells.filter((cell) => ["answer", "rank"].includes(cell.role));
+  if (["M", "P"].includes(question.source.sourceType)) {
+    return !cells.some((cell) => cell.role !== "comment" && (answers.get(cell.key) ?? "") !== "");
+  }
+  if (isCheckboxMatrix(question.source)) {
+    const rows = new Set(primary.map((cell) => cell.rowId));
+    return [...rows].some(
+      (row) => !primary.some((cell) => cell.rowId === row && answers.get(cell.key) === "1"),
+    );
+  }
+  if (
+    question.source.sourceType === "R" &&
+    ["min_answers", "max_answers"].some(
+      (name) => attribute(question.source, name) !== "" && attribute(question.source, name) !== "0",
+    )
+  ) {
+    return !primary.some((cell) => (answers.get(cell.key) ?? "") !== "");
+  }
+  return primary.some((cell) => (answers.get(cell.key) ?? "") === "");
+}
+
 export function validate(runtime: SurveyRuntime, snapshot: Snapshot, groupId?: string): Validation {
   const errors = new Map<string, string[]>();
   const warnings = new Map<string, string[]>();
   for (const [id, question] of runtime.questions) {
     if (
-      !snapshot.visible.has(id) ||
-      question.source.sourceType === "X" ||
+      !snapshot.relevant.has(id) ||
+      ["X", "*"].includes(question.source.sourceType) ||
       question.issues.length > 0
     )
       continue;
     if (groupId !== undefined && question.source.groupId !== groupId) continue;
-    const missing = question.fields.filter((field) => (snapshot.answers.get(field) ?? "") === "");
-    let unanswered = missing.length > 0;
-    if (question.source.sourceType === "M") unanswered = missing.length === question.fields.length;
-    if (question.source.sourceType === ":") {
-      const rows = new Set(question.cells.map((cell) => cell.rowId));
-      const checkedRows = new Set(
-        question.cells
-          .filter((cell) => snapshot.answers.get(cell.key) === "1")
-          .map((cell) => cell.rowId),
-      );
-      unanswered = [...rows].some((row) => !checkedRows.has(row));
-    }
-    const questionErrors = validateValues(question, snapshot.answers);
+    const cells = question.cells.filter((cell) => snapshot.activeFields.has(cell.key));
+    const questionErrors = validateValues(
+      question,
+      cells,
+      snapshot.answers,
+      runtime.study.languages,
+    );
+    const unanswered = isUnanswered(question, cells, snapshot.answers);
     if (unanswered && question.source.mandatory === "strict")
       questionErrors.push("Cette question est obligatoire.");
     if (unanswered && question.source.mandatory === "soft")
       warnings.set(id, ["Il est recommandé de répondre à cette question."]);
-    questionErrors.push(...validateConstraints(question, snapshot.answers));
+    if (
+      question.source.other &&
+      ["L", "!"].includes(question.source.sourceType) &&
+      snapshot.answers.get(question.source.code) === "-oth-" &&
+      attribute(question.source, "other_comment_mandatory") !== "0" &&
+      (snapshot.answers.get(`${question.source.code}_other`) ?? "") === ""
+    )
+      questionErrors.push("Précisez la réponse « autre ».");
+    if (question.source.sourceType === "R") {
+      const values = cells
+        .map((cell) => snapshot.answers.get(cell.key) ?? "")
+        .filter((value) => value !== "");
+      if (new Set(values).size !== values.length)
+        questionErrors.push("Chaque choix doit occuper une seule position du classement.");
+      let blank = false;
+      for (const cell of cells) {
+        const value = snapshot.answers.get(cell.key) ?? "";
+        if (value === "") blank = true;
+        else if (blank) {
+          questionErrors.push(
+            "Le classement ne doit pas contenir de position vide entre deux choix.",
+          );
+          break;
+        }
+      }
+    }
+    questionErrors.push(...validateConstraints(question, cells, snapshot.answers));
     if (questionErrors.length > 0) errors.set(id, [...new Set(questionErrors)]);
   }
   return { errors, warnings };

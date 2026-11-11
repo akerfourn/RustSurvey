@@ -7,6 +7,7 @@ interface UploadPanelProps {
   onFile: (file: File | null) => void;
   onInspect: () => void;
   onExample: () => void;
+  onControls: () => void;
 }
 
 export function UploadPanel({
@@ -16,6 +17,7 @@ export function UploadPanel({
   onFile,
   onInspect,
   onExample,
+  onControls,
 }: UploadPanelProps) {
   function handleFile(event: TargetedEvent<HTMLInputElement>): void {
     onFile(event.currentTarget.files?.[0] ?? null);
@@ -63,6 +65,9 @@ export function UploadPanel({
           </button>
           <button type="button" className="secondary" disabled={loading} onClick={onExample}>
             Essayer l’exemple
+          </button>
+          <button type="button" className="secondary" disabled={loading} onClick={onControls}>
+            Essayer les 28 types
           </button>
         </div>
         <a className="small-link" href="/api/surveys/example.lss" download="rustsurvey-demo.lss">

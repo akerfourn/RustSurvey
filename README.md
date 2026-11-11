@@ -15,7 +15,9 @@ d’explorer ses informations et d’essayer une saisie locale sans compte :
 - upload et analyse XML côté Rust, avec limite de 8 Mio ;
 - titres, langues, groupes, questions, traductions et choix de réponse ;
 - viewer Preact avec navigation par groupe et changement de langue ;
-- tableaux F/H, matrices à cases et choix en colonnes ;
+- 28 types sans fichiers : tableaux, commentaires, autre et classement ;
+- matrices texte/numériques, curseurs et choix en colonnes ;
+- sous-questions conditionnelles, filtres et équations simples ;
 - textes d’accueil et de fin localisés ;
 - réponses en mémoire dans l’onglet, téléchargeables en JSON ;
 - premier moteur client de pertinence et de validation, avec diagnostics ;
@@ -28,6 +30,16 @@ réponse durables, la collecte, la persistance métier et les archives `.lsa`
 restent à implémenter. Le moteur d’aperçu couvre un sous-ensemble explicite ; il
 ne certifie pas encore le comportement complet d’une étude LimeSurvey. Voir le
 [périmètre du viewer](docs/viewer.md).
+
+La cible couvre l’ensemble des formulaires natifs de la version de référence.
+L’[audit de couverture](docs/form-coverage.md) détaille les types, rendus et
+règles manquants, avec un plan pour les fonctions demandant du stockage. Le
+[catalogue](docs/form-catalog.md) recense les options et fonctions à suivre.
+L’absence de blocage sur une étude n’équivaut pas à une compatibilité complète.
+
+Les prochains incréments ciblent les formulaires sans persistance métier. Le
+stockage reste différé ; les futurs médias et fichiers utiliseront une
+[interface objet avec adaptateurs S3 et disque](docs/decisions/0002-object-storage.md).
 
 ## Essayer l’adaptateur de fichiers
 
@@ -106,6 +118,10 @@ Cliquer sur **Essayer l’exemple** ou sélectionner un `.lss` et cliquer sur
 **Analyser le fichier**. L’exemple contient douze questions, quatre groupes et
 deux langues. Choisir Rust fait apparaître un groupe ; cocher « Autre objectif »
 fait apparaître une question de précision.
+
+Le bouton **Essayer les 28 types** ouvre une seconde démonstration couvrant les
+28 types sans fichiers, leurs variantes locales et un calcul. Le
+[périmètre détaillé](docs/viewer.md) précise les restrictions restantes.
 
 Le groupe « Les tableaux » permet d’essayer F, H et une matrice de cases à
 cocher. Choisir « À l’aise » dans la colonne « Après » fait apparaître une

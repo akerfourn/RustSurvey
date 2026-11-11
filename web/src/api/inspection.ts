@@ -107,6 +107,7 @@ function question(value: unknown): SurveyQuestion {
     groupId: string(item.groupId),
     code: string(item.code),
     sourceType: string(item.sourceType),
+    theme: string(item.theme),
     family: string(item.family),
     mandatory,
     order: number(item.order),
@@ -229,9 +230,14 @@ export async function inspectFile(file: File, signal: AbortSignal): Promise<Insp
   return decodeInspection(body);
 }
 
-export async function loadExample(signal: AbortSignal): Promise<File> {
-  const response = await fetch("/api/surveys/example.lss", { signal, cache: "no-store" });
+export async function loadExample(
+  signal: AbortSignal,
+  variant: "example" | "controls" = "example",
+): Promise<File> {
+  const response = await fetch(`/api/surveys/${variant}.lss`, { signal, cache: "no-store" });
   if (!response.ok)
     throw new Error("L’exemple n’est pas disponible. Vérifiez que le backend est démarré.");
-  return new File([await response.blob()], "rustsurvey-demo.lss", { type: "application/xml" });
+  return new File([await response.blob()], `rustsurvey-${variant}.lss`, {
+    type: "application/xml",
+  });
 }

@@ -114,6 +114,7 @@ pub fn routes() -> Router {
     Router::new()
         .route("/api/surveys/inspect", post(inspect))
         .route("/api/surveys/example.lss", get(example))
+        .route("/api/surveys/controls.lss", get(controls))
         .with_state(InspectionState {
             slots: Arc::new(Semaphore::new(PARALLEL_INSPECTIONS)),
         })
@@ -228,6 +229,23 @@ async fn example() -> impl IntoResponse {
         include_bytes!(concat!(
             env!("CARGO_MANIFEST_DIR"),
             "/../../examples/surveys/demo.lss"
+        ))
+        .as_slice(),
+    )
+}
+
+async fn controls() -> impl IntoResponse {
+    (
+        [
+            (header::CONTENT_TYPE, "application/xml; charset=utf-8"),
+            (
+                header::CONTENT_DISPOSITION,
+                "attachment; filename=rustsurvey-controls.lss",
+            ),
+        ],
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/surveys/controls.lss"
         ))
         .as_slice(),
     )

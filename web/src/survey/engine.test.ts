@@ -242,7 +242,7 @@ test("engine should diagnose unsupported types, attributes and subquestion rules
   const runtime = createRuntime(source);
   assert.match(runtimeIssues(runtime, evaluateSnapshot(runtime, new Map())).join(), /Type \|/);
   assert.match(runtime.questions.get("2")?.issues.join() ?? "", /random_order/);
-  assert.match(runtime.questions.get("2")?.issues.join() ?? "", /pertinence de sous-question/);
+  assert.ok(runtime.questions.get("2")?.subquestionRules.size);
 });
 
 test("engine should safely address prototype-like question codes", () => {
@@ -273,4 +273,34 @@ test("text substitution should resolve answers without executing unsupported exp
   );
   assert.equal(result.text, "Équipe 2 : plusieurs / {javascript(1)}");
   assert.match(result.issues.join(), /Fonction non prise en charge/);
+});
+
+test("text diagnostics should inspect expressions before an unvisited page is rendered", async () => {
+  const { textIssues } = await import("./text.ts");
+  const fields = new Map([["KNOWN", "1"]]);
+  assert.match(textIssues("{MISSING}", fields).join(), /Variable de texte/);
+  assert.match(textIssues("{unsupported(KNOWN)}", fields).join(), /Fonction/);
+  assert.deepEqual(textIssues("{if(KNOWN, 'ok')}", fields), []);
+});
+
+test("text evaluation failures should block displayed expressions without evaluating hidden pages", async () => {
+  const { textExecutionIssues } = await import("./capabilities.ts");
+  const { compileExpression } = await import("./expressions.ts");
+  const runtime = createRuntime(
+    study([question("1", "A"), question("2", "B", { relevance: "A == 'show'" })]),
+  );
+  const expression = {
+    ownerId: "2",
+    rowId: null,
+    groupId: null,
+    expressions: [compileExpression("1/0")],
+  };
+  assert.deepEqual(
+    textExecutionIssues([expression], evaluateSnapshot(runtime, new Map([["A", "hide"]]))),
+    [],
+  );
+  assert.match(
+    textExecutionIssues([expression], evaluateSnapshot(runtime, new Map([["A", "show"]]))).join(),
+    /Division par zéro/,
+  );
 });

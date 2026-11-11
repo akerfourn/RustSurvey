@@ -130,6 +130,8 @@ test("test_matrix_should_create_two_axis_cells_when_checkbox_layout_is_enabled",
   assert.deepEqual(runtime.questions.get("2")?.cells[3], {
     key: "MATRIX_R10_C2",
     kind: "checkbox",
+    role: "answer",
+    scale: 0,
     rowId: "22",
     columnId: "24",
   });
@@ -239,7 +241,7 @@ test("test_arrays_should_bound_rendered_choices_when_a_table_would_have_too_many
   assert.match(runtime.questions.get("2")?.issues.join() ?? "", /limité à 2000 choix affichés/);
 });
 
-test("test_matrix_should_diagnose_missing_axes_numeric_mode_and_ambiguous_cell_codes", () => {
+test("test_matrix_should_accept_numeric_mode_and_diagnose_missing_axes_and_ambiguous_codes", () => {
   const missingAxis = makeCheckboxMatrix();
   missingAxis.subquestions = missingAxis.subquestions.filter((item) => item.scale === 0);
   assert.match(
@@ -248,10 +250,7 @@ test("test_matrix_should_diagnose_missing_axes_numeric_mode_and_ambiguous_cell_c
   );
   const numeric = makeCheckboxMatrix();
   numeric.questions[1]?.attributes.splice(0);
-  assert.match(
-    createRuntime(numeric).questions.get("2")?.issues.join() ?? "",
-    /Seules les matrices à cases/,
-  );
+  assert.deepEqual(createRuntime(numeric).questions.get("2")?.issues, []);
   const ambiguous = makeCheckboxMatrix();
   ambiguous.subquestions = [
     makeSubquestion("21", "2", "a_b"),

@@ -573,3 +573,43 @@ footer {
     flex-wrap: wrap;
   }
 }
+
+.text-control {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  max-width: 100%;
+}
+.text-control input,
+.text-control textarea {
+  min-width: 0;
+  flex: 1;
+}
+.array-table .text-control {
+  min-width: 9rem;
+}
+.ranking-input {
+  display: grid;
+  gap: 0.75rem;
+}
+.ranking-position {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+.slider-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.slider-control input[type="range"] {
+  flex: 1;
+  min-width: 8rem;
+}
+.computed-answer {
+  display: block;
+  padding: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}

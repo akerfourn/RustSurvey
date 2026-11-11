@@ -141,6 +141,13 @@ automatiquement l’ensemble du dossier de tests.
 
 ## Conséquences de conception
 
+L’[audit des formulaires du 11 novembre 2026](form-coverage.md) complète ce
+premier relevé : 29 types, configurations et variantes de rendu, attributs,
+fonctions ExpressionScript et écarts du moteur local. Le
+[catalogue associé](form-catalog.md) distingue les déclarations XML, le registre
+de repli et les ajouts des thèmes de question livrés. Il fixe une liste de
+travaux, y compris pour les fonctions nécessitant une persistance.
+
 Le [modèle interne](domain-model.md) sépare définition, campagne, réponse,
 droits de reprise et provenance. Le [protocole de transfert](study-migration.md)
 ajoute à l’archive standard les informations nécessaires à une étude en cours.

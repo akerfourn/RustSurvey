@@ -7,6 +7,9 @@ export const CONSTRAINT_ATTRIBUTES = new Set([
   "max_answers",
   "maximum_chars",
   "em_validation_q",
+  "min_num_value",
+  "max_num_value",
+  "equals_num_value",
 ]);
 
 const PRESENTATION_ATTRIBUTES = new Set([
@@ -78,3 +81,71 @@ export function displayColumns(question: SurveyQuestion): number {
   if (!/^\d+$/.test(value)) return 1;
   return Math.max(1, Math.min(12, Number(value)));
 }
+
+export function localizedAttribute(
+  question: SurveyQuestion,
+  name: string,
+  language: string,
+  base: string | null,
+): string {
+  const values = question.attributes.filter((item) => item.name === name);
+  return (
+    values.find((item) => item.language === language)?.value ??
+    values.find((item) => item.language === base)?.value ??
+    attribute(question, name)
+  );
+}
+
+export const INTERACTION_ATTRIBUTES = new Set([
+  "hidden",
+  "numbers_only",
+  "num_value_int_only",
+  "use_dropdown",
+  "input_boxes",
+  "other_comment_mandatory",
+  "other_numbers_only",
+  "array_filter_style",
+  "slider_layout",
+  "slider_reset",
+  "slider_showminmax",
+]);
+export const TEXT_ATTRIBUTES = new Set([
+  "prefix",
+  "suffix",
+  "placeholder",
+  "dualscale_headerA",
+  "dualscale_headerB",
+  "other_replace_text",
+  "em_validation_q_tip",
+  "em_validation_sq_tip",
+]);
+export const DEFERRED_PRESENTATION_ATTRIBUTES = new Set([
+  "question_template",
+  "cssclass",
+  "page_break",
+  "answer_width",
+  "answer_width_bycolumn",
+  "hide_title",
+  "scale_export",
+  "statistics_showgraph",
+  "statistics_graphtype",
+  "public_statistics",
+  "chart_type",
+]);
+
+export const INACTIVE_ATTRIBUTES = new Set([
+  "random_order",
+  "reverse",
+  "alphasort",
+  "exclude_all_others_auto",
+  "dropdown_dates",
+  "samechoiceheight",
+  "samelistheight",
+  "show_grand_total",
+  "location_mapservice",
+  "location_nodefaultfromip",
+  "location_postal",
+  "location_city",
+  "location_state",
+  "location_country",
+]);

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "preact/hooks";
 import type { Snapshot, SurveyRuntime } from "../survey/engine.ts";
-import { localized, plainText } from "../survey/text.ts";
+import { localized, pipeText, plainText } from "../survey/text.ts";
 import type { SurveyGroup } from "../survey/types.ts";
 import type { Validation } from "../survey/validation.ts";
 import { QuestionCard } from "./QuestionCard.tsx";
@@ -43,6 +43,7 @@ interface StudyPageProps extends NavigationProps {
   readOnly: boolean;
   onAnswer: (field: string, value: string) => void;
   onClear: (fields: readonly string[]) => void;
+  onLanguage: (language: string) => void;
 }
 
 export function StudyPage(props: StudyPageProps) {
@@ -64,6 +65,12 @@ export function StudyPage(props: StudyPageProps) {
     heading.current?.scrollIntoView({ block: "start" });
   }, [group.id]);
   const label = localized(group.labels, language, runtime.study.baseLanguage);
+  const groupTitle = pipeText(plainText(label?.name), snapshot.answers, runtime.fields).text;
+  const groupDescription = pipeText(
+    plainText(label?.description),
+    snapshot.answers,
+    runtime.fields,
+  ).text;
   const questions = [...runtime.questions.values()].filter(
     (question) => question.source.groupId === group.id && snapshot.visible.has(question.source.id),
   );
@@ -77,11 +84,19 @@ export function StudyPage(props: StudyPageProps) {
     return (
       <QuestionCard
         key={question.source.id}
-        question={question}
+        question={{
+          ...question,
+          subquestions: question.subquestions.filter((row) =>
+            snapshot.visibleSubquestions.has(row.id),
+          ),
+        }}
         answers={snapshot.answers}
         language={language}
         baseLanguage={runtime.study.baseLanguage}
         fields={runtime.fields}
+        activeFields={snapshot.activeFields}
+        languages={runtime.study.languages}
+        onLanguage={props.onLanguage}
         errors={errors}
         warnings={warnings}
         readOnly={readOnly}
@@ -105,9 +120,9 @@ export function StudyPage(props: StudyPageProps) {
           affichée(s)
         </p>
         <h3 ref={heading} tabIndex={-1}>
-          {plainText(label?.name) || `Groupe ${group.id}`}
+          {groupTitle || `Groupe ${group.id}`}
         </h3>
-        <p className="muted">{plainText(label?.description)}</p>
+        <p className="muted">{groupDescription}</p>
         <progress
           value={position + 1}
           max={snapshot.groups.length}

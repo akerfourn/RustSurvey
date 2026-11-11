@@ -190,6 +190,13 @@ les définitions et blocs de réponses typés.
 Cette représentation est décodée et validée par Rust. Aucune requête métier ne
 dépend d’un opérateur JSON spécifique au moteur SQL.
 
+Les contenus binaires des médias et pièces jointes utiliseront le port
+`ObjectStore` défini dans la [décision 0002](decisions/0002-object-storage.md),
+avec adaptateurs S3 et fichiers locaux. La base conserve les identités,
+relations, clés objet et métadonnées ; le domaine manipule des références
+logiques indépendantes de l’endpoint ou du chemin local. Ces fonctions avec
+stockage restent différées pour les prochains incréments.
+
 | Option            | Atout             | Coût                |
 | ----------------- | ----------------- | ------------------- |
 | Table par étude   | Colonnes directes | DDL par activation  |

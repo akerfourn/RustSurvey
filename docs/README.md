@@ -18,6 +18,9 @@ fonctionnel couvre l’[adaptateur `.lss`](../crates/limesurvey/README.md) et le
 9. [Choix de la pile technique](decisions/0001-technology-stack.md).
 10. [Feuille de route](roadmap.md).
 11. [Viewer et moteur d’aperçu](viewer.md).
+12. [Couverture des formulaires et plan de réalisation](form-coverage.md).
+13. [Catalogue des attributs et fonctions ExpressionScript](form-catalog.md).
+14. [Stockage objet des médias et fichiers](decisions/0002-object-storage.md).
 
 ## Lire les statuts
 

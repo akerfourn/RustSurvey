@@ -1,6 +1,9 @@
 import type { TargetedEvent } from "preact";
+import { attribute } from "../survey/attributes.ts";
+import { inputOptions } from "./ChoiceInput.tsx";
+import { GridInput } from "./GridInput.tsx";
 import { fieldName } from "../survey/cells.ts";
-import { localized, plainText } from "../survey/text.ts";
+import { localized, pipeText, plainText } from "../survey/text.ts";
 import type { SurveySubquestion } from "../survey/types.ts";
 import type { QuestionInputProps } from "./QuestionInput.tsx";
 
@@ -10,9 +13,10 @@ interface RadioCellProps {
   checked: boolean;
   labelledBy: string;
   onAnswer: QuestionInputProps["onAnswer"];
+  disabled: boolean;
 }
 
-function RadioCell({ field, value, checked, labelledBy, onAnswer }: RadioCellProps) {
+function RadioCell({ field, value, checked, labelledBy, onAnswer, disabled }: RadioCellProps) {
   function handleChange(event: TargetedEvent<HTMLInputElement>): void {
     onAnswer(field, event.currentTarget.value);
   }
@@ -24,6 +28,7 @@ function RadioCell({ field, value, checked, labelledBy, onAnswer }: RadioCellPro
           name={field}
           value={value}
           checked={checked}
+          disabled={disabled}
           aria-labelledby={labelledBy}
           onChange={handleChange}
         />
@@ -38,11 +43,12 @@ interface ArrayOption {
   label: string;
 }
 
-function options({ question, language, baseLanguage }: QuestionInputProps): ArrayOption[] {
-  const choices = question.choices.map((choice) => ({
-    id: `array-${question.source.id}-answer-${choice.id}`,
-    code: choice.code,
-    label: plainText(localized(choice.labels, language, baseLanguage)?.text) || choice.code,
+function options(props: QuestionInputProps): ArrayOption[] {
+  const { question } = props;
+  const choices = inputOptions(props).map((choice) => ({
+    id: `array-${question.source.id}-answer-${choice.value}`,
+    code: choice.value,
+    label: choice.label,
   }));
   if (question.source.mandatory === "no")
     choices.push({ id: `array-${question.source.id}-empty`, code: "", label: "Sans réponse" });
@@ -50,10 +56,12 @@ function options({ question, language, baseLanguage }: QuestionInputProps): Arra
 }
 
 function subquestionLabel(subquestion: SurveySubquestion, props: QuestionInputProps): string {
-  return (
+  return pipeText(
     plainText(localized(subquestion.labels, props.language, props.baseLanguage)?.text) ||
-    subquestion.code
-  );
+      subquestion.code,
+    props.answers,
+    props.fields,
+  ).text;
 }
 
 function subquestionHeaderId(questionId: string, subquestionId: string): string {
@@ -77,6 +85,7 @@ function ChoiceArray(props: QuestionInputProps) {
       <RadioCell
         key={choice.id}
         field={field}
+        disabled={!props.activeFields.has(field)}
         value={choice.code}
         checked={(answers.get(field) ?? "") === choice.code}
         labelledBy={`${headerId} ${choice.id}`}
@@ -111,6 +120,7 @@ function ChoiceArray(props: QuestionInputProps) {
           <RadioCell
             key={subquestion.id}
             field={field}
+            disabled={!props.activeFields.has(field)}
             value={choice.code}
             checked={(answers.get(field) ?? "") === choice.code}
             labelledBy={`${subquestionHeaderId(question.source.id, subquestion.id)} ${choice.id}`}
@@ -175,6 +185,7 @@ function CheckboxMatrix(props: QuestionInputProps) {
               type="checkbox"
               name={field}
               checked={answers.get(field) === "1"}
+              disabled={!props.activeFields.has(field)}
               aria-labelledby={`${rowHeader} ${subquestionHeaderId(question.source.id, column.id)}`}
               onChange={handleCheckbox}
             />
@@ -213,6 +224,42 @@ function CheckboxMatrix(props: QuestionInputProps) {
 }
 
 export function ArrayInput(props: QuestionInputProps) {
-  if (props.question.source.sourceType === ":") return <CheckboxMatrix {...props} />;
+  const source = props.question.source;
+  if (source.sourceType === ":" && attribute(source, "multiflexible_checkbox") === "1")
+    return <CheckboxMatrix {...props} />;
+  if (["1", ":", ";"].includes(source.sourceType)) return <GridInput {...props} />;
+  if (attribute(source, "use_dropdown") === "1") return <DropdownArray {...props} />;
   return <ChoiceArray {...props} />;
+}
+
+function DropdownArray(props: QuestionInputProps) {
+  const { question, answers, onAnswer, activeFields } = props;
+  function handleChange(event: TargetedEvent<HTMLSelectElement>): void {
+    onAnswer(event.currentTarget.name, event.currentTarget.value);
+  }
+  const options = inputOptions(props).map((option) => (
+    <option key={option.value} value={option.value}>
+      {option.label}
+    </option>
+  ));
+  const rows = question.subquestions
+    .filter((row) => row.scale === 0)
+    .map((row) => {
+      const field = fieldName(question.source, row);
+      return (
+        <label className="subquestion" key={row.id}>
+          {subquestionLabel(row, props)}
+          <select
+            name={field}
+            value={answers.get(field) ?? ""}
+            disabled={!activeFields.has(field)}
+            onChange={handleChange}
+          >
+            <option value="">Sans réponse</option>
+            {options}
+          </select>
+        </label>
+      );
+    });
+  return <div className="choices">{rows}</div>;
 }
