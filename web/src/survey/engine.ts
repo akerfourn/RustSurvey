@@ -1,4 +1,11 @@
 import { compileExpression, truth, type Expression, type Lookup } from "./expressions.ts";
+import {
+  CONSTRAINT_ATTRIBUTES,
+  hasActiveTimer,
+  isCheckboxMatrix,
+  isPassiveAttribute,
+} from "./attributes.ts";
+import { createCells, MAX_QUESTION_CELLS, MAX_SURVEY_CELLS, type ResponseCell } from "./cells.ts";
 import type {
   Answers,
   SurveyChoice,
@@ -13,6 +20,7 @@ export interface RuntimeQuestion {
   subquestions: SurveySubquestion[];
   choices: SurveyChoice[];
   fields: string[];
+  cells: ResponseCell[];
   relevance: Expression[];
   constraints: Map<string, Expression>;
   issues: string[];
@@ -49,48 +57,15 @@ const SUPPORTED_TYPES = new Set([
   "Q",
   "K",
   "X",
+  "F",
+  "H",
+  ":",
 ]);
-const MULTI_TYPES = new Set(["M", "Q", "K"]);
-const CONSTRAINTS = new Set([
-  "min_num_value_n",
-  "max_num_value_n",
-  "min_answers",
-  "max_answers",
-  "max_characters",
-  "em_validation_q",
-]);
-const PRESENTATION_ATTRIBUTES = new Set([
-  "display_rows",
-  "text_input_width",
-  "answer_width",
-  "question_template",
-  "cssclass",
-  "page_break",
-  "hide_tip",
-  "hide_title",
-  "hide_help",
-  "display_columns",
-  "scale_export",
-  "statistics_showgraph",
-  "statistics_graphtype",
-  "public_statistics",
-  "chart_type",
-]);
-
-export function fieldName(question: SurveyQuestion, subquestion: SurveySubquestion): string {
-  return `${question.code}_${subquestion.code}`;
-}
+export { attribute } from "./attributes.ts";
+export { fieldName } from "./cells.ts";
 
 export function variableName(name: string): string {
   return name.replace(/\.NAOK$/, "");
-}
-
-export function attribute(question: SurveyQuestion, name: string): string {
-  return (
-    question.attributes.find(
-      (item) => item.name === name && (item.language === null || item.language === ""),
-    )?.value ?? ""
-  );
 }
 
 function rule(source: string, fields: Map<string, string>, issues: string[]): Expression | null {
@@ -119,28 +94,45 @@ function prepareQuestion(study: SurveyStudy, question: SurveyQuestion): RuntimeQ
   const choices = study.answers
     .filter((item) => item.questionId === question.id && item.scale === 0)
     .sort((a, b) => a.order - b.order);
-  let fields = [question.code];
-  if (MULTI_TYPES.has(question.sourceType))
-    fields = subquestions.map((item) => fieldName(question, item));
-  if (question.sourceType === "X") fields = [];
   const issues: string[] = [];
+  const cells = createCells(question, subquestions, issues);
+  const fields = cells.map((cell) => cell.key);
   if (!SUPPORTED_TYPES.has(question.sourceType))
     issues.push(`Type ${question.sourceType} : saisie non prise en charge.`);
   if (question.other) issues.push("Le champ « autre » natif n’est pas encore pris en charge.");
   if (question.validation !== "")
     issues.push("Validation par expression régulière non prise en charge.");
-  if (MULTI_TYPES.has(question.sourceType) && subquestions.length === 0)
-    issues.push("Aucune sous-question exploitable.");
-  if (["L", "!"].includes(question.sourceType) && choices.length === 0)
+  if (["L", "!", "F", "H"].includes(question.sourceType) && choices.length === 0)
     issues.push("Aucun choix de réponse exploitable.");
-  if (subquestions.some((item) => item.scale !== 0 || !["", "1"].includes(item.relevance.trim()))) {
+  let displayedChoices = choices.length;
+  if (question.mandatory === "no") displayedChoices += 1;
+  if (
+    ["F", "H"].includes(question.sourceType) &&
+    cells.length * displayedChoices > MAX_QUESTION_CELLS
+  ) {
+    issues.push(`Tableau limité à ${MAX_QUESTION_CELLS} choix affichés.`);
+  }
+  if (
+    subquestions.some(
+      (item) =>
+        (item.scale !== 0 && !(isCheckboxMatrix(question) && item.scale === 1)) ||
+        !["", "1"].includes(item.relevance.trim()),
+    )
+  ) {
     issues.push("Échelle ou pertinence de sous-question non prise en charge.");
+  }
+  if (
+    ["F", "H"].includes(question.sourceType) &&
+    study.answers.some((item) => item.questionId === question.id && item.scale !== 0)
+  ) {
+    issues.push("Échelle supplémentaire de réponses non prise en charge.");
   }
   return {
     source: question,
     subquestions,
     choices,
     fields,
+    cells,
     relevance: [],
     constraints: new Map(),
     issues,
@@ -162,20 +154,31 @@ function prepareRules(
     const expression = rule(source.trim() || "1", fields, question.issues);
     if (expression !== null) question.relevance.push(expression);
   }
+  if (hasActiveTimer(question.source))
+    question.issues.push("Minuterie active non prise en charge.");
   for (const item of question.source.attributes) {
     if (item.value === "") continue;
-    if (CONSTRAINTS.has(item.name)) {
+    if (item.name === "maximum_chars" && item.value.trim() === "0") continue;
+    if (CONSTRAINT_ATTRIBUTES.has(item.name)) {
       if (item.language !== null && item.language !== "") {
         question.issues.push(`Contrainte localisée non prise en charge : ${item.name}.`);
         continue;
       }
       const expression = rule(item.value, fields, question.issues);
       if (expression !== null) question.constraints.set(item.name, expression);
-    } else if (
-      item.value !== "0" &&
-      item.name !== "num_value_int_only" &&
-      !PRESENTATION_ATTRIBUTES.has(item.name)
-    ) {
+    } else if (item.value !== "0" && !isPassiveAttribute(item.name)) {
+      if (
+        item.name === "num_value_int_only" &&
+        item.value === "1" &&
+        (item.language === null || item.language === "")
+      )
+        continue;
+      if (
+        item.name === "multiflexible_checkbox" &&
+        isCheckboxMatrix(question.source) &&
+        (item.language === null || item.language === "")
+      )
+        continue;
       question.issues.push(`Attribut non pris en charge : ${item.name}.`);
     }
   }
@@ -235,6 +238,10 @@ export function createRuntime(study: SurveyStudy): SurveyRuntime {
   }
   for (const source of [...study.questions].sort((a, b) => a.order - b.order)) {
     const question = prepareQuestion(study, source);
+    if (fields.size + question.cells.length > MAX_SURVEY_CELLS) {
+      issues.push(`Aperçu limité à ${MAX_SURVEY_CELLS} cellules de réponse.`);
+      return { study, groups, questions: new Map(), fields: new Map(), order: [], issues };
+    }
     questions.set(source.id, question);
     for (const field of question.fields) {
       if (fields.has(field)) issues.push(`Cellule ambiguë : ${field}.`);

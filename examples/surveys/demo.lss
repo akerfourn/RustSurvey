@@ -12,6 +12,7 @@
       <fieldname>language</fieldname>
       <fieldname>format</fieldname>
       <fieldname>anonymized</fieldname>
+      <fieldname>showwelcome</fieldname>
     </fields>
     <rows>
       <row>
@@ -19,6 +20,7 @@
         <language>fr</language>
         <format>G</format>
         <anonymized>Y</anonymized>
+        <showwelcome>Y</showwelcome>
       </row>
     </rows>
   </surveys>
@@ -27,17 +29,23 @@
       <fieldname>surveyls_survey_id</fieldname>
       <fieldname>surveyls_language</fieldname>
       <fieldname>surveyls_title</fieldname>
+      <fieldname>surveyls_welcometext</fieldname>
+      <fieldname>surveyls_endtext</fieldname>
     </fields>
     <rows>
       <row>
         <surveyls_survey_id>900001</surveyls_survey_id>
         <surveyls_language>fr</surveyls_language>
         <surveyls_title>Découvrir RustSurvey</surveyls_title>
+        <surveyls_welcometext>&lt;p&gt;Essayez les choix, les conditions et les tableaux. Vos réponses restent locales.&lt;/p&gt;</surveyls_welcometext>
+        <surveyls_endtext>&lt;p&gt;Merci pour cet essai, {PROJECT} !&lt;/p&gt;</surveyls_endtext>
       </row>
       <row>
         <surveyls_survey_id>900001</surveyls_survey_id>
         <surveyls_language>en</surveyls_language>
         <surveyls_title>Discover RustSurvey</surveyls_title>
+        <surveyls_welcometext>&lt;p&gt;Try choices, conditions and arrays. Your answers stay local.&lt;/p&gt;</surveyls_welcometext>
+        <surveyls_endtext>&lt;p&gt;Thank you for trying this, {PROJECT}!&lt;/p&gt;</surveyls_endtext>
       </row>
     </rows>
   </surveys_languagesettings>
@@ -63,6 +71,12 @@
       </row>
       <row>
         <gid>30</gid>
+        <sid>900001</sid>
+        <group_order>3</group_order>
+        <grelevance>1</grelevance>
+      </row>
+      <row>
+        <gid>25</gid>
         <sid>900001</sid>
         <group_order>2</group_order>
         <grelevance>1</grelevance>
@@ -112,6 +126,18 @@
         <language>en</language>
         <group_name>Summary</group_name>
         <description />
+      </row>
+      <row>
+        <gid>25</gid>
+        <language>fr</language>
+        <group_name>Les tableaux</group_name>
+        <description>Essayez les lignes, colonnes et combinaisons.</description>
+      </row>
+      <row>
+        <gid>25</gid>
+        <language>en</language>
+        <group_name>Arrays</group_name>
+        <description>Try rows, columns and combinations.</description>
       </row>
     </rows>
   </group_l10ns>
@@ -234,6 +260,58 @@
         <preg />
         <other>N</other>
       </row>
+      <row>
+        <qid>109</qid>
+        <parent_qid>0</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>F</type>
+        <title>COMPARISON</title>
+        <question_order>0</question_order>
+        <mandatory>N</mandatory>
+        <other>N</other>
+        <relevance>1</relevance>
+        <preg />
+      </row>
+      <row>
+        <qid>110</qid>
+        <parent_qid>0</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>H</type>
+        <title>MILESTONES</title>
+        <question_order>1</question_order>
+        <mandatory>N</mandatory>
+        <other>N</other>
+        <relevance>1</relevance>
+        <preg />
+      </row>
+      <row>
+        <qid>111</qid>
+        <parent_qid>0</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>:</type>
+        <title>TOOLS</title>
+        <question_order>2</question_order>
+        <mandatory>N</mandatory>
+        <other>N</other>
+        <relevance>1</relevance>
+        <preg />
+      </row>
+      <row>
+        <qid>112</qid>
+        <parent_qid>0</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>NEXTSTEP</title>
+        <question_order>3</question_order>
+        <mandatory>Y</mandatory>
+        <other>N</other>
+        <relevance>MILESTONES_after == 'high'</relevance>
+        <preg />
+      </row>
     </rows>
   </questions>
   <subquestions>
@@ -246,6 +324,7 @@
       <fieldname>scale_id</fieldname>
       <fieldname>question_order</fieldname>
       <fieldname>relevance</fieldname>
+      <fieldname>type</fieldname>
     </fields>
     <rows>
       <row>
@@ -276,6 +355,94 @@
         <title>other</title>
         <scale_id>0</scale_id>
         <question_order>2</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>211</qid>
+        <parent_qid>109</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>clarity</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>212</qid>
+        <parent_qid>109</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>resources</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>221</qid>
+        <parent_qid>110</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>before</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>222</qid>
+        <parent_qid>110</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>after</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>231</qid>
+        <parent_qid>111</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>design</title>
+        <scale_id>0</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>232</qid>
+        <parent_qid>111</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>test</title>
+        <scale_id>0</scale_id>
+        <question_order>1</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>241</qid>
+        <parent_qid>111</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>client</title>
+        <scale_id>1</scale_id>
+        <question_order>0</question_order>
+        <relevance>1</relevance>
+      </row>
+      <row>
+        <qid>242</qid>
+        <parent_qid>111</parent_qid>
+        <sid>900001</sid>
+        <gid>25</gid>
+        <type>T</type>
+        <title>server</title>
+        <scale_id>1</scale_id>
+        <question_order>1</question_order>
         <relevance>1</relevance>
       </row>
     </rows>
@@ -420,6 +587,150 @@
         <question>Another goal</question>
         <help />
       </row>
+      <row>
+        <qid>109</qid>
+        <language>fr</language>
+        <question>Comparez ces deux aspects</question>
+        <help />
+      </row>
+      <row>
+        <qid>109</qid>
+        <language>en</language>
+        <question>Compare these two aspects</question>
+        <help />
+      </row>
+      <row>
+        <qid>110</qid>
+        <language>fr</language>
+        <question>Un choix par colonne</question>
+        <help />
+      </row>
+      <row>
+        <qid>110</qid>
+        <language>en</language>
+        <question>One choice per column</question>
+        <help />
+      </row>
+      <row>
+        <qid>111</qid>
+        <language>fr</language>
+        <question>Quelles combinaisons souhaitez-vous essayer ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>111</qid>
+        <language>en</language>
+        <question>Which combinations would you like to try?</question>
+        <help />
+      </row>
+      <row>
+        <qid>112</qid>
+        <language>fr</language>
+        <question>Quelle sera votre prochaine étape ?</question>
+        <help />
+      </row>
+      <row>
+        <qid>112</qid>
+        <language>en</language>
+        <question>What will your next step be?</question>
+        <help />
+      </row>
+      <row>
+        <qid>211</qid>
+        <language>fr</language>
+        <question>Lisibilité</question>
+        <help />
+      </row>
+      <row>
+        <qid>211</qid>
+        <language>en</language>
+        <question>Readability</question>
+        <help />
+      </row>
+      <row>
+        <qid>212</qid>
+        <language>fr</language>
+        <question>Sobriété</question>
+        <help />
+      </row>
+      <row>
+        <qid>212</qid>
+        <language>en</language>
+        <question>Resource usage</question>
+        <help />
+      </row>
+      <row>
+        <qid>221</qid>
+        <language>fr</language>
+        <question>Avant</question>
+        <help />
+      </row>
+      <row>
+        <qid>221</qid>
+        <language>en</language>
+        <question>Before</question>
+        <help />
+      </row>
+      <row>
+        <qid>222</qid>
+        <language>fr</language>
+        <question>Après</question>
+        <help />
+      </row>
+      <row>
+        <qid>222</qid>
+        <language>en</language>
+        <question>After</question>
+        <help />
+      </row>
+      <row>
+        <qid>231</qid>
+        <language>fr</language>
+        <question>Conception</question>
+        <help />
+      </row>
+      <row>
+        <qid>231</qid>
+        <language>en</language>
+        <question>Design</question>
+        <help />
+      </row>
+      <row>
+        <qid>232</qid>
+        <language>fr</language>
+        <question>Tests</question>
+        <help />
+      </row>
+      <row>
+        <qid>232</qid>
+        <language>en</language>
+        <question>Tests</question>
+        <help />
+      </row>
+      <row>
+        <qid>241</qid>
+        <language>fr</language>
+        <question>Navigateur</question>
+        <help />
+      </row>
+      <row>
+        <qid>241</qid>
+        <language>en</language>
+        <question>Browser</question>
+        <help />
+      </row>
+      <row>
+        <qid>242</qid>
+        <language>fr</language>
+        <question>Serveur</question>
+        <help />
+      </row>
+      <row>
+        <qid>242</qid>
+        <language>en</language>
+        <question>Server</question>
+        <help />
+      </row>
     </rows>
   </question_l10ns>
   <answers>
@@ -465,6 +776,34 @@
         <code>regular</code>
         <scale_id>0</scale_id>
         <sortorder>4</sortorder>
+      </row>
+      <row>
+        <aid>401</aid>
+        <qid>109</qid>
+        <code>01</code>
+        <sortorder>0</sortorder>
+        <scale_id>0</scale_id>
+      </row>
+      <row>
+        <aid>402</aid>
+        <qid>109</qid>
+        <code>02</code>
+        <sortorder>1</sortorder>
+        <scale_id>0</scale_id>
+      </row>
+      <row>
+        <aid>411</aid>
+        <qid>110</qid>
+        <code>low</code>
+        <sortorder>0</sortorder>
+        <scale_id>0</scale_id>
+      </row>
+      <row>
+        <aid>412</aid>
+        <qid>110</qid>
+        <code>high</code>
+        <sortorder>1</sortorder>
+        <scale_id>0</scale_id>
       </row>
     </rows>
   </answers>
@@ -525,6 +864,46 @@
         <language>en</language>
         <answer>I use it regularly</answer>
       </row>
+      <row>
+        <aid>401</aid>
+        <language>fr</language>
+        <answer>À améliorer</answer>
+      </row>
+      <row>
+        <aid>401</aid>
+        <language>en</language>
+        <answer>Needs work</answer>
+      </row>
+      <row>
+        <aid>402</aid>
+        <language>fr</language>
+        <answer>Satisfaisant</answer>
+      </row>
+      <row>
+        <aid>402</aid>
+        <language>en</language>
+        <answer>Good</answer>
+      </row>
+      <row>
+        <aid>411</aid>
+        <language>fr</language>
+        <answer>Débutant</answer>
+      </row>
+      <row>
+        <aid>411</aid>
+        <language>en</language>
+        <answer>Starting</answer>
+      </row>
+      <row>
+        <aid>412</aid>
+        <language>fr</language>
+        <answer>À l’aise</answer>
+      </row>
+      <row>
+        <aid>412</aid>
+        <language>en</language>
+        <answer>Confident</answer>
+      </row>
     </rows>
   </answer_l10ns>
   <question_attributes>
@@ -558,6 +937,46 @@
         <attribute>min_answers</attribute>
         <value>1</value>
         <language />
+      </row>
+      <row>
+        <qid>111</qid>
+        <attribute>multiflexible_checkbox</attribute>
+        <value>1</value>
+      </row>
+      <row>
+        <qid>102</qid>
+        <attribute>display_columns</attribute>
+        <value>3</value>
+      </row>
+      <row>
+        <qid>105</qid>
+        <attribute>display_columns</attribute>
+        <value>2</value>
+      </row>
+      <row>
+        <qid>103</qid>
+        <attribute>input_size</attribute>
+        <value>8</value>
+      </row>
+      <row>
+        <qid>108</qid>
+        <attribute>clear_default</attribute>
+        <value>Y</value>
+      </row>
+      <row>
+        <qid>108</qid>
+        <attribute>save_as_default</attribute>
+        <value>Y</value>
+      </row>
+      <row>
+        <qid>108</qid>
+        <attribute>time_limit</attribute>
+        <value />
+      </row>
+      <row>
+        <qid>108</qid>
+        <attribute>time_limit_action</attribute>
+        <value>1</value>
       </row>
     </rows>
   </question_attributes>

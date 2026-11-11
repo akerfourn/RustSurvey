@@ -15,6 +15,8 @@ d’explorer ses informations et d’essayer une saisie locale sans compte :
 - upload et analyse XML côté Rust, avec limite de 8 Mio ;
 - titres, langues, groupes, questions, traductions et choix de réponse ;
 - viewer Preact avec navigation par groupe et changement de langue ;
+- tableaux F/H, matrices à cases et choix en colonnes ;
+- textes d’accueil et de fin localisés ;
 - réponses en mémoire dans l’onglet, téléchargeables en JSON ;
 - premier moteur client de pertinence et de validation, avec diagnostics ;
 - une connexion SQLite par défaut et des pilotes PostgreSQL/MariaDB activables ;
@@ -101,9 +103,13 @@ services. Un `BIND_ADDRESS` explicite conserve le port demandé.
 Ouvrir l’adresse affichée par Vite, <http://127.0.0.1:5173> par défaut. Si ce
 port est occupé, Vite choisit automatiquement le prochain port disponible.
 Cliquer sur **Essayer l’exemple** ou sélectionner un `.lss` et cliquer sur
-**Analyser le fichier**. L’exemple contient huit questions, trois groupes et
+**Analyser le fichier**. L’exemple contient douze questions, quatre groupes et
 deux langues. Choisir Rust fait apparaître un groupe ; cocher « Autre objectif »
 fait apparaître une question de précision.
+
+Le groupe « Les tableaux » permet d’essayer F, H et une matrice de cases à
+cocher. Choisir « À l’aise » dans la colonne « Après » fait apparaître une
+précision obligatoire. Les autres cellules de ces tableaux sont facultatives.
 
 La navigation contrôle les réponses obligatoires et les contraintes prises en
 charge. Une réponse devenue non pertinente est effacée. Recharger la page ou

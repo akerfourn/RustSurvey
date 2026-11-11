@@ -8,9 +8,9 @@ mod xml;
 
 pub use error::Error;
 pub use model::{
-    AnswerOption, Group, LocalizedGroup, LocalizedQuestion, LocalizedText, LocalizedTitle,
-    Mandatory, Question, QuestionAttribute, QuestionFamily, SourceId, SourceMetadata, Subquestion,
-    SurveySource,
+    AnswerOption, Group, LocalizedGroup, LocalizedQuestion, LocalizedSurveyMessages, LocalizedText,
+    LocalizedTitle, Mandatory, Question, QuestionAttribute, QuestionFamily, SourceId,
+    SourceMetadata, Subquestion, SurveySource,
 };
 pub use report::{Capability, Diagnostic, DiagnosticCode, Report, SectionSummary, Severity};
 

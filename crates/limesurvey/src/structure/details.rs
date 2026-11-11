@@ -1,8 +1,8 @@
 use std::collections::BTreeMap;
 
 use crate::{
-    AnswerOption, LocalizedGroup, LocalizedQuestion, LocalizedText, LocalizedTitle,
-    QuestionAttribute, SourceId, SourceMetadata, SurveySource, xml::Document,
+    AnswerOption, LocalizedGroup, LocalizedQuestion, LocalizedSurveyMessages, LocalizedText,
+    LocalizedTitle, QuestionAttribute, SourceId, SourceMetadata, SurveySource, xml::Document,
 };
 
 use super::tables::rows;
@@ -12,6 +12,15 @@ fn id(xml: &Document, row: usize, field: &str) -> Option<SourceId> {
 }
 
 pub(super) fn enrich(xml: &Document, model: &mut SurveySource) {
+    for row in rows(xml, "surveys_languagesettings") {
+        if let Some(language) = xml.field(row, "surveyls_language") {
+            model.messages.push(LocalizedSurveyMessages {
+                language: language.to_owned(),
+                welcome: xml.field(row, "surveyls_welcometext").map(str::to_owned),
+                end: xml.field(row, "surveyls_endtext").map(str::to_owned),
+            });
+        }
+    }
     let mut groups: BTreeMap<SourceId, Vec<LocalizedGroup>> = BTreeMap::new();
     for row in rows(xml, "group_l10ns") {
         if let (Some(id), Some(language)) = (id(xml, row, "gid"), xml.field(row, "language")) {

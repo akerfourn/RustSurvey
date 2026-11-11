@@ -81,6 +81,19 @@ fn read_survey(xml: &Document, model: &mut SurveySource, report: &mut Report) {
     let row = surveys[0];
     model.survey_id = source_id(xml, row, "sid", "surveys.rows[0]", report);
     model.base_language = text(xml, row, "language", "surveys.rows[0]", report).map(str::to_owned);
+    model.show_welcome = match xml.field(row, "showwelcome") {
+        None | Some("") | Some("Y") => true,
+        Some("N") => false,
+        _ => {
+            issue(
+                report,
+                DiagnosticCode::InvalidField,
+                "surveys.rows[0].showwelcome",
+                "showwelcome must be Y or N",
+            );
+            false
+        }
+    };
     if let Some(language) = &model.base_language
         && !model.languages.contains(language)
     {

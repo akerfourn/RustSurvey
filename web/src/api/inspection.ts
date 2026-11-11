@@ -8,6 +8,7 @@ import type {
   QuestionLabel,
   SurveyChoice,
   SurveyGroup,
+  SurveyMessages,
   SurveyQuestion,
   SurveyStudy,
   SurveySubquestion,
@@ -55,6 +56,15 @@ function title(value: unknown): LocalizedTitle {
 function questionLabel(value: unknown): QuestionLabel {
   const item = record(value);
   return { language: string(item.language), text: nullable(item.text), help: nullable(item.help) };
+}
+
+function surveyMessages(value: unknown): SurveyMessages {
+  const item = record(value);
+  return {
+    language: string(item.language),
+    welcome: nullable(item.welcome),
+    end: nullable(item.end),
+  };
 }
 
 function groupLabel(value: unknown): GroupLabel {
@@ -142,6 +152,8 @@ function study(value: unknown): SurveyStudy {
     baseLanguage: nullable(item.baseLanguage),
     languages: array(item.languages, string),
     titles: array(item.titles, title),
+    showWelcome: boolean(item.showWelcome),
+    messages: array(item.messages, surveyMessages),
     groups: array(item.groups, group),
     questions: array(item.questions, question),
     subquestions: array(item.subquestions, subquestion),

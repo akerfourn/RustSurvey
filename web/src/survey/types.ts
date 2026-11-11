@@ -22,6 +22,12 @@ export interface QuestionAttribute {
   language: string | null;
 }
 
+export interface SurveyMessages {
+  language: string;
+  welcome: string | null;
+  end: string | null;
+}
+
 export interface SurveyGroup {
   id: string;
   order: number;
@@ -71,6 +77,8 @@ export interface SurveyStudy {
   baseLanguage: string | null;
   languages: string[];
   titles: LocalizedTitle[];
+  showWelcome: boolean;
+  messages: SurveyMessages[];
   groups: SurveyGroup[];
   questions: SurveyQuestion[];
   subquestions: SurveySubquestion[];

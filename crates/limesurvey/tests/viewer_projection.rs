@@ -44,3 +44,73 @@ fn test_source_id_should_serialize_as_text_when_identifier_exceeds_javascript_in
 
     assert_eq!(serialized, "\"18446744073709551615\"");
 }
+
+#[test]
+fn test_projection_should_expose_welcome_and_end_per_language_without_changing_html() {
+    let document = LssDocument::parse(DEMO.as_bytes(), Limits::default()).unwrap();
+    let model = document.source_model().unwrap();
+
+    assert!(model.show_welcome);
+    assert_eq!(model.messages.len(), 2);
+    assert_eq!(
+        model.messages[0].welcome.as_deref(),
+        Some(
+            "<p>Essayez les choix, les conditions et les tableaux. Vos réponses restent locales.</p>"
+        )
+    );
+    assert_eq!(
+        model.messages[1].end.as_deref(),
+        Some("<p>Thank you for trying this, {PROJECT}!</p>")
+    );
+    assert_eq!(document.original_xml(), DEMO.as_bytes());
+}
+
+#[test]
+fn test_projection_should_keep_message_content_when_welcome_display_is_disabled() {
+    let source = DEMO.replace(
+        "<showwelcome>Y</showwelcome>",
+        "<showwelcome>N</showwelcome>",
+    );
+    let document = LssDocument::parse(source.as_bytes(), Limits::default()).unwrap();
+    let model = document.source_model().unwrap();
+
+    assert!(!model.show_welcome);
+    assert!(model.messages[0].welcome.is_some());
+}
+
+#[test]
+fn test_projection_should_distinguish_missing_and_empty_messages_when_source_is_optional() {
+    let source = include_str!("fixtures/minimal-623.lss");
+    let absent = LssDocument::parse(source.as_bytes(), Limits::default()).unwrap();
+    let source = DEMO.replace(
+        "&lt;p&gt;Thank you for trying this, {PROJECT}!&lt;/p&gt;",
+        "",
+    );
+    let empty = LssDocument::parse(source.as_bytes(), Limits::default()).unwrap();
+
+    assert!(absent.source_model().unwrap().messages[0].welcome.is_none());
+    assert_eq!(
+        empty.source_model().unwrap().messages[1].end.as_deref(),
+        Some("")
+    );
+}
+
+#[test]
+fn test_projection_should_report_invalid_welcome_flag_when_source_setting_is_unknown() {
+    let source = DEMO.replace(
+        "<showwelcome>Y</showwelcome>",
+        "<showwelcome>invalid</showwelcome>",
+    );
+    let document = LssDocument::parse(source.as_bytes(), Limits::default()).unwrap();
+
+    assert!(
+        document
+            .report()
+            .diagnostics
+            .iter()
+            .any(
+                |diagnostic| diagnostic.location == "surveys.rows[0].showwelcome"
+                    && diagnostic.message.contains("Y or N")
+            )
+    );
+}

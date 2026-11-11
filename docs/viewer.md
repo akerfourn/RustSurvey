@@ -9,8 +9,10 @@ endpoint d’analyse que l’upload d’un fichier local.
 1. Renseigner un nom de projet, choisir Rust et indiquer la taille de l’équipe.
 2. Passer au groupe suivant, choisir une expérience et un objectif.
 3. Cocher « Autre objectif » pour faire apparaître la précision obligatoire.
-4. Terminer par une note et valider la saisie locale.
-5. Revenir au premier groupe et changer de technologie pour masquer le groupe
+4. Essayer les trois tableaux. Choisir « À l’aise » dans la colonne « Après »
+   affiche une autre précision obligatoire.
+5. Terminer par une note et valider la saisie locale.
+6. Revenir au premier groupe et changer de technologie pour masquer le groupe
    Rust et effacer ses réponses.
 
 Le changement de langue conserve la saisie. Le bouton de réinitialisation,
@@ -20,16 +22,18 @@ réponses LimeSurvey et sa réimportation n’est pas encore implémentée.
 
 ## Types et règles couverts
 
-| Types LSS | Saisie dans cet aperçu              |
-| --------- | ----------------------------------- |
-| S, T, U   | Texte court ou multiligne           |
-| N         | Nombre                              |
-| D         | Date calendaire ISO, sans heure     |
-| L, !      | Choix simple, liste ou menu         |
-| 5, Y, G   | Note 1–5, oui/non, genre historique |
-| M         | Cases à cocher par sous-question    |
-| Q, K      | Textes ou nombres multiples         |
-| X         | Information sans réponse            |
+| Types LSS | Saisie dans cet aperçu                        |
+| --------- | --------------------------------------------- |
+| S, T, U   | Texte court ou multiligne                     |
+| N         | Nombre                                        |
+| D         | Date calendaire ISO, sans heure               |
+| L, !      | Choix simple, liste ou menu                   |
+| 5, Y, G   | Note 1–5, oui/non, genre historique           |
+| M         | Cases à cocher par sous-question              |
+| Q, K      | Textes ou nombres multiples                   |
+| F, H      | Tableau de choix par lignes/colonnes          |
+| :         | Matrice à cases si `multiflexible_checkbox=1` |
+| X         | Information sans réponse                      |
 
 Les libellés, aides et choix utilisent la langue sélectionnée, puis la langue de
 base en repli. Le HTML importé est converti en texte dans un élément `template`
@@ -42,8 +46,36 @@ Le moteur TypeScript prend en charge :
   devenues masquées ; cycles et variables inconnues signalés ;
 - obligatoire strict, obligatoire souple avec avertissement avant de continuer ;
 - nombres finis, entier seul, limites `min_num_value_n`/`max_num_value_n` ;
-- `min_answers`, `max_answers`, `max_characters` et `em_validation_q` ;
+- `min_answers`, `max_answers`, `maximum_chars` et `em_validation_q` ;
 - substitutions de texte entre accolades avec les expressions prises en charge.
+
+Les réponses F et H sont adressées par `CODE_sousquestion`. Les cellules d’une
+matrice sont adressées par `CODE_ligne_colonne`, avec les deux axes source
+`scale_id=0` et `scale_id=1`. H transpose l’affichage sans changer les réponses.
+Les codes de choix sont conservés comme chaînes, y compris les zéros initiaux.
+
+Une matrice conserve l’absence de saisie, la valeur cochée `1` et la valeur
+décochée `0`. Effacer une question remet ses cellules à vide ; masquer la
+question supprime toutes ses réponses. Une matrice obligatoire demande au moins
+une case cochée par ligne ; une question F/H obligatoire demande une réponse par
+sous-question. Le caractère facultatif reste respecté.
+
+Le viewer restitue les textes d’accueil/fin dans la langue choisie. L’accueil
+est présenté si `showwelcome` l’autorise et si un texte est présent. Modifier
+des réponses après validation conserve la saisie, tandis que « Recommencer »
+revient au début. Les libellés sont convertis en texte selon la même règle que
+ceux des questions.
+
+Les choix simples et multiples respectent `display_columns`, avec repli sur une
+colonne sur petit écran. Les tableaux restent accessibles par défilement
+horizontal. Les groupes possèdent une navigation en haut et en bas ; un contrôle
+en échec ramène à la première question à corriger.
+
+Les réglages de largeur (`input_size`) et les préférences d’édition
+(`save_as_default`, `clear_default`) ne bloquent plus l’exécution. Les options
+secondaires de minuterie restent sans effet quand aucune durée n’est définie.
+Une minuterie active et les attributs d’exécution inconnus restent
+diagnostiqués.
 
 La grammaire bornée accepte nombres, chaînes, booléens, parenthèses,
 comparaisons, arithmétique et opérateurs booléens `and`, `or`, `not`, `&&`,
@@ -56,17 +88,24 @@ confrontées à un corpus exécuté dans LimeSurvey 6.5.14. Les comparaisons de
 chaînes, les règles sur les valeurs vides et les variantes de fonctions ne sont
 pas une garantie de sémantique ExpressionScript complète.
 
-Les tableaux, classements, fichiers, équations, champs « autre » natifs,
-expressions régulières, filtres et pertinence de sous-questions, ordres
-aléatoires et attributs actifs inconnus produisent des limites explicites. Les
-questions concernées sont consultables avec saisie désactivée ; la validation
-finale locale reste désactivée. Les conditions historiques, valeurs par défaut
-et quotas présents bloquent également cette validation. Le viewer impose sa
-navigation par groupe : il ne reproduit pas tous les paramètres de collecte.
+Les autres variantes de tableaux, classements, fichiers, équations, champs «
+autre » natifs, expressions régulières, filtres et pertinence de sous-questions,
+ordres aléatoires et attributs actifs inconnus produisent des limites
+explicites. Les questions concernées sont consultables avec saisie désactivée ;
+la validation finale locale reste désactivée. Les conditions historiques,
+valeurs par défaut et quotas présents bloquent également cette validation. Le
+viewer impose sa navigation par groupe : il ne reproduit pas tous les paramètres
+de collecte.
 
 Une erreur de structure désactive toute saisie. Un schéma différent de 623
 permet seulement l’inspection des métadonnées et du rapport ; aucune conversion
 implicite de schéma n’est effectuée.
+
+Le programme client est borné à 2 000 questions, 2 000 cellules par question, 2
+000 choix affichés par tableau F/H et 20 000 cellules pour l’ensemble de
+l’étude. Les produits d’axes sont vérifiés avant leur allocation ; un
+dépassement permet seulement l’inspection et ne rend pas un grand tableau
+désactivé.
 
 ## Frontière HTTP
 
@@ -104,7 +143,10 @@ versionnée.
 `npm test` exécute les tests purs du moteur avec le lanceur natif Node. Le mode
 TypeScript utilise `--experimental-strip-types`, disponible sur Node 22.15 de
 cette machine ; aucun framework de test supplémentaire n’est ajouté. Les tests
-Rust exercent la projection et la frontière HTTP sans réseau ni base externe.
+Rust exercent la projection, les messages localisés et la frontière HTTP sans
+réseau ni base externe. Les fixtures synthétiques couvrent F/H, matrices,
+dépendances, cellules facultatives/obligatoires et limites. Les exports locaux
+de `.surveys-tests/` restent ignorés et hors des tests versionnés.
 
 Le parcours HTTP local a été vérifié avec Vite, le backend, le décodeur JSON et
 le moteur réels. Le navigateur pilotable étant indisponible dans la session de

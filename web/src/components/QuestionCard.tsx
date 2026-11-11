@@ -7,6 +7,7 @@ interface QuestionCardProps extends QuestionInputProps {
   errors: string[];
   warnings: string[];
   readOnly: boolean;
+  onClear: (fields: readonly string[]) => void;
 }
 
 function requirement(question: RuntimeQuestion): string {
@@ -17,17 +18,8 @@ function requirement(question: RuntimeQuestion): string {
 }
 
 export function QuestionCard(props: QuestionCardProps) {
-  const {
-    question,
-    language,
-    baseLanguage,
-    answers,
-    fields,
-    errors,
-    warnings,
-    readOnly,
-    onAnswer,
-  } = props;
+  const { question, language, baseLanguage, answers, fields, errors, warnings, readOnly, onClear } =
+    props;
   const label = localized(question.source.labels, language, baseLanguage);
   const title = pipeText(plainText(label?.text) || question.source.code, answers, fields);
   const help = pipeText(plainText(label?.help), answers, fields);
@@ -55,7 +47,7 @@ export function QuestionCard(props: QuestionCardProps) {
       </p>
     );
   function handleClear(): void {
-    for (const field of question.fields) onAnswer(field, "");
+    onClear(question.fields);
   }
   if (question.source.sourceType === "X") {
     return (
@@ -68,6 +60,8 @@ export function QuestionCard(props: QuestionCardProps) {
     );
   }
   let clearContent = null;
+  let inputContent = null;
+  if (question.issues.length === 0) inputContent = <QuestionInput {...props} />;
   if (question.issues.length === 0 && !readOnly)
     clearContent = (
       <button type="button" className="text-button" onClick={handleClear}>
@@ -76,6 +70,8 @@ export function QuestionCard(props: QuestionCardProps) {
     );
   return (
     <fieldset
+      id={`question-${question.source.id}`}
+      tabIndex={-1}
       className="question"
       disabled={readOnly || question.issues.length > 0}
       aria-describedby={`help-${question.source.id}`}
@@ -88,7 +84,7 @@ export function QuestionCard(props: QuestionCardProps) {
       </legend>
       {helpContent}
       {issueContent}
-      <QuestionInput {...props} />
+      {inputContent}
       <div aria-live="polite">
         {errorContent}
         {warningContent}

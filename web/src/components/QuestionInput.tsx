@@ -2,6 +2,8 @@ import type { TargetedEvent } from "preact";
 import { fieldName, type RuntimeQuestion } from "../survey/engine.ts";
 import { localized, plainText } from "../survey/text.ts";
 import type { Answers } from "../survey/types.ts";
+import { displayColumns } from "../survey/attributes.ts";
+import { ArrayInput } from "./ArrayInput.tsx";
 
 export interface QuestionInputProps {
   question: RuntimeQuestion;
@@ -141,7 +143,11 @@ function SingleChoice(props: QuestionInputProps) {
       <span>{option.label}</span>
     </label>
   ));
-  return <div className="choices">{radios}</div>;
+  return (
+    <div className="choices" style={{ "--choice-columns": displayColumns(question.source) }}>
+      {radios}
+    </div>
+  );
 }
 
 function MultipleInput({
@@ -187,12 +193,17 @@ function MultipleInput({
       </div>
     );
   });
-  return <div className="choices">{inputs}</div>;
+  return (
+    <div className="choices" style={{ "--choice-columns": displayColumns(question.source) }}>
+      {inputs}
+    </div>
+  );
 }
 
 export function QuestionInput(props: QuestionInputProps) {
   const { question, answers, onAnswer } = props;
   const type = question.source.sourceType;
+  if (["F", "H", ":"].includes(type)) return <ArrayInput {...props} />;
   if (["L", "!", "5", "Y", "G"].includes(type)) return <SingleChoice {...props} />;
   if (["M", "Q", "K"].includes(type)) return <MultipleInput {...props} />;
   return (

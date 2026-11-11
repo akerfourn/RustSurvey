@@ -34,6 +34,8 @@ function study(questions: SurveyQuestion[]): SurveyStudy {
     baseLanguage: "fr",
     languages: ["fr"],
     titles: [],
+    showWelcome: false,
+    messages: [],
     groups: [
       { id: "10", order: 0, relevance: "1", randomizationGroup: "", labels: [] },
       { id: "20", order: 1, relevance: "STACK == 'rust'", randomizationGroup: "", labels: [] },

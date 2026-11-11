@@ -42,11 +42,24 @@ async fn test_inspect_should_return_localized_questions_and_rules_when_upload_is
     assert_eq!(body["report"]["sourceSchema"], 623);
     assert_eq!(body["report"]["errors"], 0, "{body}");
     assert_eq!(body["study"]["groups"][1]["relevance"], "STACK == 'rust'");
-    assert_eq!(body["study"]["questions"].as_array().unwrap().len(), 8);
+    assert_eq!(body["study"]["questions"].as_array().unwrap().len(), 12);
     assert_eq!(body["study"]["questions"][0]["id"], "101");
     assert_eq!(body["study"]["questions"][0]["mandatory"], "strict");
-    assert_eq!(body["study"]["subquestions"].as_array().unwrap().len(), 3);
-    assert_eq!(body["study"]["answers"].as_array().unwrap().len(), 5);
+    assert_eq!(body["study"]["subquestions"].as_array().unwrap().len(), 11);
+    assert_eq!(body["study"]["answers"].as_array().unwrap().len(), 9);
+    assert_eq!(body["study"]["showWelcome"], true);
+    assert!(
+        body["study"]["messages"][0]["welcome"]
+            .as_str()
+            .unwrap()
+            .contains("tableaux")
+    );
+    assert!(
+        body["study"]["messages"][1]["end"]
+            .as_str()
+            .unwrap()
+            .contains("{PROJECT}")
+    );
     assert_eq!(body["study"]["answers"][0]["labels"][0]["text"], "Rust");
 }
 

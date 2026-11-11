@@ -134,6 +134,13 @@ pub struct LocalizedTitle {
     pub value: Option<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct LocalizedSurveyMessages {
+    pub language: String,
+    pub welcome: Option<String>,
+    pub end: Option<String>,
+}
+
 #[derive(Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SurveySource {
@@ -141,6 +148,8 @@ pub struct SurveySource {
     pub base_language: Option<String>,
     pub languages: Vec<String>,
     pub titles: Vec<LocalizedTitle>,
+    pub show_welcome: bool,
+    pub messages: Vec<LocalizedSurveyMessages>,
     pub groups: Vec<Group>,
     pub questions: Vec<Question>,
     pub subquestions: Vec<Subquestion>,

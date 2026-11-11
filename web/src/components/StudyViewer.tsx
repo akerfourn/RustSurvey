@@ -1,57 +1,23 @@
 import { useMemo, useState } from "preact/hooks";
 import type { TargetedEvent } from "preact";
-import {
-  createRuntime,
-  evaluateSnapshot,
-  runtimeIssues,
-  type Snapshot,
-  type SurveyRuntime,
-} from "../survey/engine.ts";
-import { localized, plainText } from "../survey/text.ts";
+import { createRuntime, evaluateSnapshot, runtimeIssues } from "../survey/engine.ts";
+import { downloadAnswers } from "../survey/download.ts";
+import { localized, pipeText, plainText } from "../survey/text.ts";
 import type { Inspection, SurveyStudy } from "../survey/types.ts";
-import { validate, type Validation } from "../survey/validation.ts";
-import { QuestionCard } from "./QuestionCard.tsx";
+import { validate } from "../survey/validation.ts";
+import { StudyPage } from "./StudyPage.tsx";
+import { SurveyMessage } from "./SurveyMessage.tsx";
 
 interface StudyViewerProps {
   study: SurveyStudy;
   inspection: Inspection;
 }
 
-function firstErrorGroup(
-  runtime: SurveyRuntime,
-  validation: Validation,
-  snapshot: Snapshot,
-): string | undefined {
-  return snapshot.groups.find((group) =>
-    [...validation.errors.keys()].some(
-      (id) => runtime.questions.get(id)?.source.groupId === group.id,
-    ),
-  )?.id;
-}
-
-function downloadAnswers(
-  study: SurveyStudy,
-  language: string,
-  snapshot: Snapshot,
-  complete: boolean,
-): void {
-  const content = JSON.stringify(
-    {
-      format: "rustsurvey-local-preview-v1",
-      surveyId: study.surveyId,
-      language,
-      complete,
-      answers: Object.fromEntries(snapshot.answers),
-    },
-    null,
-    2,
-  );
-  const url = URL.createObjectURL(new Blob([content], { type: "application/json" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = "rustsurvey-local-answers.json";
-  anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+function focusQuestion(id: string | undefined): void {
+  if (id === undefined) return;
+  const element = document.getElementById(`question-${id}`);
+  element?.focus({ preventScroll: true });
+  element?.scrollIntoView({ block: "center" });
 }
 
 export function StudyViewer({ study, inspection }: StudyViewerProps) {
@@ -59,13 +25,18 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
   const [answers, setAnswers] = useState(new Map<string, string>());
   const [language, setLanguage] = useState(study.baseLanguage ?? study.languages[0] ?? "fr");
   const [groupId, setGroupId] = useState<string | undefined>(study.groups[0]?.id);
+  const [started, setStarted] = useState(false);
   const [attempted, setAttempted] = useState(false);
   const [complete, setComplete] = useState(false);
   const snapshot = useMemo(() => evaluateSnapshot(runtime, answers), [runtime, answers]);
   const currentGroup = snapshot.groups.find((group) => group.id === groupId) ?? snapshot.groups[0];
   const position = snapshot.groups.findIndex((group) => group.id === currentGroup?.id);
   const currentValidation = validate(runtime, snapshot, currentGroup?.id);
-  const issues = runtimeIssues(runtime, snapshot);
+  const messages = localized(study.messages, language, study.baseLanguage);
+  const welcome = pipeText(plainText(messages?.welcome), snapshot.answers, runtime.fields);
+  const ending = pipeText(plainText(messages?.end), snapshot.answers, runtime.fields);
+  const hasWelcome = study.showWelcome && welcome.text !== "";
+  const issues = [...runtimeIssues(runtime, snapshot), ...welcome.issues, ...ending.issues];
   for (const section of inspection.report.sections) {
     if (
       ["conditions", "defaultvalues", "quota", "quota_members", "quota_languagesettings"].includes(
@@ -79,25 +50,42 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
   const readOnly = inspection.report.errors > 0 || runtime.issues.length > 0;
   const cannotComplete = readOnly || issues.length > 0;
 
-  function handleAnswer(field: string, value: string): void {
+  function changeAnswers(changes: readonly (readonly [string, string])[]): void {
     setAnswers((previous) => {
       const updated = new Map(previous);
-      updated.set(field, value);
+      for (const [field, value] of changes) updated.set(field, value);
       return evaluateSnapshot(runtime, updated).answers;
     });
+    setStarted(true);
     setComplete(false);
+  }
+  function handleAnswer(field: string, value: string): void {
+    changeAnswers([[field, value]]);
+  }
+  function handleClear(fields: readonly string[]): void {
+    changeAnswers(fields.map((field) => [field, ""]));
   }
   function handleLanguage(event: TargetedEvent<HTMLSelectElement>): void {
     setLanguage(event.currentTarget.value);
   }
-  function handlePrevious(): void {
-    setGroupId(snapshot.groups[position - 1]?.id);
-    setAttempted(false);
+  function handleStart(): void {
+    setStarted(true);
+  }
+  function handleEdit(): void {
     setComplete(false);
   }
+  function handlePrevious(): void {
+    if (position <= 0) setStarted(false);
+    else setGroupId(snapshot.groups[position - 1]?.id);
+    setAttempted(false);
+  }
   function handleNext(): void {
+    setStarted(true);
     setAttempted(true);
-    if (currentValidation.errors.size > 0) return;
+    if (currentValidation.errors.size > 0) {
+      focusQuestion(currentValidation.errors.keys().next().value);
+      return;
+    }
     if (currentValidation.warnings.size > 0 && !attempted) return;
     if (position < snapshot.groups.length - 1) {
       setGroupId(snapshot.groups[position + 1]?.id);
@@ -106,7 +94,10 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
     }
     const all = validate(runtime, snapshot);
     if (all.errors.size > 0) {
-      setGroupId(firstErrorGroup(runtime, all, snapshot));
+      const firstGroup = snapshot.groups.find((group) =>
+        [...all.errors.keys()].some((id) => runtime.questions.get(id)?.source.groupId === group.id),
+      );
+      setGroupId(firstGroup?.id);
       return;
     }
     if (!cannotComplete) setComplete(true);
@@ -117,6 +108,7 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
   function handleReset(): void {
     setAnswers(new Map());
     setGroupId(study.groups[0]?.id);
+    setStarted(false);
     setAttempted(false);
     setComplete(false);
   }
@@ -143,87 +135,36 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
         désactivée.
       </p>
     );
+  let nextLabel = "Groupe suivant";
+  if (position === snapshot.groups.length - 1) nextLabel = "Valider la saisie locale";
+  if (attempted && currentValidation.errors.size === 0 && currentValidation.warnings.size > 0)
+    nextLabel = "Continuer sans les réponses recommandées";
   let pageContent = (
     <p className="notice">Aucune question pertinente à afficher pour les réponses actuelles.</p>
   );
-  let nextLabel = "Groupe suivant";
-  if (position === snapshot.groups.length - 1) nextLabel = "Valider la saisie locale";
-  if (attempted && currentValidation.errors.size === 0 && currentValidation.warnings.size > 0) {
-    nextLabel = "Continuer sans les réponses recommandées";
-  }
-  if (currentGroup !== undefined) {
-    const groupLabel = localized(currentGroup.labels, language, study.baseLanguage);
-    const questions = [...runtime.questions.values()].filter(
-      (question) =>
-        question.source.groupId === currentGroup.id && snapshot.visible.has(question.source.id),
-    );
-    const questionContent = questions.map((question) => {
-      let errors: string[] = [];
-      let warnings: string[] = [];
-      if (attempted) {
-        errors = currentValidation.errors.get(question.source.id) ?? [];
-        warnings = currentValidation.warnings.get(question.source.id) ?? [];
-      }
-      return (
-        <QuestionCard
-          key={question.source.id}
-          question={question}
-          answers={snapshot.answers}
-          language={language}
-          baseLanguage={study.baseLanguage}
-          fields={runtime.fields}
-          errors={errors}
-          warnings={warnings}
-          readOnly={readOnly}
-          onAnswer={handleAnswer}
-        />
-      );
-    });
-    let validationContent = null;
-    if (attempted && currentValidation.errors.size > 0)
-      validationContent = (
-        <p className="notice error" role="alert">
-          Corrigez les réponses signalées avant de continuer.
-        </p>
-      );
+  if (hasWelcome && !started)
+    pageContent = <SurveyMessage message={welcome} completed={false} onContinue={handleStart} />;
+  else if (complete)
+    pageContent = <SurveyMessage message={ending} completed={true} onContinue={handleEdit} />;
+  else if (currentGroup !== undefined)
     pageContent = (
-      <div>
-        <div className="group-heading">
-          <p className="eyebrow">
-            Groupe {position + 1} sur {snapshot.groups.length}
-          </p>
-          <h3>{plainText(groupLabel?.name) || `Groupe ${currentGroup.id}`}</h3>
-          <p className="muted">{plainText(groupLabel?.description)}</p>
-        </div>
-        {questionContent}
-        {validationContent}
-        <nav className="viewer-navigation" aria-label="Parcours du questionnaire">
-          <button
-            type="button"
-            className="secondary"
-            disabled={position <= 0}
-            onClick={handlePrevious}
-          >
-            Précédent
-          </button>
-          <button
-            type="button"
-            disabled={readOnly || (position === snapshot.groups.length - 1 && cannotComplete)}
-            onClick={handleNext}
-          >
-            {nextLabel}
-          </button>
-        </nav>
-      </div>
-    );
-  }
-  let completionContent = null;
-  if (complete)
-    completionContent = (
-      <p className="notice success" role="status">
-        Saisie locale validée. Les réponses sont uniquement dans cet onglet ; vous pouvez les
-        télécharger ci-dessous.
-      </p>
+      <StudyPage
+        runtime={runtime}
+        snapshot={snapshot}
+        group={currentGroup}
+        language={language}
+        position={position}
+        validation={currentValidation}
+        attempted={attempted}
+        readOnly={readOnly}
+        onAnswer={handleAnswer}
+        onClear={handleClear}
+        previousDisabled={position <= 0 && !hasWelcome}
+        nextDisabled={readOnly || (position === snapshot.groups.length - 1 && cannotComplete)}
+        nextLabel={nextLabel}
+        onPrevious={handlePrevious}
+        onNext={handleNext}
+      />
     );
   return (
     <section className="viewer panel" aria-labelledby="viewer-title">
@@ -246,7 +187,6 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
       {readOnlyContent}
       {issueContent}
       {pageContent}
-      {completionContent}
       <div className="local-actions">
         <button type="button" className="secondary" onClick={handleDownload}>
           Télécharger les réponses (JSON)
