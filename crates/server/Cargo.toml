@@ -12,16 +12,23 @@ db-postgres = ["sea-orm/sqlx-postgres", "sea-orm/runtime-tokio-rustls", "rustsur
 db-sqlite = ["sea-orm/sqlx-sqlite", "rustsurvey-migration/db-sqlite"]
 
 [dependencies]
+argon2.workspace = true
 axum.workspace = true
+dotenvy.workspace = true
+getrandom.workspace = true
 http-body-util.workspace = true
+rustsurvey-domain = { path = "../domain" }
 rustsurvey-limesurvey = { path = "../limesurvey" }
 rustsurvey-migration = { path = "../migration", default-features = false }
 sea-orm.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
+subtle.workspace = true
 tokio.workspace = true
-tracing.workspace = true
 tracing-subscriber.workspace = true
+tracing.workspace = true
+uuid.workspace = true
 
 [dev-dependencies]
 tower.workspace = true

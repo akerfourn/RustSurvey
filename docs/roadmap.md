@@ -16,17 +16,21 @@ décrit le profil effectivement implémenté.
 
 ## Priorité du cycle actuel
 
-Avancer sur F0–F4 pour les capacités, types de questions, expressions, filtres
-et rendus autonomes, avec saisie en mémoire. Les fonctions nécessitant une
-persistance métier sont **différées** : F5/F6, reprise, fichiers, ressources
-durables, quotas globaux et effets serveur. Une simulation locale des calculs ou
-de l’ordre reste possible, sans annoncer leur continuité après fermeture.
+Un [premier éditeur natif](authoring.md) et la persistance SQL des définitions
+et de l’administration sont présents. Il permet de créer des questionnaires
+publics avec huit types de questions et un aperçu. Le parcours LSS conserve ses
+28 types sans fichiers. Les réponses restent en mémoire dans le navigateur.
 
-Les étapes de persistance et de migration ci-dessous restent des objectifs
+F5/F6 restent différés pour la collecte, la reprise, les fichiers, les
+ressources durables, les quotas globaux et les effets serveur. Les prochaines
+étapes d’édition devront préserver les imports LSS avant de les rendre
+modifiables, puis étendre le document natif et l’éditeur.
+
+La persistance des participations et leur migration restent des objectifs
 ultérieurs. Les futurs médias et pièces jointes suivront la
 [décision de stockage objet](decisions/0002-object-storage.md) : port commun,
 adaptateur S3 et adaptateur fichiers locaux, sans volume persistant requis pour
-le déploiement S3. Aucun moteur de stockage n’est ajouté pendant ce cycle.
+le déploiement S3. Aucun stockage de médias n’est ajouté pendant ce cycle.
 
 ## Étape 0 — Cadrage et squelette
 
@@ -70,10 +74,12 @@ les limites et ne transforme pas un import conservé en autorisation de collecte
 
 Un premier [viewer local](viewer.md) est disponible : upload LSS, informations
 de structure, rendu Preact et moteur partiel de pertinence/validation. Les
-réponses restent dans le navigateur, sans compte ni collecte serveur. Ce
-parcours ne remplit pas encore le critère de progression durable ci-dessous.
+réponses restent dans le navigateur, sans compte participant ni collecte
+serveur. Ce parcours ne remplit pas encore le critère de progression durable
+ci-dessous.
 
-- Introduire le schéma conçu et ses migrations sur les trois bases.
+- Définitions et administration : premières tables et migrations testées sur les
+  trois bases ; compléter ensuite campagnes et participations.
 - Charger réponses complètes/partielles, participants et états disponibles.
 - Implémenter les règles et le rendu Preact du profil couvert.
 - Sauvegarder les blocs de réponses et le checkpoint de façon atomique.
@@ -106,7 +112,8 @@ dans le corpus 6.5.14. La réussite d’une étude ne clôt pas cet objectif gé
 Les lots de formulaire peuvent avancer dès les étapes précédentes ; cette étape
 n’impose pas d’attendre la migration pour développer les types manquants.
 
-L’éditeur, les invitations et les outils d’exploitation restent des chantiers
-complémentaires. Chaque extension précise son impact sur les échanges, les
-données et le coût serveur. Les exports utilisateur affinent la priorité des cas
-réels ; ils ne remplacent pas l’analyse des sources de référence.
+L’extension de l’éditeur, les invitations et les outils d’exploitation restent
+des chantiers complémentaires. Chaque extension précise son impact sur les
+échanges, les données et le coût serveur. Les exports utilisateur affinent la
+priorité des cas réels ; ils ne remplacent pas l’analyse des sources de
+référence.

@@ -14,17 +14,17 @@ départ technique de RustSurvey, à conserver sauf besoin particulier.
 
 ## Contraintes acquises
 
-| Sujet          | Attente                                                   |
-| -------------- | --------------------------------------------------------- |
-| Serveur        | Rust minimal, ressources maîtrisées                       |
-| Navigateur     | TypeScript et Preact                                      |
-| Répartition    | Déporter les interactions et calculs sûrs côté client     |
-| Sécurité       | Contrôles serveur même lorsque le client valide déjà      |
-| Bases          | SQLite, MariaDB et PostgreSQL                             |
-| Évolution      | Migrations de base automatisées et versionnées            |
-| Échange        | Import/export de fichiers LimeSurvey                      |
-| Référence      | LimeSurvey 6.5.14 en production                           |
-| Étape actuelle | Import LSS, viewer et moteur de saisie locale sans compte |
+| Sujet          | Attente                                                          |
+| -------------- | ---------------------------------------------------------------- |
+| Serveur        | Rust minimal, ressources maîtrisées                              |
+| Navigateur     | TypeScript et Preact                                             |
+| Répartition    | Déporter les interactions et calculs sûrs côté client            |
+| Sécurité       | Contrôles serveur même lorsque le client valide déjà             |
+| Bases          | SQLite, MariaDB et PostgreSQL                                    |
+| Évolution      | Migrations de base automatisées et versionnées                   |
+| Échange        | Import/export de fichiers LimeSurvey                             |
+| Référence      | LimeSurvey 6.5.14 en production                                  |
+| Étape actuelle | Import LSS, viewer local, éditeur natif et compte administrateur |
 
 La cible fonctionnelle couvre tous les formulaires natifs de la version 6.5.14 :
 types de questions, variantes de rendu, règles et parcours. Les questionnaires
@@ -37,12 +37,15 @@ Les interfaces d’administration et réseau sont des chantiers distincts. Les
 thèmes et plugins personnalisés nécessitent un inventaire et une adaptation
 explicites ; leur code importé n’est pas exécuté automatiquement.
 
-La priorité actuelle est la couverture des formulaires **sans persistance
-métier**. Les fonctions nécessitant du stockage sont différées ; leur présence
-dans un import continue à être diagnostiquée. Les médias et pièces jointes
-utiliseront un port de stockage objet, avec adaptateurs S3 et fichiers locaux,
-selon la [décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne
-doit pas dépendre d’un volume disque persistant attaché au serveur.
+La persistance actuelle couvre les définitions et les sessions d’un unique
+administrateur, avec un premier éditeur natif. Les questionnaires sont publics
+sans compte participant. Les réponses restent locales ; collecte, reprise et
+fonctions de formulaire nécessitant un état durable sont différées. Leur
+présence dans un import continue à être diagnostiquée. Les médias et pièces
+jointes utiliseront un port de stockage objet, avec adaptateurs S3 et fichiers
+locaux, selon la [décision 0002](decisions/0002-object-storage.md). Le
+déploiement S3 ne doit pas dépendre d’un volume disque persistant attaché au
+serveur.
 
 La migration d’études en cours est une exigence acquise : conserver structure,
 réponses complètes et partielles, participants, droits de reprise et
@@ -65,7 +68,8 @@ certification des fonctions restent progressives.
 
 Le [viewer actuel](viewer.md) réalise un premier parcours sans persistance : le
 backend analyse la structure, le navigateur affiche les questions et évalue un
-sous-ensemble des règles. Les comptes utilisateurs sont hors de cette étape.
+sous-ensemble des règles. L’[éditeur](authoring.md) ajoute création et
+sauvegarde SQL, sans changer le périmètre local des réponses.
 
 Le [protocole de migration](study-migration.md) distingue conservation,
 réexport, exécution et continuité. Le transfert complet inclut les compléments

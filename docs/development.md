@@ -75,9 +75,11 @@ TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
 | `npm run check:all`    | Vérifications client et Rust    |
 
 Les tests Rust couvrent l’adaptateur LSS, sa CLI, la projection du viewer et
-l’API HTTP d’inspection. Les tests TypeScript couvrent les expressions,
-dépendances, validations et substitutions du moteur local. Ils sont isolés et ne
-nécessitent aucun service distant.
+l’API HTTP d’inspection, le domaine natif, les sessions et les sauvegardes SQL.
+Les tests TypeScript couvrent les expressions, dépendances, validations et
+substitutions du moteur local. Ils sont isolés et ne nécessitent aucun service
+distant. Le test externe optionnel décrit dans [Bases de données](database.md)
+utilise une base locale jetable fournie explicitement.
 
 ## Démarrage local
 
@@ -95,10 +97,12 @@ dépendance supplémentaire n’est nécessaire.
   `/api/health` ; <http://127.0.0.1:3000/api/health> par défaut.
 - SQLite : `rustsurvey.db` créé dans le répertoire courant, ignoré par Git.
 
-La page permet d’importer un `.lss` et d’essayer le [viewer](viewer.md). Son
-upload et le lien de contrôle utilisent le proxy Vite vers l’API ; les réponses
-sont uniquement en mémoire dans le navigateur. Le serveur gère Ctrl+C et, sur
-Unix, SIGTERM pour terminer proprement.
+La page présente les questionnaires publics. **Administration** ouvre le premier
+éditeur natif après connexion ; la configuration `.env` du compte est décrite
+dans le [README](../README.md). **Essayer un LSS** ouvre le [viewer](viewer.md).
+Son upload et le lien de contrôle utilisent le proxy Vite vers l’API ; les
+réponses sont uniquement en mémoire dans le navigateur. Le serveur gère Ctrl+C
+et, sur Unix, SIGTERM pour terminer proprement.
 
 Si le port 5173 est occupé, Vite choisit automatiquement le prochain port
 disponible et affiche l’adresse retenue dans le terminal.
@@ -114,11 +118,14 @@ conservent un port strict : un conflit arrête le démarrage.
 
 ## Configuration actuelle
 
-| Variable           | Défaut                            |
-| ------------------ | --------------------------------- |
-| `BIND_ADDRESS`     | `127.0.0.1:3000`                  |
-| `DATABASE_URL`     | `sqlite://rustsurvey.db?mode=rwc` |
-| `API_PROXY_TARGET` | Découvert par `npm run dev`       |
+| Variable              | Défaut                                     |
+| --------------------- | ------------------------------------------ |
+| `BIND_ADDRESS`        | `127.0.0.1:3000`                           |
+| `DATABASE_URL`        | `sqlite://rustsurvey.db?mode=rwc`          |
+| `API_PROXY_TARGET`    | Découvert par `npm run dev`                |
+| `ADMIN_USERNAME`      | `admin`, pour le premier compte            |
+| `ADMIN_PASSWORD`      | Aucun ; initialisation explicite du compte |
+| `ADMIN_COOKIE_SECURE` | `false` en debug, `true` en release        |
 
 `BIND_ADDRESS` définit l’IP et le port du serveur. `DATABASE_URL` définit la
 connexion de base ; le défaut SQLite permet de créer le fichier. Avec
@@ -126,9 +133,25 @@ connexion de base ; le défaut SQLite permet de créer le fichier. Avec
 et lance uniquement Vite. Avec `npm run dev:web`, cette variable configure le
 proxy Vite ; son défaut est alors `http://127.0.0.1:3000`.
 
-Le serveur ne charge pas `.env` automatiquement. `.env.example` est une
-référence à exporter dans l’environnement du processus, sans secrets réels. Les
-valeurs ne sont pas injectées dans le bundle client.
+Le backend Rust charge automatiquement le `.env` de son répertoire courant. Avec
+`npm run dev`, c’est la racine du projet. Copier `.env.example` vers `.env`
+suffit pour les tests locaux : compte `admin`, mot de passe
+`rustsurvey-dev-only`. Ces identifiants publics doivent être remplacés hors des
+tests locaux ; `.env` est ignoré par Git.
+
+L’environnement du processus prend priorité sur le fichier, y compris pour les
+valeurs vides. Le chargement n’altère pas l’environnement global et ne transmet
+pas les valeurs au frontend. Un fichier absent reste facultatif ; un fichier
+illisible ou invalide arrête le serveur avec une erreur sans secrets. Seul
+`.env` est chargé, sans recherche dans les répertoires parents ni variantes
+automatiques `.env.local` ou `.env.production`. Le lanceur et Vite conservent
+leur configuration propre, notamment `API_PROXY_TARGET` dans l’environnement.
+
+Le serveur crée automatiquement les tables de définitions et d’administration.
+Le mode `DATABASE_URL=sqlite::memory:` les conserve uniquement jusqu’à l’arrêt,
+avec un pool d’une connexion. Le mode fichier par défaut conserve
+questionnaires, compte et sessions ; modifier les variables de bootstrap ne
+remplace pas le compte existant. Voir le [périmètre de l’éditeur](authoring.md).
 
 Exemple avec une autre adresse d’API :
 
@@ -147,32 +170,38 @@ production restent à préparer ; `vite preview` n’est pas un déploiement.
 
 ## Vérifications et limites
 
-Bilan du socle et du premier viewer, le 10 novembre 2026 :
+Bilan complété avec le stockage et l’administration le 11 novembre 2026 :
 
-| Contrôle                        | Résultat                                 |
-| ------------------------------- | ---------------------------------------- |
-| Outillage                       | Outils requis présents                   |
-| Formatage, ESLint, TypeScript   | Réussis                                  |
-| Compilation Rust, trois pilotes | Réussie                                  |
-| Rustfmt et Clippy               | Aucun avertissement                      |
-| Tests Cargo                     | Adaptateur, CLI, projection et API       |
-| Tests TypeScript                | Moteur et validations locales            |
-| SQLite                          | Démarrage et redémarrage vérifiés        |
-| HTTP, Vite et proxy             | Réponses locales vérifiées               |
-| SIGTERM                         | Arrêt propre                             |
-| PostgreSQL/MariaDB              | Exécution non testée                     |
-| LimeSurvey                      | Lecture LSS et réexport original         |
-| Viewer                          | Parcours HTTP vérifié, visuel à vérifier |
+| Contrôle                        | Résultat                                  |
+| ------------------------------- | ----------------------------------------- |
+| Outillage                       | Outils requis présents                    |
+| Formatage, ESLint, TypeScript   | Réussis                                   |
+| Compilation Rust, trois pilotes | Réussie                                   |
+| Rustfmt et Clippy               | Aucun avertissement                       |
+| Tests Cargo                     | Adaptateur, CLI, projection et API        |
+| Tests TypeScript                | Moteur et validations locales             |
+| SQLite                          | Démarrage et redémarrage vérifiés         |
+| HTTP, Vite et proxy             | Réponses locales vérifiées                |
+| SIGTERM                         | Arrêt propre                              |
+| PostgreSQL 17/MariaDB 11.4      | Migration et écritures sur bases jetables |
+| LimeSurvey                      | Lecture LSS et réexport original          |
+| Viewer                          | Parcours HTTP vérifié, visuel à vérifier  |
 
-Le contrôle SQLite a également confirmé que seule la table vide d’historique des
-migrations est créée. Les pilotes PostgreSQL/MariaDB ont été compilés sans
-serveur externe ; cela ne valide ni un schéma multi-bases ni les futures
-migrations métier.
+Les tests des trois moteurs vérifient la première migration, son deuxième
+passage, les documents UTF-8 supérieurs à 64 Kio et les modifications
+concurrentes avec une seule sauvegarde gagnante. SQLite couvre aussi
+l’authentification, CSRF, historique, expiration et révocation. Les sessions et
+définitions ont été relues après redémarrage du processus HTTP sur une base
+fichier temporaire, à travers le proxy Vite.
+
+L’hôte d’automatisation du navigateur n’est pas disponible sur cette machine.
+Les contrôles HTTP, les tests du moteur et le build TypeScript ne constituent
+pas une validation visuelle du parcours d’édition.
 
 L’[audit des sources](limesurvey-source-audit.md) identifie des fixtures amont
-et leurs versions. La certification d’échange, la CI et les tests de migrations
-métier multi-bases restent à réaliser. Le dépôt n’impose pour l’instant aucun
-hébergeur Git ni service de CI particulier.
+et leurs versions. La certification d’échange, la CI et les futurs tests de
+montée de version avec données restent à réaliser. Le dépôt n’impose pour
+l’instant aucun hébergeur Git ni service de CI particulier.
 
 [vite]: https://vite.dev/guide/
 [node-releases]: https://nodejs.org/en/about/previous-releases

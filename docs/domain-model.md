@@ -2,9 +2,12 @@
 
 ## Statut et objectifs
 
-Décisions de conception du premier tour, sans implémentation métier ni migration
-SQL ajoutée. Elles répondent à la migration d’études en cours et à la contrainte
-d’un backend sobre sur les trois bases.
+Le modèle général ci-dessous prépare la migration d’études en cours et un
+backend sobre sur les trois bases. Le premier sous-ensemble implémenté couvre
+`studies`, `definition_revisions` et l’administration, avec migrations SQL. Le
+[domaine natif de l’éditeur](authoring.md) porte huit types de questions et un
+document versionné indépendant du format LSS. Les autres concepts de ce document
+restent des décisions de conception.
 
 Le modèle découle de l’[analyse du code 6.5.14](limesurvey-source-audit.md). Un
 export utilisateur enrichira les cas de validation ; il n’est pas un prérequis
@@ -208,11 +211,11 @@ peuvent être chargées depuis un cache borné partagé entre requêtes. Une
 sauvegarde ne réécrit que les blocs affectés et le checkpoint. L’export lit les
 réponses par lots ; il ne charge pas une étude entière en mémoire.
 
-Les premières tables logiques seront `studies`, `definition_revisions`, `runs`,
-`responses`, `answer_blocks`, `response_access`, `participants`,
-`transfer_batches`, `operation_receipts` et les correspondances source.
-Checkpoint et métadonnées peuvent rester sur la ligne réponse ; une table par
-concept n’est pas imposée.
+Les tables `studies` et `definition_revisions` sont présentes. Les suivantes
+restent à réaliser : `runs`, `responses`, `answer_blocks`, `response_access`,
+`participants`, `transfer_batches`, `operation_receipts` et les correspondances
+source. Checkpoint et métadonnées peuvent rester sur la ligne réponse ; une
+table par concept n’est pas imposée.
 
 Les identifiants d’objets internes sont des UUID sous forme textuelle canonique.
 Les versions et compteurs utilisent des entiers ; les instants natifs utilisent

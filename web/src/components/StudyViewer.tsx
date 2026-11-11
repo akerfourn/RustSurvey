@@ -16,7 +16,7 @@ import { SurveyMessage } from "./SurveyMessage.tsx";
 
 interface StudyViewerProps {
   study: SurveyStudy;
-  inspection: Inspection;
+  inspection?: Inspection;
 }
 
 function focusQuestion(id: string | undefined): void {
@@ -27,6 +27,7 @@ function focusQuestion(id: string | undefined): void {
 }
 
 export function StudyViewer({ study, inspection }: StudyViewerProps) {
+  const report = inspection?.report ?? { errors: 0, sections: [] };
   const runtime = useMemo(() => createRuntime(study), [study]);
   const textProblems = useMemo(() => studyTextIssues(runtime), [runtime]);
   const notices = useMemo(() => presentationNotices(runtime), [runtime]);
@@ -52,7 +53,7 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
     ...welcome.issues,
     ...ending.issues,
   ];
-  for (const section of inspection.report.sections) {
+  for (const section of report.sections) {
     if (
       ["conditions", "defaultvalues", "quota", "quota_members", "quota_languagesettings"].includes(
         section.name,
@@ -62,7 +63,7 @@ export function StudyViewer({ study, inspection }: StudyViewerProps) {
       issues.push(`Section ${section.name} : comportement non pris en charge par cet aperçu.`);
     }
   }
-  const readOnly = inspection.report.errors > 0 || runtime.issues.length > 0;
+  const readOnly = report.errors > 0 || runtime.issues.length > 0;
   const cannotComplete = readOnly || issues.length > 0;
 
   function changeAnswers(changes: readonly (readonly [string, string])[]): void {

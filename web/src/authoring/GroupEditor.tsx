@@ -1,0 +1,108 @@
+import type { TargetedEvent } from "preact";
+import { moveItem, type Group, type Question } from "./model.ts";
+import { QuestionEditor } from "./QuestionEditor.tsx";
+
+interface GroupEditorProps {
+  group: Group;
+  index: number;
+  count: number;
+  canAddQuestion: boolean;
+  onChange: (group: Group) => void;
+  onMove: (direction: -1 | 1) => void;
+  onRemove: () => void;
+  onAddQuestion: () => void;
+}
+export function GroupEditor({
+  group,
+  index,
+  count,
+  canAddQuestion,
+  onChange,
+  onMove,
+  onRemove,
+  onAddQuestion,
+}: GroupEditorProps) {
+  function handleTitle(event: TargetedEvent<HTMLInputElement>): void {
+    onChange({ ...group, title: event.currentTarget.value });
+  }
+  function handleDescription(event: TargetedEvent<HTMLTextAreaElement>): void {
+    onChange({ ...group, description: event.currentTarget.value });
+  }
+  function handleUp(): void {
+    onMove(-1);
+  }
+  function handleDown(): void {
+    onMove(1);
+  }
+  const questions = group.questions.map((question, questionIndex) => {
+    function handleChange(updated: Question): void {
+      onChange({
+        ...group,
+        questions: group.questions.map((item) => (item.id === question.id ? updated : item)),
+      });
+    }
+    function handleMove(direction: -1 | 1): void {
+      onChange({ ...group, questions: moveItem(group.questions, questionIndex, direction) });
+    }
+    function handleRemove(): void {
+      if (window.confirm("Retirer cette question du brouillon ?"))
+        onChange({
+          ...group,
+          questions: group.questions.filter((item) => item.id !== question.id),
+        });
+    }
+    return (
+      <QuestionEditor
+        key={question.id}
+        question={question}
+        index={questionIndex}
+        count={group.questions.length}
+        onChange={handleChange}
+        onMove={handleMove}
+        onRemove={handleRemove}
+      />
+    );
+  });
+  return (
+    <section className="panel group-editor">
+      <div className="section-heading">
+        <h2>Groupe {index + 1}</h2>
+        <div className="button-row">
+          <button type="button" className="text-button" onClick={handleUp} disabled={index === 0}>
+            Monter
+          </button>
+          <button
+            type="button"
+            className="text-button"
+            onClick={handleDown}
+            disabled={index === count - 1}
+          >
+            Descendre
+          </button>
+          <button type="button" className="text-button" onClick={onRemove}>
+            Retirer le groupe
+          </button>
+        </div>
+      </div>
+      <div className="editor-fields">
+        <label>
+          Titre du groupe
+          <input value={group.title} maxLength={500} onInput={handleTitle} />
+        </label>
+        <label>
+          Description
+          <textarea rows={2} value={group.description} onInput={handleDescription} />
+        </label>
+      </div>
+      {questions}
+      <button
+        type="button"
+        className="secondary"
+        onClick={onAddQuestion}
+        disabled={!canAddQuestion}
+      >
+        Ajouter une question
+      </button>
+    </section>
+  );
+}

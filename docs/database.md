@@ -4,7 +4,8 @@
 
 SQLite, MariaDB et PostgreSQL sont des cibles acquises. Le squelette utilise
 SeaORM avec ses pilotes SQLx ; la [documentation officielle][drivers] indique
-les pilotes SQLite, PostgreSQL et MySQL/MariaDB disponibles.
+les pilotes SQLite, PostgreSQL et MySQL/MariaDB disponibles. L’accès aux
+questionnaires utilise des constructeurs SeaQuery et des paramètres liés.
 
 Cela fournit une abstraction, pas une preuve que tous les futurs schémas et
 requêtes auront la même sémantique. La portabilité devra être testée sur les
@@ -47,9 +48,28 @@ sans les écrire dans le dépôt ni les journaux.
 d’écouter en HTTP, selon le mécanisme de [migration au démarrage][run].
 L’historique est géré par SeaORM dans `seaql_migrations`.
 
-La liste des migrations est actuellement **vide**. Le squelette ne définit
-aucune table métier, aucun modèle ORM de questionnaires ni commande de rollback.
-Il permet seulement d’initialiser le mécanisme et de vérifier la connexion.
+La migration `m20261111_000001_authoring` crée les premières tables :
+
+| Table                    | Contenu                                      |
+| ------------------------ | -------------------------------------------- |
+| `administrator`          | Compte unique, mot de passe Argon2id, échecs |
+| `administrator_sessions` | Empreintes de sessions, CSRF, expiration     |
+| `studies`                | Identité, titre, version courante, dates     |
+| `definition_revisions`   | Documents natifs versionnés et immuables     |
+
+Les révisions ont une clé composée étude/version et une clé étrangère vers
+l’étude. Les sessions référencent l’administrateur et possèdent un index
+d’expiration. Les instants utilisent des secondes Unix UTC en entier 64 bits.
+L’historique SQL est distinct de la version du document natif.
+
+La sauvegarde compare la version attendue et insère le document dans une même
+transaction. Un conflit ne crée pas de révision. Aucun opérateur JSON SQL n’est
+utilisé. Le compte n’est initialisé que si aucun administrateur n’existe.
+
+SQLite fichier est persistant par défaut. `sqlite::memory:` et les URL
+`mode=memory` gardent une connexion ouverte, sans expiration du pool, pour ne
+pas perdre le schéma après une période d’inactivité. Les autres URL utilisent au
+plus quatre connexions.
 
 ## Schéma métier conçu
 
@@ -64,12 +84,15 @@ la dépendance aux opérateurs JSON d’un moteur. La création ou activation d�
 
 Le type de stockage doit accepter les grands documents sur les trois moteurs. En
 particulier, ne pas présumer qu’une colonne `TEXT` a partout la même capacité.
-Les migrations isoleront les éventuels choix de type adaptés au moteur ; tester
-aussi un document supérieur à 64 Kio.
+La migration utilise `LONGTEXT` pour MariaDB et `TEXT` pour SQLite/PostgreSQL.
+Ce choix propre au moteur reste isolé dans le migrateur. Les tests vérifient un
+document Unicode supérieur à 64 Kio sur les trois moteurs.
 
 Les changements de format des documents ont leur propre versionnement et leur
 stratégie de conversion. Ils ne se confondent ni avec les migrations SQL, ni
-avec le `DBVersion` LimeSurvey. Aucune de ces tables n’est encore créée.
+avec le `DBVersion` LimeSurvey. Seules les études, leurs révisions et
+l’administration sont implémentées. Campagnes, réponses, participants et
+transferts restent à réaliser.
 
 ## Automatisation et déploiement
 
@@ -113,16 +136,32 @@ Pour SQLite en mémoire, les tests devront contrôler le partage des connexions 
 du schéma ; une connexion unique est le point de départ le plus simple. Une base
 fichier temporaire convient mieux aux tests de concurrence.
 
-## Vérifications à ajouter avec le premier schéma
+## Vérifications du premier schéma
 
-La matrice d’intégration devra prouver au minimum : installation vierge,
-deuxième passage sans changement, mise à niveau avec données, aller-retour UTF-8
-et contraintes de relations. Les tests de réversibilité utiliseront uniquement
-des bases jetables et des fixtures synthétiques.
+Le 11 novembre 2026, les tests ont été exécutés sur SQLite embarqué, PostgreSQL
+17 et MariaDB 11.4 en conteneurs locaux jetables : installation vierge, deuxième
+passage sans changement, connexion administrateur, documents UTF-8 de plus de 64
+Kio, lecture publique et sauvegarde versionnée.
 
-Une migration qui compile pour trois pilotes n’est pas encore une migration
-validée sur trois bases. Cette matrice fait partie de la prochaine étape de
-développement, pas des fonctionnalités achevées du squelette.
+Les tests courants utilisent SQLite mémoire, un temps et une entropie injectés.
+Ils couvrent aussi sessions, révocation, expiration, CSRF, validation, limites
+de corps, historique et concurrence entre deux modifications.
+
+Le test externe est ignoré par défaut. Après avoir créé une base locale vide
+nommée `rustsurvey_test`, exporter son URL sous `RUSTSURVEY_TEST_DATABASE_URL`,
+puis exécuter :
+
+```sh
+cargo test -p rustsurvey-server --all-features --locked --test workspace \
+  test_external_database_should_apply_migrations_and_roundtrip_large_documents \
+  -- --ignored
+```
+
+Le test refuse une base déjà initialisée et ne supprime aucune table.
+L’exécution est explicite ; aucun service ni conteneur n’est démarré par les
+tests courants. Les montées de version avec données et les migrations de
+documents seront testées avec le prochain schéma. Le `down` existe pour cette
+migration mais n’est pas une procédure de sauvegarde/restauration.
 
 [drivers]:
   https://www.sea-ql.org/SeaORM/docs/install-and-config/database-and-async-runtime/

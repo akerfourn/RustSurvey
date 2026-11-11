@@ -2,23 +2,48 @@ use std::{env, error::Error, future::Future, io, net::SocketAddr, time::Duration
 
 use axum::{Router, extract::State, http::StatusCode, routing::get};
 use rustsurvey_migration::{Migrator, MigratorTrait};
-use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use rustsurvey_server::settings::Settings;
+use sea_orm::{Database, DatabaseConnection};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt().init();
-    let address: SocketAddr = setting("BIND_ADDRESS", "127.0.0.1:3000")?
+    let settings = Settings::load(".env")?;
+    let address: SocketAddr = settings
+        .value_or("BIND_ADDRESS", "127.0.0.1:3000")?
         .parse()
         .map_err(|_| io::Error::other("BIND_ADDRESS must be an IP address and port"))?;
-    let automatic_port = cfg!(debug_assertions) && env::var_os("BIND_ADDRESS").is_none();
-    let database = connect_database().await?;
+    let automatic_port = cfg!(debug_assertions) && settings.get("BIND_ADDRESS")?.is_none();
+    let database = connect_database(&settings).await?;
     Migrator::up(&database, None)
         .await
         .map_err(|_| io::Error::other("database migration failed; startup stopped"))?;
+    let secure_cookie = match settings
+        .value_or(
+            "ADMIN_COOKIE_SECURE",
+            if cfg!(debug_assertions) {
+                "false"
+            } else {
+                "true"
+            },
+        )?
+        .as_str()
+    {
+        "true" => true,
+        "false" => false,
+        _ => return Err(io::Error::other("ADMIN_COOKIE_SECURE must be true or false").into()),
+    };
+    let workspace =
+        rustsurvey_server::workspace::WorkspaceState::new(database.clone(), secure_cookie);
+    if let Some(password) = settings.get("ADMIN_PASSWORD")? {
+        let username = settings.value_or("ADMIN_USERNAME", "admin")?;
+        rustsurvey_server::workspace::bootstrap_admin(&workspace, &username, &password).await?;
+    }
     let router = Router::new()
         .route("/api/health", get(health))
         .with_state(database.clone())
-        .merge(rustsurvey_server::inspection::routes());
+        .merge(rustsurvey_server::inspection::routes())
+        .merge(rustsurvey_server::workspace::routes(workspace));
     let shutdown = shutdown_signal()?;
     let listener = rustsurvey_server::network::bind_listener(address, automatic_port).await?;
     tracing::info!(address = %listener.local_addr()?, "HTTP server listening");
@@ -43,15 +68,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn connect_database() -> io::Result<DatabaseConnection> {
-    let url = setting("DATABASE_URL", "sqlite://rustsurvey.db?mode=rwc")?;
-    let mut options = ConnectOptions::new(url);
-    options
-        .min_connections(0)
-        .max_connections(4)
-        .connect_timeout(Duration::from_secs(5))
-        .acquire_timeout(Duration::from_secs(5))
-        .sqlx_logging(false);
+async fn connect_database(settings: &Settings) -> io::Result<DatabaseConnection> {
+    let url = settings.value_or("DATABASE_URL", "sqlite://rustsurvey.db?mode=rwc")?;
+    let options = rustsurvey_server::database::options(url);
     Database::connect(options).await.map_err(|_| {
         io::Error::other("database connection failed; check DATABASE_URL and compiled drivers")
     })
@@ -61,16 +80,6 @@ async fn health(State(database): State<DatabaseConnection>) -> (StatusCode, &'st
     match tokio::time::timeout(Duration::from_secs(2), database.ping()).await {
         Ok(Ok(())) => (StatusCode::OK, "ok"),
         _ => (StatusCode::SERVICE_UNAVAILABLE, "unavailable"),
-    }
-}
-
-fn setting(name: &str, default: &str) -> io::Result<String> {
-    match env::var(name) {
-        Ok(value) => Ok(value),
-        Err(env::VarError::NotPresent) => Ok(default.to_owned()),
-        Err(env::VarError::NotUnicode(_)) => {
-            Err(io::Error::other(format!("{name} must contain valid UTF-8")))
-        }
     }
 }
 

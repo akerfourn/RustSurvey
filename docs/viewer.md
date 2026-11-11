@@ -8,9 +8,10 @@ gérées. Zéro blocage détecté ne certifie pas l’équivalence d’un formul
 
 ## Essayer le parcours
 
-Démarrer le backend et Vite avec les commandes du [README](../README.md). Le
-bouton **Essayer l’exemple** télécharge un LSS synthétique et utilise le même
-endpoint d’analyse que l’upload d’un fichier local.
+Démarrer le backend et Vite avec les commandes du [README](../README.md), puis
+ouvrir **Essayer un LSS** (`#/import`). Le bouton **Essayer l’exemple**
+télécharge un LSS synthétique et utilise le même endpoint d’analyse que l’upload
+d’un fichier local.
 
 1. Renseigner un nom de projet, choisir Rust et indiquer la taille de l’équipe.
 2. Passer au groupe suivant, choisir une expérience et un objectif.
@@ -25,6 +26,11 @@ Le changement de langue conserve la saisie. Le bouton de réinitialisation,
 l’import d’une autre étude et le rechargement repartent de zéro. Le JSON
 téléchargeable conserve les cellules locales ; ce format n’est pas un export de
 réponses LimeSurvey et sa réimportation n’est pas encore implémentée.
+
+L’[éditeur natif](authoring.md) utilise aussi ce viewer pour ses aperçus et ses
+liens publics. La définition est alors chargée depuis SQL ; les réponses restent
+locales dans les deux parcours. Le compte administrateur n’intervient que pour
+créer et modifier les définitions.
 
 ## Types et règles couverts
 

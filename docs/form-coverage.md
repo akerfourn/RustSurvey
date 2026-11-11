@@ -10,14 +10,15 @@ limitent pas cette cible fonctionnelle.
 Ce document est un **audit et un plan de réalisation**, pas une annonce de
 compatibilité complète. La base de comparaison est le commit `62e21e0`, examinée
 le 11 novembre 2026, puis complétée par l’incrément local sans stockage du même
-jour. Les états ci-dessous reflètent ce nouvel incrément ; aucune migration SQL
-n’est ajoutée.
+jour. Les états ci-dessous décrivent le moteur de formulaire. L’incrément
+d’[édition native](authoring.md) ajoute ensuite le stockage SQL des définitions
+et de l’administration, sans ajouter de collecte de réponses.
 
-Priorité du cycle actuel : F0–F4 dans leur partie sans persistance métier. F5/F6
-et les fonctions demandant du stockage sont différés ; les propositions
-correspondantes ci-dessous décrivent la cible future. Les médias et fichiers
-suivront la [décision de stockage objet](decisions/0002-object-storage.md), avec
-adaptateurs S3 et fichiers locaux.
+Les fonctions F5/F6 demandant un stockage des participations restent différées ;
+les propositions correspondantes ci-dessous décrivent la cible future. Les
+médias et fichiers suivront la
+[décision de stockage objet](decisions/0002-object-storage.md), avec adaptateurs
+S3 et fichiers locaux.
 
 Le périmètre est le formulaire vu et rempli par le participant. L’éditeur
 administrateur, les invitations, les statistiques et RemoteControl sont des
@@ -335,9 +336,10 @@ Tout ce qui précède peut en grande partie être simulé localement. La collect
 réelle exige aussi un moteur Rust de validation et de transition : un résultat
 validé dans le navigateur n’est jamais une écriture de confiance.
 
-Les noms de tables ci-dessous sont **conceptuels** ; aucune migration n’est
-encore créée. Réutiliser le [modèle interne](domain-model.md) et la
-[stratégie SQL](database.md), plutôt qu’une table de réponses par étude.
+Les noms de tables de collecte ci-dessous sont **conceptuels**. Les premières
+migrations concernent seulement définitions et administration. Réutiliser le
+[modèle interne](domain-model.md) et la [stratégie SQL](database.md), plutôt
+qu’une table de réponses par étude.
 
 | Sujet                       | État durable nécessaire                            | Proposition de réalisation                                                       |
 | --------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- |

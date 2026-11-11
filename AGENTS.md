@@ -3,9 +3,10 @@
 ## Phase actuelle
 
 Le développement couvre l’adaptateur LimeSurvey, son outil CLI et un premier
-viewer web avec saisie locale. Aucun compte utilisateur n’est nécessaire à cette
-étape. Suivre les grandes lignes et livrer des incréments fonctionnels testés ;
-ne pas remplacer le code demandé par un nouveau tour de cadrage général.
+viewer web avec saisie locale, stockage SQL et premier éditeur natif. Un compte
+administrateur protège les écritures ; les questionnaires restent publics.
+Suivre les grandes lignes et livrer des incréments fonctionnels testés ; ne pas
+remplacer le code demandé par un nouveau tour de cadrage général.
 
 Lire [README.md](README.md), les [besoins](docs/requirements.md), le
 [modèle interne](docs/domain-model.md) et le document du domaine concerné avant
@@ -18,10 +19,12 @@ types, rendus et règles, suivre l’[audit de couverture](docs/form-coverage.md
 et son [catalogue](docs/form-catalog.md). Un LSS sans blocage détecté ne prouve
 pas la parité ; distinguer options interprétées, tolérées et non projetées.
 
-Priorité actuelle : types, règles et rendus sans persistance métier. Différer
-les fonctions nécessitant du stockage. Pour les futurs médias et fichiers,
-suivre la [décision de stockage objet](docs/decisions/0002-object-storage.md) :
-port commun, adaptateur compatible S3 et adaptateur local sur fichiers.
+La persistance actuelle couvre les définitions versionnées et les sessions
+administrateur. Lire le [périmètre de l’éditeur](docs/authoring.md) avant une
+modification de ces fonctions. Collecte et reprise des réponses restent à faire.
+Pour les futurs médias et fichiers, suivre la
+[décision de stockage objet](docs/decisions/0002-object-storage.md) : port
+commun, adaptateur compatible S3 et adaptateur local sur fichiers.
 
 ## Contraintes du produit
 

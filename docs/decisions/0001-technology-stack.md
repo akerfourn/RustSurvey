@@ -64,9 +64,9 @@ maintenant.
 | SeaORM/SeaQuery | Schéma commun aux moteurs | Abstraction supplémentaire |
 | SQLx direct     | Contrôle explicite du SQL | Variantes SQL à maintenir  |
 
-SeaORM et `sea-orm-migration` 2.0.4 sont retenus provisoirement pour vérifier la
-connexion et préparer le point d’entrée des migrations. Les pilotes et runtimes
-sont décrits dans la [documentation officielle][seaorm].
+SeaORM et `sea-orm-migration` 2.0.4 portent la connexion, les requêtes SeaQuery
+et les premières migrations métier. Les pilotes et runtimes sont décrits dans la
+[documentation officielle][seaorm].
 
 Les options par défaut sont désactivées dans les dépendances directes, puis les
 pilotes sont activés via les fonctionnalités Cargo du projet. SQLite est le
@@ -77,6 +77,9 @@ L’ORM est justifié par la contrainte des trois moteurs et des migrations. Son
 coût de compilation, sa requêtologie et sa consommation à l’exécution devront
 être observés avant de généraliser son usage. Une optimisation ciblée pourra
 utiliser SQLx derrière la même frontière d’accès aux données.
+
+La [décision 0003](0003-authoring.md) détaille les définitions SQL, les sessions
+administrateur et leurs dépendances cryptographiques ciblées.
 
 ## Lecture des fichiers XML
 

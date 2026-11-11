@@ -42,8 +42,9 @@ et continuité sont évalués séparément. Le
 [transfert d’études en cours](study-migration.md) prépare une cible fermée et ne
 l’ouvre qu’après validation d’un instantané cohérent.
 
-La première implémentation porte sur l’adaptateur `.lss`. Le modèle de stockage
-et le protocole complet restent à réaliser. Ces décisions s’appuient sur
+L’implémentation couvre l’adaptateur `.lss` et les premières définitions natives
+en SQL, avec [éditeur et administration](authoring.md). Le modèle de collecte et
+le protocole complet restent à réaliser. Ces décisions s’appuient sur
 l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans attendre un
 export de production.
 
@@ -52,8 +53,8 @@ indépendant du fournisseur. Un adaptateur compatible S3 permet le déploiement
 sans volume disque persistant ; un adaptateur local représente les mêmes objets
 par des fichiers. Les métadonnées et relations restent dans SQL. La
 [décision 0002](decisions/0002-object-storage.md) fixe ce contrat. Ces
-adaptateurs et la persistance métier sont différés : les prochains incréments
-concernent les formulaires et leur saisie locale.
+adaptateurs restent différés. La persistance actuelle concerne les définitions
+et les sessions administrateur ; la saisie des réponses reste locale.
 
 ## Frontière de confiance
 
@@ -82,7 +83,7 @@ schéma interne de LimeSurvey. Un adaptateur traduira les fichiers vers ce modè
 et produira des diagnostics de compatibilité explicites. La représentation
 source conservée ne remplacera jamais la validation du modèle exécutable.
 
-Quand le métier sera introduit, séparer progressivement :
+La séparation des modules suit les besoins :
 
 - les règles et types du domaine ;
 - les adaptateurs d’import/export ;
@@ -91,15 +92,23 @@ Quand le métier sera introduit, séparer progressivement :
 - le client et son moteur d’interactions.
 
 Créer ces modules au rythme des besoins. Le dépôt contient aujourd’hui
-`crates/server`, `crates/migration`, `crates/limesurvey` et `web`. Le modèle de
-lecture de l’adaptateur est propre au format source ; les identifiants natifs et
-leur correspondance seront introduits avec la persistance métier.
+`crates/domain`, `crates/server`, `crates/migration`, `crates/limesurvey` et
+`web`. Le domaine natif ne dépend que de Serde. L’accès SQL et les sessions sont
+isolés dans `crates/server/src/workspace`. Le modèle de lecture de l’adaptateur
+reste propre au format source ; sa conversion et ses correspondances restent à
+faire.
 
 ## Sessions et progression
 
-Le squelette n’implémente aucune session. Le modèle définit un checkpoint
-durable et des droits de reprise séparés des participants. Les principes
-d’implémentation sont les suivants :
+L’administration utilise des sessions opaques stockées en SQL, révocables et
+expirant après 12 heures. Le cookie est `HttpOnly`, `SameSite=Strict` et
+`Secure` en release ; un jeton CSRF protège les écritures. Aucun état de session
+permanent n’est attaché au processus. Voir la
+[décision 0003](decisions/0003-authoring.md).
+
+Le modèle de participation définit un checkpoint durable et des droits de
+reprise séparés des participants. Ils restent à implémenter avec les principes
+suivants :
 
 - Distinguer la session d’un administrateur de la participation à un survey.
 - Ne pas garder chaque participation dans une structure mémoire permanente.
@@ -111,9 +120,9 @@ d’implémentation sont les suivants :
 - Séparer les métadonnées d’accès des réponses lorsque l’anonymat l’exige.
 - Prévoir expiration et nettoyage sans balayage coûteux à chaque requête.
 
-Le mécanisme précis d’authentification, les cookies, l’anti-CSRF et la reprise
-sur plusieurs appareils dépendent des parcours retenus. Le simple choix de
-jetons signés ne règle pas à lui seul révocation, reprise ou confidentialité.
+La reprise des participations sur plusieurs appareils dépend des parcours
+retenus. Le simple choix de jetons signés ne règle pas à lui seul révocation,
+reprise ou confidentialité.
 
 ## Ressources et performance
 

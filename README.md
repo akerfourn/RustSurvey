@@ -7,8 +7,20 @@ responsable des autorisations, de la validation et de la persistance.
 
 ## État du projet
 
-**Premier parcours web fonctionnel.** Le dépôt permet d’importer un `.lss`,
-d’explorer ses informations et d’essayer une saisie locale sans compte :
+**Premier éditeur avec stockage SQL.** Un compte administrateur permet de créer
+et modifier des questionnaires. Ils sont publics dès leur enregistrement :
+
+- groupes et questions réordonnables, textes, codes et choix de réponse ;
+- huit types : texte court/long, nombre, date, choix unique/multiples, oui/non
+  et information ;
+- caractère facultatif, recommandé ou obligatoire ; aperçu avec le viewer ;
+- définitions natives validées côté Rust et versions immuables en SQL ;
+- sauvegarde protégée contre l’écrasement entre deux onglets ;
+- sessions administrateur en SQL, mot de passe Argon2id et protection CSRF ;
+- SQLite par défaut, migrations testées aussi sur PostgreSQL et MariaDB.
+
+Le parcours d’import `.lss` permet toujours d’explorer un fichier et d’essayer
+une saisie locale sans compte :
 
 - lecture bornée, diagnostics et modèle de lecture du schéma LimeSurvey 623 ;
 - réexport de l’original à l’octet près et modification ciblée d’un titre ;
@@ -21,14 +33,13 @@ d’explorer ses informations et d’essayer une saisie locale sans compte :
 - textes d’accueil et de fin localisés ;
 - réponses en mémoire dans l’onglet, téléchargeables en JSON ;
 - premier moteur client de pertinence et de validation, avec diagnostics ;
-- une connexion SQLite par défaut et des pilotes PostgreSQL/MariaDB activables ;
-- un point d’entrée pour les migrations, sans migration métier ;
 - un exemple synthétique bilingue pour essayer le parcours immédiatement.
 
-Les réponses ne sont jamais envoyées au serveur. L’éditeur, les sessions de
-réponse durables, la collecte, la persistance métier et les archives `.lsa`
-restent à implémenter. Le moteur d’aperçu couvre un sous-ensemble explicite ; il
-ne certifie pas encore le comportement complet d’une étude LimeSurvey. Voir le
+Les réponses ne sont jamais envoyées au serveur. La collecte, les sessions de
+réponse durables et les archives `.lsa` restent à implémenter. L’éditeur natif
+ne sait pas encore enregistrer ou modifier un LSS importé, ni produire un LSS.
+Le moteur d’aperçu couvre un sous-ensemble explicite ; il ne certifie pas encore
+le comportement complet d’une étude LimeSurvey. Voir le
 [périmètre du viewer](docs/viewer.md).
 
 La cible couvre l’ensemble des formulaires natifs de la version de référence.
@@ -37,8 +48,8 @@ règles manquants, avec un plan pour les fonctions demandant du stockage. Le
 [catalogue](docs/form-catalog.md) recense les options et fonctions à suivre.
 L’absence de blocage sur une étude n’équivaut pas à une compatibilité complète.
 
-Les prochains incréments ciblent les formulaires sans persistance métier. Le
-stockage reste différé ; les futurs médias et fichiers utiliseront une
+La persistance actuelle concerne les définitions et l’administration. Les futurs
+médias et fichiers utiliseront une
 [interface objet avec adaptateurs S3 et disque](docs/decisions/0002-object-storage.md).
 
 ## Essayer l’adaptateur de fichiers
@@ -79,6 +90,7 @@ Commencer par l’[index de documentation] et les [besoins du projet].
 | [Audit LimeSurvey]     | Constats dans les sources 6.5.14 |
 | [Compatibilité]        | Formats et vérifications         |
 | [Bases de données]     | Portabilité et migrations        |
+| [Administration]       | Compte, éditeur et API SQL       |
 | [Développement]        | Outillage et commandes           |
 | [Choix techniques]     | Alternatives et compromis        |
 | [Feuille de route]     | Prochaines étapes                |
@@ -89,7 +101,7 @@ Commencer par l’[index de documentation] et les [besoins du projet].
 Rust `1.97.1` avec rustfmt et Clippy, un compilateur C, Node.js et npm sont
 nécessaires. Node.js 24 LTS est recommandé ; la version 22.15.0 présente sur
 cette machine satisfait aussi les contraintes du squelette. Docker est optionnel
-et servira aux futurs tests PostgreSQL/MariaDB.
+et permet les tests PostgreSQL/MariaDB sur des bases jetables.
 
 ```sh
 node scripts/doctor.mjs
@@ -100,7 +112,34 @@ npm run check:all
 Le diagnostic vérifie la présence des outils. Les versions attendues et les
 limites de cette vérification sont détaillées dans [Développement].
 
-## Essayer le viewer
+## Créer le premier compte administrateur
+
+Pour un essai local, copier la configuration fournie depuis la racine :
+
+```sh
+cp .env.example .env
+npm run dev
+```
+
+Ouvrir l’adresse Vite affichée, puis **Administration**. L’exemple utilise
+`admin` / `rustsurvey-dev-only`, des identifiants publics réservés aux tests
+locaux. Choisir un mot de passe privé hors de ces tests. Après connexion,
+cliquer sur **Créer un questionnaire**, ajouter les questions et enregistrer. Le
+questionnaire apparaît dans le catalogue public ; son lien permet une saisie
+locale sans compte. Les modifications sont publiques dès leur sauvegarde.
+
+Le backend Rust charge automatiquement le `.env` du répertoire courant. Les
+variables déjà définies dans l’environnement sont prioritaires. Cette
+configuration n’est pas injectée dans le frontend ; le mot de passe du compte
+est conservé haché en SQL.
+
+Le compte est créé uniquement si aucun administrateur n’existe. Ensuite,
+`ADMIN_PASSWORD` peut être retiré du `.env` et de l’environnement ; le compte et
+les sessions survivent aux redémarrages. Modifier cette variable ne réinitialise
+pas un compte existant. Sans compte configuré, le catalogue et l’import restent
+accessibles. Voir [Administration] pour les limites et la configuration HTTPS.
+
+## Essayer le viewer LSS
 
 Depuis la racine, une commande lance Rust puis Vite :
 
@@ -114,10 +153,11 @@ services. Un `BIND_ADDRESS` explicite conserve le port demandé.
 
 Ouvrir l’adresse affichée par Vite, <http://127.0.0.1:5173> par défaut. Si ce
 port est occupé, Vite choisit automatiquement le prochain port disponible.
-Cliquer sur **Essayer l’exemple** ou sélectionner un `.lss` et cliquer sur
-**Analyser le fichier**. L’exemple contient douze questions, quatre groupes et
-deux langues. Choisir Rust fait apparaître un groupe ; cocher « Autre objectif »
-fait apparaître une question de précision.
+Ouvrir **Essayer un LSS**, puis cliquer sur **Essayer l’exemple** ou
+sélectionner un `.lss` et cliquer sur **Analyser le fichier**. L’exemple
+contient douze questions, quatre groupes et deux langues. Choisir Rust fait
+apparaître un groupe ; cocher « Autre objectif » fait apparaître une question de
+précision.
 
 Le bouton **Essayer les 28 types** ouvre une seconde démonstration couvrant les
 28 types sans fichiers, leurs variantes locales et un calcul. Le
@@ -137,9 +177,10 @@ Le proxy Vite relaie `/api` au serveur Rust. Le lien d’état appelle
 `/api/health` pour vérifier HTTP et la base.
 
 Par défaut, le serveur crée `rustsurvey.db` dans le répertoire courant et
-initialise l’historique des migrations. Aucune table de questionnaires n’est
-créée. `.env.example` décrit les deux variables de configuration ; les fichiers
-`.env` ne sont pas chargés automatiquement.
+applique automatiquement les migrations des questionnaires et de
+l’administration. `DATABASE_URL=sqlite::memory:` utilise une base volatile,
+perdue à l’arrêt. `.env.example` décrit la configuration ; le `.env` local est
+ignoré par Git.
 
 ## Contribution et licence
 
@@ -160,6 +201,7 @@ LimeSurvey n’implique pas de reprendre son code, ses thèmes ou ses extensions
 [Audit LimeSurvey]: docs/limesurvey-source-audit.md
 [contrat de compatibilité]: docs/limesurvey-compatibility.md
 [Bases de données]: docs/database.md
+[Administration]: docs/authoring.md
 [Développement]: docs/development.md
 [Choix techniques]: docs/decisions/0001-technology-stack.md
 [Feuille de route]: docs/roadmap.md
