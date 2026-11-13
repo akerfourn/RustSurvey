@@ -3,6 +3,8 @@ node_modules/
 /web/dist/
 /coverage/
 /.surveys-tests/
+/.data/
+/.private/
 .env
 .env.*
 !.env.example

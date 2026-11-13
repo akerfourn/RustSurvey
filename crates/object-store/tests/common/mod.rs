@@ -1,7 +1,6 @@
 use rustsurvey_object_store::{
     ByteRange, MAX_OBJECT_BYTES, ObjectKey, ObjectMetadata, ObjectStore, StoreError,
 };
-
 pub async fn contract(store: &dyn ObjectStore) {
     let key = ObjectKey::parse(&"a".repeat(64)).unwrap();
     let missing = ObjectKey::parse(&"b".repeat(64)).unwrap();

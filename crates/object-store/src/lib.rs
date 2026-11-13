@@ -2,6 +2,7 @@
 use sha2::{Digest, Sha256};
 use std::{future::Future, pin::Pin};
 
+pub mod file;
 pub mod memory;
 pub const MAX_OBJECT_BYTES: usize = 8 * 1024 * 1024;
 pub type StoreFuture<'a, T> = Pin<Box<dyn Future<Output = Result<T, StoreError>> + Send + 'a>>;

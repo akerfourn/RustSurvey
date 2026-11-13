@@ -1,0 +1,236 @@
+import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile, readdir, rename, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createInterface } from "node:readline";
+
+// All credentials and data below belong to disposable local fixtures.
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const target = resolve(root, process.env.CARGO_TARGET_DIR ?? "target");
+let interrupted = false;
+const temporary = await mkdtemp(join(tmpdir(), "rustsurvey-local-http-"));
+const image = await readFile(join(root, "crates/server/tests/fixtures/pixel.png"));
+const media = ["00000000-0000-4000-8000-000000000010", "00000000-0000-4000-8000-000000000011"];
+let child;
+let base;
+let cookie = "";
+let csrf = "";
+function interrupt() {
+  interrupted = true;
+  child?.kill("SIGTERM");
+}
+process.on("SIGINT", interrupt);
+process.on("SIGTERM", interrupt);
+async function start(backend) {
+  if (interrupted) {
+    throw new Error("Local storage checks interrupted");
+  }
+  const environment = {
+    ...process.env,
+    BIND_ADDRESS: "127.0.0.1:0",
+    RUSTSURVEY_DEV_READY: "1",
+    OBJECT_STORE_BACKEND: backend,
+    OBJECT_STORE_DIRECTORY: ".data/media",
+    ADMIN_USERNAME: "admin",
+    ADMIN_PASSWORD: "synthetic-admin-password",
+    ADMIN_COOKIE_SECURE: "false",
+    DEV_ALLOW_WEAK_PASSWORDS: "false",
+  };
+  delete environment.DATABASE_URL;
+  child = spawn(
+    resolve(
+      target,
+      "debug",
+      process.platform === "win32" ? "rustsurvey-server.exe" : "rustsurvey-server",
+    ),
+    [],
+    { cwd: temporary, env: environment, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  child.stderr.on("data", () => {});
+  base = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("HTTP startup timed out")), 15000);
+    const lines = createInterface({ input: child.stdout });
+    lines.on("line", (line) => {
+      if (line.startsWith("RUSTSURVEY_DEV_API_URL=")) {
+        clearTimeout(timer);
+        resolve(line.slice("RUSTSURVEY_DEV_API_URL=".length));
+      }
+    });
+    child.once("error", () => {
+      clearTimeout(timer);
+      reject(new Error("Cannot launch the local test server"));
+    });
+    child.once("exit", () => {
+      clearTimeout(timer);
+      reject(new Error("HTTP exited before readiness"));
+    });
+  });
+}
+async function stop() {
+  if (
+    child === undefined ||
+    child.pid === undefined ||
+    child.exitCode !== null ||
+    child.signalCode !== null
+  ) {
+    return;
+  }
+  await new Promise((resolve) => {
+    const timer = setTimeout(() => child.kill("SIGKILL"), 3000);
+    child.once("exit", () => {
+      clearTimeout(timer);
+      resolve();
+    });
+    child.kill("SIGTERM");
+  });
+}
+async function request(path, options = {}, status = 200) {
+  if (interrupted) {
+    throw new Error("Local storage checks interrupted");
+  }
+  const response = await fetch(`${base}${path}`, {
+    ...options,
+    signal: AbortSignal.timeout(10000),
+    headers: {
+      Cookie: cookie,
+      "X-Requested-With": "RustSurvey",
+      "X-CSRF-Token": csrf,
+      ...options.headers,
+    },
+  });
+  assert.equal(response.status, status, `${options.method ?? "GET"} ${path}`);
+  return response;
+}
+async function json(path, method = "GET", body, status = 200) {
+  const options = { method };
+  if (body !== undefined) {
+    options.body = JSON.stringify(body);
+    options.headers = { "Content-Type": "application/json" };
+  }
+  return (await request(path, options, status)).json();
+}
+try {
+  await start("sql");
+  assert.ok((await stat(join(temporary, ".data/rustsurvey.db"))).isFile());
+  const authentication = await request("/api/admin/login", {
+    method: "POST",
+    body: JSON.stringify({ username: "admin", password: "synthetic-admin-password" }),
+    headers: { "Content-Type": "application/json" },
+  });
+  cookie = authentication.headers.getSetCookie()[0].split(";")[0];
+  csrf = (await authentication.json()).csrfToken;
+  const definition = {
+    schemaVersion: 3,
+    title: "Local storage check",
+    language: "fr",
+    welcome: "",
+    end: "",
+    groups: [
+      {
+        id: "g1",
+        title: "Group",
+        description: "",
+        questions: [
+          {
+            id: "q1",
+            code: "Q1",
+            title: "Question",
+            help: "",
+            kind: "short_text",
+            mandatory: "no",
+            choices: [],
+          },
+        ],
+      },
+    ],
+  };
+  let study = await json("/api/admin/studies", "POST", definition, 201);
+  await (
+    await request(`/api/admin/studies/${study.id}/media/${media[0]}?name=pixel.png`, {
+      method: "PUT",
+      body: image,
+    })
+  ).arrayBuffer();
+  study.definition.groups[0].questions[0].media = [
+    { id: media[0], alt: "Synthetic SQL image", language: null },
+  ];
+  study = await json(`/api/admin/studies/${study.id}`, "PUT", {
+    expectedRevision: 1,
+    definition: study.definition,
+  });
+  await stop();
+  await start("file");
+  assert.equal((await json("/api/admin/session")).authenticated, true);
+  assert.deepEqual(
+    Buffer.from(await (await request(`/api/studies/${study.id}/media/${media[0]}`)).arrayBuffer()),
+    image,
+  );
+  assert.equal(
+    (await readdir(join(temporary, ".data/media"))).length,
+    0,
+    "legacy SQL content remains readable without copying it",
+  );
+  await (
+    await request(`/api/admin/studies/${study.id}/media/${media[1]}?name=pixel.png`, {
+      method: "PUT",
+      body: image,
+    })
+  ).arrayBuffer();
+  const keys = await readdir(join(temporary, ".data/media"));
+  assert.equal(keys.length, 1);
+  assert.match(keys[0], /^[a-f0-9]{64}$/);
+  assert.deepEqual(await readFile(join(temporary, ".data/media", keys[0], "content")), image);
+  study.definition.groups[0].questions[0].media.push({
+    id: media[1],
+    alt: "Synthetic file image",
+    language: null,
+  });
+  study = await json(`/api/admin/studies/${study.id}`, "PUT", {
+    expectedRevision: 2,
+    definition: study.definition,
+  });
+  const partial = await request(
+    `/api/studies/${study.id}/media/${media[1]}`,
+    { headers: { Range: "bytes=0-7" } },
+    206,
+  );
+  assert.deepEqual(Buffer.from(await partial.arrayBuffer()), image.subarray(0, 8));
+  await stop();
+  await start("file");
+  assert.equal((await json(`/api/studies/${study.id}`)).revision, 3);
+  assert.deepEqual(
+    Buffer.from(await (await request(`/api/studies/${study.id}/media/${media[1]}`)).arrayBuffer()),
+    image,
+  );
+  await stop();
+  // Simulate a legacy layout using only this disposable database, after a clean shutdown.
+  for (const suffix of ["", "-wal", "-shm"]) {
+    try {
+      await rename(
+        join(temporary, `.data/rustsurvey.db${suffix}`),
+        join(temporary, `rustsurvey.db${suffix}`),
+      );
+    } catch (error) {
+      if (error.code !== "ENOENT") {
+        throw error;
+      }
+    }
+  }
+  await start("file");
+  assert.equal((await json("/api/admin/session")).authenticated, true);
+  assert.equal((await json(`/api/studies/${study.id}`)).revision, 3);
+  for (const id of media) {
+    assert.deepEqual(
+      Buffer.from(await (await request(`/api/studies/${study.id}/media/${id}`)).arrayBuffer()),
+      image,
+    );
+  }
+  console.log(
+    "HTTP réel : création .data, ancien média SQL, nouveau fichier local, plages, sessions et redémarrages vérifiés, y compris avec une ancienne base racine.",
+  );
+} finally {
+  await stop();
+  await rm(temporary, { recursive: true, force: true });
+}

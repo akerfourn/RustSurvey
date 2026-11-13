@@ -32,8 +32,10 @@ réécrire les révisions historiques. Lire le
 fonctions. Collecte et reprise des réponses restent à faire. Pour les futurs
 médias et fichiers, suivre la
 [décision de stockage objet](docs/decisions/0002-object-storage.md) : port
-commun, adaptateur SQL par défaut et mémoire pour les tests ; S3 et fichiers
-locaux restent à ajouter. Ne pas accéder au disque depuis le métier.
+commun, adaptateurs SQL, fichiers locaux et mémoire pour les tests ; S3 reste à
+ajouter. Le [stockage local](docs/local-storage.md) décrit `.data/`, les
+réglages et la lecture des anciens objets SQL. Ne pas accéder au disque depuis
+le métier ni servir directement les répertoires privés.
 
 ## Contraintes du produit
 

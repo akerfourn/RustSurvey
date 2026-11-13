@@ -73,13 +73,16 @@ TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
 | `npm run check`        | Formatage, lint, tests et build |
 | `npm run check:rust`   | Contrôles Rust, tous pilotes    |
 | `npm run check:all`    | Vérifications client et Rust    |
+| `npm run test:storage` | HTTP et stockage local jetables |
 
 Les tests Rust couvrent l’adaptateur LSS, sa CLI, la projection du viewer et
 l’API HTTP d’inspection, le domaine natif, les sessions et les sauvegardes SQL.
 Les tests TypeScript couvrent les expressions, dépendances, validations et
 substitutions du moteur local. Ils sont isolés et ne nécessitent aucun service
 distant. Le test externe optionnel décrit dans [Bases de données](database.md)
-utilise une base locale jetable fournie explicitement.
+utilise une base locale jetable fournie explicitement. Le
+[contrôle du stockage local](local-storage.md) démarre des processus HTTP avec
+SQLite et des médias jetables, sans toucher aux données de développement.
 
 ## Démarrage local
 
@@ -95,7 +98,9 @@ dépendance supplémentaire n’est nécessaire.
 - Client : adresse affichée par Vite, <http://127.0.0.1:5173> par défaut.
 - API de disponibilité : adresse affichée sous `RustSurvey API`, puis
   `/api/health` ; <http://127.0.0.1:3000/api/health> par défaut.
-- SQLite : `rustsurvey.db` créé dans le répertoire courant, ignoré par Git.
+- SQLite : `.data/rustsurvey.db` pour une nouvelle installation.
+- Mode fichiers de l’exemple : `.data/media/`.
+- Données privées ignorées par Git et refusées par le serveur Vite.
 
 La page présente les questionnaires publics. **Administration** ouvre le premier
 éditeur natif après connexion ; la configuration `.env` du compte est décrite
@@ -121,7 +126,9 @@ conservent un port strict : un conflit arrête le démarrage.
 | Variable                   | Défaut                                                                   |
 | -------------------------- | ------------------------------------------------------------------------ |
 | `BIND_ADDRESS`             | `127.0.0.1:3000`                                                         |
-| `DATABASE_URL`             | `sqlite://rustsurvey.db?mode=rwc`                                        |
+| `DATABASE_URL`             | `sqlite://.data/rustsurvey.db?mode=rwc`, ou ancienne base racine seule   |
+| `OBJECT_STORE_BACKEND`     | `sql` sans réglage ; `file` dans `.env.example`                          |
+| `OBJECT_STORE_DIRECTORY`   | `.data/media`, utilisé en mode fichiers                                  |
 | `API_PROXY_TARGET`         | Découvert par `npm run dev`                                              |
 | `ADMIN_USERNAME`           | `admin`, pour le premier compte                                          |
 | `ADMIN_PASSWORD`           | Aucun ; initialisation explicite du compte                               |
@@ -222,3 +229,6 @@ l’instant aucun hébergeur Git ni service de CI particulier.
 [node-releases]: https://nodejs.org/en/about/previous-releases
 [ts-eslint]: https://registry.npmjs.org/typescript-eslint/8.72.2
 [stack]: decisions/0001-technology-stack.md
+
+Le [stockage local](local-storage.md) détaille les chemins, la conservation des
+bases existantes, les objets fichiers et la reprise des anciens médias SQL.

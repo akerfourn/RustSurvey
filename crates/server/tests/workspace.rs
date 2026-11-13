@@ -24,10 +24,14 @@ const PASSWORD: &str = "synthetic-admin-password";
 mod export_tests;
 #[path = "workspace/history.rs"]
 mod history_tests;
+#[path = "workspace/local_storage.rs"]
+mod local_storage_tests;
 #[path = "workspace/media.rs"]
 mod media_tests;
 #[path = "../../object-store/tests/common/mod.rs"]
 mod object_contract;
+#[path = "../../object-store/tests/common/directory.rs"]
+mod test_directory;
 
 #[tokio::test]
 async fn test_sql_objects_should_respect_the_same_contract_as_the_memory_adapter() {

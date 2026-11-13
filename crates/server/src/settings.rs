@@ -26,7 +26,8 @@ impl Settings {
         }
     }
 
-    fn from_reader(
+    /// Compose configuration with an explicit environment, without changing process state.
+    pub fn from_reader(
         reader: impl Read,
         environment: impl IntoIterator<Item = (OsString, OsString)>,
     ) -> io::Result<Self> {
@@ -152,6 +153,18 @@ mod tests {
         );
         assert_eq!(settings.get("BIND_ADDRESS").unwrap(), None);
         assert!(!settings.boolean("DEV_ALLOW_WEAK_PASSWORDS", false).unwrap());
+        assert_eq!(
+            settings.get("DATABASE_URL").unwrap().as_deref(),
+            Some(crate::storage::DEFAULT_DATABASE_URL)
+        );
+        assert_eq!(
+            settings.get("OBJECT_STORE_BACKEND").unwrap().as_deref(),
+            Some("file")
+        );
+        assert_eq!(
+            settings.get("OBJECT_STORE_DIRECTORY").unwrap().as_deref(),
+            Some(".data/media")
+        );
     }
 
     #[test]

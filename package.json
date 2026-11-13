@@ -27,6 +27,7 @@
     "lint": "eslint . --max-warnings 0",
     "test": "npm test --workspace web",
     "test:databases": "node scripts/test-databases.mjs",
+    "test:storage": "cargo build -p rustsurvey-server --locked && node scripts/test-local-storage.mjs",
     "typecheck": "npm run typecheck --workspace web"
   },
   "type": "module",

@@ -28,6 +28,8 @@ l’[éditeur avec administration](authoring.md).
 
 18. [Édition étendue, historique et médias natifs](decisions/0005-authoring-media-and-history.md).
 
+19. [Données privées et stockage local](local-storage.md).
+
 ## Lire les statuts
 
 | Statut    | Signification                                            |

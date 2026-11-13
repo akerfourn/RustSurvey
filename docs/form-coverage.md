@@ -21,8 +21,8 @@ Les fonctions F5/F6 demandant un stockage des participations restent différées
 les propositions correspondantes ci-dessous décrivent la cible future. Les
 médias et fichiers suivent la
 [décision de stockage objet](decisions/0002-object-storage.md). Le port, les
-adaptateurs SQL/mémoire et les images natives sont présents ; S3, fichiers
-locaux et téléversements participants restent à réaliser.
+adaptateurs SQL/mémoire/fichiers et les images natives sont présents ; S3 et
+téléversements participants restent à réaliser.
 
 Le périmètre est le formulaire vu et rempli par le participant. L’éditeur
 administrateur, les invitations, les statistiques et RemoteControl sont des
@@ -389,10 +389,10 @@ administrateur ne sont un préalable.
 
 ### Pièces jointes et ressources
 
-Le port de stockage objet est présent avec adaptateurs SQL et mémoire. Un
-premier parcours d’images natives contrôle propriétaire, taille, signature,
-dimensions et association à une révision. Les adaptateurs S3/disque et les
-pièces jointes des participants restent à réaliser ; voir la
+Le port de stockage objet est présent avec adaptateurs SQL, mémoire et fichiers.
+Un premier parcours d’images natives contrôle propriétaire, taille, signature,
+dimensions et association à une révision. L’adaptateur S3 et les pièces jointes
+des participants restent à réaliser ; voir la
 [décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne devra
 pas dépendre d’un volume disque persistant.
 

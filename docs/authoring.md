@@ -102,11 +102,13 @@ Dissocier conserve le fichier et les anciennes révisions. Un envoi interrompu
 peut être repris depuis sa carte avec **Reprendre cet envoi**, en sélectionnant
 le même fichier ; le serveur vérifie aussi son empreinte.
 
-Les binaires passent par le port `ObjectStore`, avec SQL par défaut. Aucun
-répertoire de médias n’est requis. Le parcours borne images, dimensions,
-concurrence et envois ; il supporte la reprise d’un upload avec le même
-identifiant. Voir la [décision 0002](decisions/0002-object-storage.md). S3,
-fichiers locaux, nettoyage et téléversements participants restent à faire.
+Les binaires passent par le port `ObjectStore`. SQL reste le défaut sans
+configuration ; `.env.example` propose le mode fichiers dans `.data/media/`. Les
+anciens objets SQL restent lisibles dans ce mode. Le parcours borne images,
+dimensions, concurrence et envois ; il supporte la reprise d’un upload avec le
+même identifiant. Voir la [décision 0002](decisions/0002-object-storage.md). Le
+[stockage local](local-storage.md) est implémenté ; S3, nettoyage et
+téléversements participants restent à faire.
 
 ## Exports de définition et LSS
 
@@ -158,7 +160,9 @@ valeur.
 Une base contenant déjà le compte ignore les identifiants de bootstrap : ils ne
 remplacent jamais le mot de passe existant.
 
-Les questionnaires et le compte sont conservés dans `rustsurvey.db` par défaut.
+Les nouvelles installations conservent questionnaires et compte dans
+`.data/rustsurvey.db`. Les chemins explicites et l’ancienne base racine restent
+respectés ; voir le [stockage local](local-storage.md).
 `DATABASE_URL=sqlite::memory:` fournit le même schéma en mémoire, avec une seule
 connexion, mais perd tout à l’arrêt. Les migrations sont automatiques.
 

@@ -36,10 +36,10 @@ La persistance des participations et leur migration restent des objectifs
 ultérieurs. Les futurs médias et pièces jointes suivront la
 [décision de stockage objet](decisions/0002-object-storage.md) : port commun,
 adaptateur S3 et adaptateur fichiers locaux, sans volume persistant requis pour
-le déploiement S3. Un premier adaptateur SQL et une médiathèque d’images natives
-sont présents. L’historique restaurable, les traductions et l’import/export JSON
-complètent l’édition. La collecte des réponses et les adaptateurs S3/disque
-restent à faire.
+le déploiement S3. Les adaptateurs SQL/fichiers locaux et une médiathèque
+d’images natives sont présents. L’historique restaurable, les traductions et
+l’import/export JSON complètent l’édition. La collecte des réponses et
+l’adaptateur S3 restent à faire.
 
 ## Étape 0 — Cadrage et squelette
 

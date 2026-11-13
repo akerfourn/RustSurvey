@@ -217,5 +217,6 @@ npm run test:databases -- postgres
 
 Le lanceur n’utilise aucune URL de base existante, ne télécharge pas d’image et
 retire uniquement ses propres conteneurs. Les tests courants restent sans
-service externe. Les adaptateurs S3/disque et le nettoyage des objets ne sont
-pas encore implémentés.
+service externe. L’adaptateur fichiers locaux est décrit dans le
+[guide de stockage local](local-storage.md). S3 et le nettoyage des objets
+restent à implémenter.

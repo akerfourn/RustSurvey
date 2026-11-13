@@ -198,8 +198,8 @@ dépend d’un opérateur JSON spécifique au moteur SQL.
 
 Les contenus binaires des médias et pièces jointes utiliseront le port
 `ObjectStore` défini dans la [décision 0002](decisions/0002-object-storage.md),
-avec adaptateurs SQL et mémoire, puis S3 et fichiers locaux. La base conserve
-les identités, relations, clés objet et métadonnées ; le domaine manipule des
+avec adaptateurs SQL, mémoire et fichiers locaux, puis S3. La base conserve les
+identités, relations, clés objet et métadonnées ; le domaine manipule des
 références logiques indépendantes de l’endpoint ou du chemin local. Le premier
 parcours d’images natives est implémenté ; les pièces jointes des participants
 et le transfert des ressources LimeSurvey restent à réaliser.

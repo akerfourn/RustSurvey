@@ -61,10 +61,11 @@ L’absence de blocage sur une étude n’équivaut pas à une compatibilité co
 
 La persistance couvre les définitions, l’administration et les images natives.
 Les contenus binaires passent par un
-[port objet](docs/decisions/0002-object-storage.md), avec adaptateurs SQL et
-mémoire. S3 et fichiers locaux restent à ajouter derrière ce même port ; aucun
-répertoire de médias n’est requis. Les fichiers envoyés par les participants ne
-sont pas encore pris en charge.
+[port objet](docs/decisions/0002-object-storage.md), avec adaptateurs SQL,
+fichiers locaux et mémoire. Le mode local fourni utilise `.data/`, ignoré par
+Git et protégé contre la lecture directe par Vite. S3 reste à ajouter derrière
+ce même port ; le mode SQL reste utilisable sans répertoire de médias. Les
+fichiers envoyés par les participants ne sont pas encore pris en charge.
 
 ## Essayer l’adaptateur de fichiers
 
@@ -213,11 +214,13 @@ LimeSurvey.
 Le proxy Vite relaie `/api` au serveur Rust. Le lien d’état appelle
 `/api/health` pour vérifier HTTP et la base.
 
-Par défaut, le serveur crée `rustsurvey.db` dans le répertoire courant et
-applique automatiquement les migrations des questionnaires et de
-l’administration. `DATABASE_URL=sqlite::memory:` utilise une base volatile,
-perdue à l’arrêt. `.env.example` décrit la configuration ; le `.env` local est
-ignoré par Git.
+Pour une nouvelle installation, la configuration d’exemple place SQLite dans
+`.data/rustsurvey.db` et les nouveaux médias dans `.data/media/`. Le serveur
+crée les répertoires et applique automatiquement les migrations. Un ancien
+`DATABASE_URL` reste respecté ; les médias déjà présents en SQL restent lisibles
+en mode fichiers. Voir le [stockage local](docs/local-storage.md).
+`DATABASE_URL=sqlite::memory:` utilise une base volatile, perdue à l’arrêt.
+`.env.example` décrit la configuration ; le `.env` local est ignoré par Git.
 
 ## Contribution et licence
 

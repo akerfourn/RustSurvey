@@ -6,9 +6,10 @@ Orientation acquise le 11 novembre 2026, premier incrément implémenté le 13
 novembre 2026. La demande d’avancer sur la persistance remplace le report
 initial des fonctions avec stockage.
 
-Le port `ObjectStore`, ses adaptateurs SQL et mémoire et un parcours d’images
-natives sont présents. S3 et l’adaptateur fichiers restent à développer. Aucun
-répertoire de médias, SDK S3 ou service supplémentaire n’est requis.
+Le port `ObjectStore`, ses adaptateurs SQL, mémoire et fichiers locaux ainsi
+qu’un parcours d’images natives sont présents. S3 reste à développer. Le mode
+local fourni utilise `.data/` ; le mode SQL reste utilisable sans répertoire de
+médias. Aucun SDK S3 ni service supplémentaire n’est requis.
 
 ## Décision
 
@@ -21,7 +22,7 @@ passent par `crates/object-store`, indépendant de HTTP, SQL et du disque.
 | `SqlObjectStore`    | Implémenté | Valeur par défaut, même base que les définitions   |
 | `MemoryObjectStore` | Implémenté | Tests, limites explicites de volume et d’objets    |
 | `S3ObjectStore`     | Prévu      | Endpoint et conteneur compatibles S3 configurables |
-| `FileObjectStore`   | Prévu      | Répertoire privé, derrière le même contrat         |
+| `FileObjectStore`   | Implémenté | Répertoire privé, derrière le même contrat         |
 
 L’adaptateur SQL répond à la contrainte actuelle sans stockage disque attaché
 aux médias. Sa table `objects` utilise `LONGBLOB` sur MariaDB, `BYTEA` sur
@@ -34,7 +35,7 @@ flowchart LR
     Port --> SQL["Adaptateur SQL"]
     Port --> Memory["Adaptateur mémoire borné"]
     Port -.-> S3["Futur adaptateur S3"]
-    Port -.-> Disk["Futur adaptateur fichiers"]
+    Port --> Disk["Adaptateur fichiers locaux"]
 ```
 
 Le choix d’un hébergement adapté aux contraintes HDS reste distinct de cette
@@ -54,14 +55,15 @@ fourni par le navigateur reste une métadonnée et ne devient jamais une clé ni
 chemin. Une modification de contenu demande une nouvelle identité.
 
 Le port borne chaque contenu à 8 Mio. Le contrat utilise actuellement des
-tampons bornés, sans fichier temporaire. L’adaptateur SQL lit le binaire entier
-avant de découper une plage ; ce n’est pas une lecture SQL en flux. Un futur
-adaptateur S3 pourra utiliser les plages du fournisseur. Le streaming de très
-gros fichiers devra faire évoluer ce contrat explicitement.
+tampons bornés. L’adaptateur fichiers prépare ses écritures dans un répertoire
+temporaire privé avant publication atomique. Les adaptateurs SQL et fichiers
+lisent le binaire entier avant de découper une plage ; ce n’est pas une lecture
+SQL en flux. Un futur adaptateur S3 pourra utiliser les plages du fournisseur.
+Le streaming de très gros fichiers devra faire évoluer ce contrat explicitement.
 
 Les erreurs distinguent absence, conflit, indisponibilité, taille, clé et plage
 invalides. L’intégrité SHA-256 appartient au contrat ; un ETag fournisseur ne
-remplacera pas cette empreinte. SQL la vérifie aussi à la lecture.
+remplacera pas cette empreinte. SQL et fichiers la vérifient aussi à la lecture.
 
 ## Métadonnées et reprise des envois
 
@@ -114,9 +116,28 @@ conserver SQL et les objets correspondants.
 
 ## Vérifications
 
-Le même contrat est exécuté sur mémoire et SQL : intégrité binaire au-delà de 64
-Kio, absence, conflit sans écrasement, lecture partielle, limites et suppression
-répétée. Les tests API couvrent droits, CSRF, propriété, exposition publique,
-restauration historique, reprise après panne et concurrence bornée. Les
-migrations et parcours SQL sont vérifiés sur SQLite, PostgreSQL 17 et MariaDB
-11.4 dans des environnements jetables.
+Le même contrat est exécuté sur mémoire, SQL et fichiers : intégrité binaire
+au-delà de 64 Kio, absence, conflit sans écrasement, lecture partielle, limites
+et suppression répétée. Les tests API couvrent droits, CSRF, propriété,
+exposition publique, restauration historique, reprise après panne et concurrence
+bornée. Les migrations et parcours SQL sont vérifiés sur SQLite, PostgreSQL 17
+et MariaDB 11.4 dans des environnements jetables.
+
+## Adaptateur local et configuration
+
+Le [guide du stockage local](../local-storage.md) précise `.data/`, la sélection
+`OBJECT_STORE_BACKEND=sql|file`, le répertoire `OBJECT_STORE_DIRECTORY`, les
+permissions et le protocole de publication. La configuration d’exemple utilise
+le mode fichiers ; en l’absence de réglage, le backend conserve SQL.
+
+Le mode fichiers garde un accès en lecture aux anciennes clés SQL. Un objet
+local corrompu ou un stockage local indisponible ne déclenche pas cette lecture
+de secours. Les nouvelles écritures restent locales. La base actuelle n’est pas
+déplacée et les anciens objets SQL ne sont pas supprimés automatiquement. Les
+changements de stockage ultérieurs demandent une copie explicite.
+
+Tokio et `tracing`, déjà présents dans le graphe, deviennent des dépendances
+directes de la crate objet : I/O bloquante exécutée hors du thread HTTP avec
+quatre places, et diagnostic sans contenu privé si un nettoyage échoue. Aucune
+nouvelle crate externe n’est ajoutée. Le format local a sa propre signature v1 ;
+le schéma SQL et le format natif du questionnaire restent inchangés.

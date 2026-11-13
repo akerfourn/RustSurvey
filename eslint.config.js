@@ -4,7 +4,17 @@ import globals from "globals";
 import typescript from "typescript-eslint";
 
 export default [
-  { ignores: ["target/**", "**/node_modules/**", "web/dist/**", "coverage/**"] },
+  {
+    ignores: [
+      "target/**",
+      "**/node_modules/**",
+      "web/dist/**",
+      "coverage/**",
+      ".data/**",
+      ".private/**",
+      ".surveys-tests/**",
+    ],
+  },
   eslint.configs.recommended,
   ...typescript.configs.recommended,
   {

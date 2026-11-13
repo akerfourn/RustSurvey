@@ -3,6 +3,7 @@ use std::{env, error::Error, future::Future, io, net::SocketAddr, time::Duration
 use axum::{Router, extract::State, http::StatusCode, routing::get};
 use rustsurvey_migration::{Migrator, MigratorTrait};
 use rustsurvey_server::settings::Settings;
+use rustsurvey_server::storage::StorageConfiguration;
 use rustsurvey_server::workspace::PasswordPolicy;
 use sea_orm::{Database, DatabaseConnection};
 
@@ -10,6 +11,7 @@ use sea_orm::{Database, DatabaseConnection};
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt().init();
     let settings = Settings::load(".env")?;
+    let storage = StorageConfiguration::read(&settings)?;
     let password_policy = PasswordPolicy::from_development_flag(
         settings.boolean("DEV_ALLOW_WEAK_PASSWORDS", false)?,
     )?;
@@ -18,13 +20,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .parse()
         .map_err(|_| io::Error::other("BIND_ADDRESS must be an IP address and port"))?;
     let automatic_port = cfg!(debug_assertions) && settings.get("BIND_ADDRESS")?.is_none();
-    let database = connect_database(&settings).await?;
+    let database = connect_database(&storage).await?;
     Migrator::up(&database, None)
         .await
         .map_err(|_| io::Error::other("database migration failed; startup stopped"))?;
     let secure_cookie = settings.boolean("ADMIN_COOKIE_SECURE", !cfg!(debug_assertions))?;
+    let objects = storage.object_store(database.clone()).await?;
     let workspace =
-        rustsurvey_server::workspace::WorkspaceState::new(database.clone(), secure_cookie);
+        rustsurvey_server::workspace::WorkspaceState::new(database.clone(), secure_cookie)
+            .with_object_store(objects);
     if let Some(password) = settings.get("ADMIN_PASSWORD")? {
         let username = settings.value_or("ADMIN_USERNAME", "admin")?;
         rustsurvey_server::workspace::bootstrap_admin(
@@ -64,8 +68,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-async fn connect_database(settings: &Settings) -> io::Result<DatabaseConnection> {
-    let url = settings.value_or("DATABASE_URL", "sqlite://rustsurvey.db?mode=rwc")?;
+async fn connect_database(storage: &StorageConfiguration) -> io::Result<DatabaseConnection> {
+    let url = storage.database_url(std::path::Path::new(".")).await?;
     let options = rustsurvey_server::database::options(url);
     Database::connect(options).await.map_err(|_| {
         io::Error::other("database connection failed; check DATABASE_URL and compiled drivers")
