@@ -55,6 +55,20 @@ attributs bruts et expressions de pertinence nécessaires au
 afin de conserver leur précision dans JavaScript. `metadata()` reste disponible
 pour les autres schémas sans prétendre en valider la structure.
 
+## Réexport des pertinences
+
+`LssDocument::with_relevances` applique un lot de modifications aux groupes et
+questions identifiés par leurs alias source. Les champs `grelevance`/`relevance`
+sont modifiés ou ajoutés avec leur déclaration ; les autres octets restent
+inchangés. L’API d’administration utilise ce mécanisme pour exporter une
+révision enregistrée, séparément de l’original immuable.
+
+Une transformation est refusée si une section d’anciennes `conditions` contient
+des lignes. Celles-ci pourraient régénérer des pertinences contradictoires lors
+de l’import. Les cibles ambiguës, caractères XML invalides et dépassements sont
+refusés. Le résultat est relu avec les mêmes limites et contrôles structurels.
+La certification d’import dans LimeSurvey 6.5.14 reste à réaliser.
+
 ## Limites explicites
 
 Les autres révisions de schéma sont conservées sans projection ni contrôle

@@ -1,5 +1,16 @@
 import type { ImportInfo } from "./model.ts";
-export function ImportDetails({ id, source }: { id: string | null; source: ImportInfo | null }) {
+import { LssDownload } from "./LssDownload.tsx";
+export function ImportDetails({
+  id,
+  source,
+  revision,
+  onExpired,
+}: {
+  id: string | null;
+  source: ImportInfo | null;
+  revision: number;
+  onExpired: () => void;
+}) {
   if (source === null || id === null) return null;
   const diagnostics = source.report.diagnostics.map((item, index) => (
     <li key={`${index}-${item.code}-${item.location}`}>
@@ -13,16 +24,23 @@ export function ImportDetails({ id, source }: { id: string | null; source: Impor
         Les conditions des groupes et questions sont éditables. Les textes, types, traductions et
         autres options importées sont conservés et protégés dans ce lot.
       </p>
-      <a
-        className="button-link secondary"
-        href={`/api/admin/studies/${encodeURIComponent(id)}/original.lss`}
-      >
-        Télécharger le LSS original inchangé
-      </a>
+      <LssDownload
+        id={id}
+        revision={null}
+        label="Télécharger le LSS original inchangé"
+        onExpired={onExpired}
+      />
       <p className="muted">
-        L’original ne contient pas les modifications faites ici. Le réexport LSS modifié reste à
-        réaliser.
+        L’original ne contient pas les modifications faites ici. Le LSS modifié reprend les
+        conditions de la révision enregistrée ; les autres octets sont conservés. Les anciennes
+        conditions non interprétées peuvent bloquer ce réexport.
       </p>
+      <LssDownload
+        id={id}
+        revision={revision}
+        label={`Télécharger le LSS modifié · révision ${revision}`}
+        onExpired={onExpired}
+      />
       <details>
         <summary>Rapport d’import · {source.report.warnings} avertissement(s)</summary>
         <p>

@@ -2,6 +2,7 @@ import { attribute } from "../survey/attributes.ts";
 import type { RuntimeQuestion } from "../survey/engine.ts";
 import { localized, pipeText, plainText } from "../survey/text.ts";
 import { QuestionInput, type QuestionInputProps } from "./QuestionInput.tsx";
+import { QuestionImages } from "./QuestionImages.tsx";
 
 interface QuestionCardProps extends QuestionInputProps {
   fields: ReadonlyMap<string, string>;
@@ -9,6 +10,7 @@ interface QuestionCardProps extends QuestionInputProps {
   warnings: string[];
   readOnly: boolean;
   onClear: (fields: readonly string[]) => void;
+  mediaBaseUrl: string | null;
 }
 
 function requirement(question: RuntimeQuestion): string {
@@ -56,6 +58,11 @@ export function QuestionCard(props: QuestionCardProps) {
       <section className="question information">
         <p className="question-meta">{question.source.code} · Information</p>
         <p className="question-title">{title.text}</p>
+        <QuestionImages
+          question={question.source}
+          baseUrl={props.mediaBaseUrl}
+          language={language}
+        />
         {helpContent}
         {issueContent}
       </section>
@@ -85,6 +92,7 @@ export function QuestionCard(props: QuestionCardProps) {
         <span className="question-title">{title.text}</span>
       </legend>
       {helpContent}
+      <QuestionImages question={question.source} baseUrl={props.mediaBaseUrl} language={language} />
       {issueContent}
       {inputContent}
       <div aria-live="polite">

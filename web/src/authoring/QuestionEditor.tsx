@@ -7,9 +7,10 @@ import {
   type Mandatory,
   type Question,
   type QuestionKind,
-  type Choice,
 } from "./model.ts";
-import { ChoiceEditor } from "./ChoiceEditor.tsx";
+import { QuestionAxes } from "./QuestionAxes.tsx";
+import { QuestionSettings } from "./QuestionSettings.tsx";
+import { QuestionMediaEditor } from "./QuestionMediaEditor.tsx";
 
 interface QuestionEditorProps {
   question: Question;
@@ -49,10 +50,6 @@ export function QuestionEditor({
   function handleMandatory(event: TargetedEvent<HTMLSelectElement>): void {
     onChange({ ...question, mandatory: event.currentTarget.value as Mandatory });
   }
-  function handleChoices(choices: Choice[]): void {
-    if (question.kind === "multiple_choice") onChange({ ...question, subquestions: choices });
-    else onChange({ ...question, choices });
-  }
   function handleUp(): void {
     onMove(-1);
   }
@@ -64,16 +61,11 @@ export function QuestionEditor({
       {label}
     </option>
   ));
-  let responseChoices = question.choices;
-  if (question.kind === "multiple_choice") responseChoices = question.subquestions;
   let importedType = null;
   if (!QUESTION_KINDS.has(question.kind))
     importedType = (
       <option value={question.kind}>{question.source?.kind ?? question.kind} · type importé</option>
     );
-  let choices = null;
-  if (question.kind === "single_choice" || question.kind === "multiple_choice")
-    choices = <ChoiceEditor choices={responseChoices} onChange={handleChoices} />;
   return (
     <section className="question-editor" id={`edit-${question.id}`}>
       <div className="section-heading">
@@ -127,7 +119,7 @@ export function QuestionEditor({
             <select
               value={question.mandatory}
               onChange={handleMandatory}
-              disabled={question.kind === "information"}
+              disabled={question.kind === "information" || question.kind === "equation"}
             >
               <option value="no">Facultative</option>
               <option value="soft">Recommandée</option>
@@ -139,7 +131,9 @@ export function QuestionEditor({
           Aide
           <textarea rows={2} value={question.help} onInput={handleHelp} />
         </label>
-        {choices}
+        <QuestionAxes question={question} variables={variables} onChange={onChange} />
+        <QuestionSettings question={question} variables={variables} onChange={onChange} />
+        <QuestionMediaEditor question={question} onChange={onChange} />
       </fieldset>
       <ConditionEditor
         value={question.relevance}

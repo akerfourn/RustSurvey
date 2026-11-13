@@ -1,5 +1,7 @@
 import { ImportDetails } from "./ImportDetails.tsx";
-import { useMemo, useState } from "preact/hooks";
+import { RevisionHistory } from "./RevisionHistory.tsx";
+import { MediaLibrary } from "./MediaLibrary.tsx";
+import { useCallback, useMemo, useState } from "preact/hooks";
 import type { Session, ValidationIssue } from "./model.ts";
 import { toViewer } from "./model.ts";
 import { useEditor } from "./useEditor.ts";
@@ -27,6 +29,8 @@ function issueLabel(issue: ValidationIssue): string {
 export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
   const editor = useEditor(id, session.csrfToken);
   const [preview, setPreview] = useState(false);
+  const [restoring, setRestoring] = useState(false);
+  const writing = editor.saving || restoring;
   const study = useMemo(() => toViewer(editor.definition, id), [editor.definition, id]);
   function handleSave(): void {
     void editor.save();
@@ -42,6 +46,9 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
     onSession(updated);
     editor.setNeedsLogin(false);
   }
+  const handleExpired = useCallback(() => {
+    editor.setNeedsLogin(true);
+  }, [editor.setNeedsLogin]);
   let error = null;
   if (editor.error !== null)
     error = (
@@ -72,12 +79,13 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
   if (editor.revision > 0) status = `Version ${editor.revision} enregistrée`;
   if (editor.dirty) status = "Modifications non enregistrées";
   if (editor.saving) status = "Enregistrement…";
+  if (restoring) status = "Restauration de la révision…";
   let previewLabel = "Aperçu";
   if (preview) previewLabel = "Revenir à l’éditeur";
   let content = <p role="status">Chargement du questionnaire…</p>;
   if (editor.ready) {
     content = (
-      <fieldset className="editor-body" disabled={editor.saving}>
+      <fieldset className="editor-body" disabled={writing}>
         <DefinitionEditor
           definition={editor.definition}
           readOnlyContent={editor.source !== null}
@@ -93,14 +101,35 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
       );
   }
   let reload = null;
+  let media = null;
+  if (id !== null && editor.ready && editor.source === null && session.csrfToken !== null)
+    media = (
+      <MediaLibrary
+        id={id}
+        csrf={session.csrfToken}
+        definition={editor.definition}
+        disabled={writing}
+        onChange={editor.change}
+        onExpired={handleExpired}
+      />
+    );
+  let history = null;
+  if (id !== null && editor.ready)
+    history = (
+      <RevisionHistory
+        id={id}
+        revision={editor.revision}
+        csrf={session.csrfToken}
+        disabled={editor.dirty || writing}
+        onRestore={editor.acceptSaved}
+        onBusy={setRestoring}
+        report={editor.source?.report}
+        onExpired={handleExpired}
+      />
+    );
   if (id !== null)
     reload = (
-      <button
-        type="button"
-        className="text-button"
-        onClick={editor.reloadSaved}
-        disabled={editor.saving}
-      >
+      <button type="button" className="text-button" onClick={editor.reloadSaved} disabled={writing}>
         Recharger la version enregistrée
       </button>
     );
@@ -116,21 +145,21 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
           </p>
         </div>
         <div className="button-row">
-          <button type="button" className="secondary" onClick={handleBack} disabled={editor.saving}>
+          <button type="button" className="secondary" onClick={handleBack} disabled={writing}>
             Mes questionnaires
           </button>
           <button
             type="button"
             className="secondary"
             onClick={handlePreview}
-            disabled={!editor.ready}
+            disabled={!editor.ready || writing}
           >
             {previewLabel}
           </button>
           <button
             type="button"
             onClick={handleSave}
-            disabled={!editor.ready || editor.saving || (!editor.dirty && editor.revision > 0)}
+            disabled={!editor.ready || writing || (!editor.dirty && editor.revision > 0)}
           >
             Enregistrer
           </button>
@@ -140,7 +169,14 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
         {error}
       </section>
       {login}
-      <ImportDetails id={id} source={editor.source} />
+      <ImportDetails
+        id={id}
+        source={editor.source}
+        revision={editor.revision}
+        onExpired={handleExpired}
+      />
+      {history}
+      {media}
       {content}
     </div>
   );

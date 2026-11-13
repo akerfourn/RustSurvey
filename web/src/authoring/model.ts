@@ -1,4 +1,5 @@
 import type { SurveyStudy } from "../survey/types.ts";
+import { QUESTION_PROFILES, questionProfile } from "./question-profile.ts";
 
 export const RENDER_TYPES = {
   short_text: "S",
@@ -76,6 +77,12 @@ export interface Question {
   randomizationGroup: string;
   theme: string;
   source: SourceReference | null;
+  media: QuestionMedia[];
+}
+export interface QuestionMedia {
+  id: string;
+  alt: string;
+  language: string | null;
 }
 export interface Group {
   id: string;
@@ -128,16 +135,9 @@ export interface ValidationIssue {
   message: string;
 }
 
-export const QUESTION_KINDS: ReadonlyMap<QuestionKind, string> = new Map([
-  ["short_text", "Texte court"],
-  ["long_text", "Texte long"],
-  ["number", "Nombre"],
-  ["date", "Date"],
-  ["single_choice", "Choix unique"],
-  ["multiple_choice", "Choix multiples"],
-  ["yes_no", "Oui / non"],
-  ["information", "Information"],
-]);
+export const QUESTION_KINDS: ReadonlyMap<QuestionKind, string> = new Map(
+  [...QUESTION_PROFILES].map(([kind, profile]) => [kind, profile.label]),
+);
 
 export function createId(): string {
   return crypto.randomUUID();
@@ -156,7 +156,7 @@ export function createGroup(makeId: () => string = createId): Group {
 }
 export function createDefinition(makeId: () => string = createId): Definition {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     languages: [],
     translations: [],
     showWelcome: null,
@@ -205,6 +205,7 @@ export function createQuestion(definition: Definition, makeId: () => string = cr
     randomizationGroup: "",
     theme: "core",
     source: null,
+    media: [],
   };
 }
 export function changeKind(
@@ -212,19 +213,55 @@ export function changeKind(
   kind: QuestionKind,
   makeId: () => string = createId,
 ): Question {
-  let choices: Choice[] = [];
-  if (kind === "single_choice" || kind === "multiple_choice")
-    choices = question.choices.length > 0 ? question.choices : question.subquestions;
-  if ((kind === "single_choice" || kind === "multiple_choice") && choices.length === 0)
-    choices = createChoices(makeId);
-  let mandatory = question.mandatory;
-  if (kind === "information") mandatory = "no";
+  if (kind === question.kind) return question;
+  const profile = questionProfile(kind);
+  const oldProfile = questionProfile(question.kind);
+  let choices = question.choices.filter((choice) => choice.scale === 0);
+  let rows = question.subquestions.filter((row) => row.scale === 0);
+  if (profile.choices && !profile.rows && choices.length === 0 && !oldProfile.choices)
+    choices = rows;
+  if (profile.rows && !profile.choices && rows.length === 0 && !oldProfile.rows)
+    rows = question.choices;
+  if (profile.choices && choices.length === 0) choices = createChoices(makeId);
+  if (profile.rows && rows.length === 0) rows = createChoices(makeId);
+  if (!profile.choices) choices = [];
   let subquestions: Choice[] = [];
-  if (kind === "multiple_choice") {
-    subquestions = choices;
-    choices = [];
+  if (profile.rows) subquestions = rows;
+  if (profile.columns) {
+    let columns = question.subquestions.filter((row) => row.scale === 1);
+    if (columns.length === 0)
+      columns = createChoices(makeId).map((item) => ({ ...item, scale: 1 }));
+    subquestions = [...subquestions, ...columns];
   }
-  return { ...question, kind, choices, subquestions, mandatory };
+  if (profile.dualScale) {
+    let secondScale = question.choices.filter((choice) => choice.scale === 1);
+    if (secondScale.length === 0)
+      secondScale = createChoices(makeId).map((choice) => ({ ...choice, scale: 1 }));
+    choices = [...choices, ...secondScale];
+  }
+  let mandatory = question.mandatory;
+  if (kind === "information" || kind === "equation") mandatory = "no";
+  const attributes = question.attributes.filter((item) => !isTypeSpecificAttribute(item.name));
+  if (kind === "equation") attributes.push({ name: "equation", value: "0", language: null });
+  return {
+    ...question,
+    kind,
+    choices,
+    subquestions,
+    mandatory,
+    attributes,
+    other: profile.other && question.other,
+  };
+}
+
+function isTypeSpecificAttribute(name: string): boolean {
+  return (
+    name === "equation" ||
+    name === "commented_checkbox" ||
+    name.startsWith("slider_") ||
+    name.startsWith("multiflexible_") ||
+    name === "input_boxes"
+  );
 }
 export function moveItem<T>(items: readonly T[], index: number, direction: -1 | 1): T[] {
   const next = index + direction;
@@ -296,6 +333,7 @@ export function toViewer(definition: Definition, id: string | null = null): Surv
         other: question.other,
         labels: labels(question.translations, language, question.title, question.help),
         attributes: question.attributes,
+        media: question.media,
       });
       for (const [order, row] of question.subquestions.entries())
         study.subquestions.push({

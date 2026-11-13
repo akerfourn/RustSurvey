@@ -31,6 +31,24 @@ fn valid_question_code(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
 }
 
+fn valid_language(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= 32
+        && value
+            .split('-')
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_alphabetic()))
+}
+
+fn valid_media_id(value: &str) -> bool {
+    value.len() == 36
+        && value.bytes().enumerate().all(|(index, byte)| {
+            if [8, 13, 18, 23].contains(&index) {
+                return byte == b'-';
+            }
+            byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)
+        })
+}
+
 impl Validator {
     fn issue(&mut self, path: impl Into<String>, message: &str) {
         if self.issues.len() >= 100 {
@@ -79,6 +97,18 @@ impl Validator {
         if definition.languages.len() > 32 || definition.translations.len() > 32 {
             self.issue("translations", "Maximum de 32 langues.");
         }
+        let mut active_languages = BTreeSet::new();
+        for language in &definition.languages {
+            if !valid_language(language) || !active_languages.insert(language) {
+                self.issue("languages", "Code de langue invalide ou dupliqué.");
+            }
+        }
+        if !active_languages.is_empty() && !active_languages.contains(&definition.language) {
+            self.issue(
+                "languages",
+                "La langue principale doit être proposée dans le parcours.",
+            );
+        }
         let mut languages = BTreeSet::new();
         for translation in definition.translations.iter().take(32) {
             if !languages.insert(&translation.language) {
@@ -105,13 +135,7 @@ impl Validator {
             );
         }
 
-        if definition.language.is_empty()
-            || definition.language.len() > 32
-            || !definition
-                .language
-                .bytes()
-                .all(|byte| byte.is_ascii_alphabetic() || byte == b'-')
-        {
+        if !valid_language(&definition.language) {
             self.issue("language", "Code de langue invalide.");
         }
     }
@@ -168,6 +192,20 @@ impl Validator {
             false,
         );
         self.translations(path, &question.translations);
+        if question.media.len() > 8 {
+            self.issue(format!("{path}.media"), "Maximum de 8 images par question.");
+        }
+        let mut media = BTreeSet::new();
+        for (index, image) in question.media.iter().take(8).enumerate() {
+            let media_path = format!("{path}.media[{index}]");
+            if !valid_media_id(&image.id) || !media.insert((&image.id, &image.language)) {
+                self.issue(&media_path, "Référence d’image invalide ou dupliquée.");
+            }
+            self.text(&format!("{media_path}.alt"), &image.alt, 1000, false);
+            if let Some(language) = &image.language {
+                self.text(&media_path, language, 32, true);
+            }
+        }
         if question.attributes.len() > 200 {
             self.issue(path, "Maximum de 200 options par question.");
         }

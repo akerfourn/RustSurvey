@@ -7,11 +7,13 @@ mod details;
 mod edit;
 mod fields;
 mod project;
+mod relevance;
 mod tables;
 mod translations;
 
 pub(crate) use details::metadata;
 pub(crate) use edit::replace_title;
+pub(crate) use relevance::replace as replace_relevances;
 
 const CHECKED: &[&str] = &[
     "surveys",

@@ -1,6 +1,10 @@
 # 0004 — Définition enrichie, import LSS et conditions
 
-## Décision
+## Décision initiale
+
+La [décision 0005](0005-authoring-media-and-history.md) étend cet incrément au
+format v3, aux calculs éditables, à l’historique, aux images et au réexport LSS
+des conditions. Le texte ci-dessous décrit les choix du lot v2.
 
 Le format natif v2 est commun aux créations et aux imports LSS du schéma 623. Il
 représente les types du modèle de lecture, les traductions, sous-questions,

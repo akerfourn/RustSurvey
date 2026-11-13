@@ -20,6 +20,8 @@ pub enum Error {
     InvalidStructure,
     UnsupportedSchema(u32),
     TitleNotFound,
+    InvalidRelevanceEdit,
+    LegacyConditionsPreventEdit,
 }
 
 impl fmt::Display for Error {
@@ -57,6 +59,11 @@ impl fmt::Display for Error {
             }
             Self::TitleNotFound => {
                 formatter.write_str("expected exactly one survey title for the requested language")
+            }
+            Self::InvalidRelevanceEdit => formatter
+                .write_str("expected unique existing group/question targets for relevance edits"),
+            Self::LegacyConditionsPreventEdit => {
+                formatter.write_str("legacy conditions prevent a transformed relevance export")
             }
         }
     }

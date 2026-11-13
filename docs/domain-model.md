@@ -4,12 +4,13 @@
 
 Le modèle général ci-dessous prépare la migration d’études en cours et un
 backend sobre sur les trois bases. Le premier sous-ensemble implémenté couvre
-`studies`, `definition_revisions`, `import_sources` et l’administration, avec
-migrations SQL. Le [domaine natif de l’éditeur](authoring.md) v2 est commun aux
-créations et imports : types, traductions, sous-questions, options et règles. La
-création visuelle propose huit types ; les imports conservent le modèle de
-lecture complet et permettent l’édition des conditions de groupes/questions. Les
-autres concepts de ce document restent des décisions de conception.
+`studies`, `definition_revisions`, `import_sources`, les médias et
+l’administration, avec migrations SQL. Le
+[domaine natif de l’éditeur](authoring.md) v3 est commun aux créations et
+imports : types, traductions, sous-questions, options et règles. La création
+visuelle propose 28 types ; les imports conservent le modèle de lecture complet
+et permettent l’édition des conditions de groupes/questions. Les autres concepts
+de ce document restent des décisions de conception.
 
 Le modèle découle de l’[analyse du code 6.5.14](limesurvey-source-audit.md). Un
 export utilisateur enrichira les cas de validation ; il n’est pas un prérequis
@@ -197,10 +198,11 @@ dépend d’un opérateur JSON spécifique au moteur SQL.
 
 Les contenus binaires des médias et pièces jointes utiliseront le port
 `ObjectStore` défini dans la [décision 0002](decisions/0002-object-storage.md),
-avec adaptateurs S3 et fichiers locaux. La base conserve les identités,
-relations, clés objet et métadonnées ; le domaine manipule des références
-logiques indépendantes de l’endpoint ou du chemin local. Ces fonctions avec
-stockage restent différées pour les prochains incréments.
+avec adaptateurs SQL et mémoire, puis S3 et fichiers locaux. La base conserve
+les identités, relations, clés objet et métadonnées ; le domaine manipule des
+références logiques indépendantes de l’endpoint ou du chemin local. Le premier
+parcours d’images natives est implémenté ; les pièces jointes des participants
+et le transfert des ressources LimeSurvey restent à réaliser.
 
 | Option            | Atout             | Coût                |
 | ----------------- | ----------------- | ------------------- |

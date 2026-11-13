@@ -21,14 +21,19 @@ types, rendus et règles, suivre l’[audit de couverture](docs/form-coverage.md
 et son [catalogue](docs/form-catalog.md). Un LSS sans blocage détecté ne prouve
 pas la parité ; distinguer options interprétées, tolérées et non projetées.
 
-La persistance actuelle couvre les définitions versionnées et les sessions
-administrateur, ainsi que les originaux LSS privés. Le format natif v2 est
-commun aux créations et imports ; convertir explicitement la v1 sans réécrire
-les révisions historiques. Lire le [périmètre de l’éditeur](docs/authoring.md)
-avant une modification de ces fonctions. Collecte et reprise des réponses
-restent à faire. Pour les futurs médias et fichiers, suivre la
+La persistance actuelle couvre les définitions versionnées, les sessions
+administrateur, les originaux LSS privés et les images natives. L’éditeur
+propose 28 types, paramètres, calculs et traductions. L’historique est
+restaurable sans écrasement ; le réexport LSS ne modifie que les pertinences
+enregistrées et bloque les anciennes conditions contradictoires. Le format natif
+v3 est commun aux créations et imports ; convertir explicitement les v1/v2 sans
+réécrire les révisions historiques. Lire le
+[périmètre de l’éditeur](docs/authoring.md) avant une modification de ces
+fonctions. Collecte et reprise des réponses restent à faire. Pour les futurs
+médias et fichiers, suivre la
 [décision de stockage objet](docs/decisions/0002-object-storage.md) : port
-commun, adaptateur compatible S3 et adaptateur local sur fichiers.
+commun, adaptateur SQL par défaut et mémoire pour les tests ; S3 et fichiers
+locaux restent à ajouter. Ne pas accéder au disque depuis le métier.
 
 ## Contraintes du produit
 

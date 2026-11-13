@@ -109,6 +109,10 @@ function question(value: unknown, legacy: boolean): Question {
         language: nullable(attribute.language),
       };
     }),
+    media: array(item.media, (value) => {
+      const image = object(value);
+      return { id: text(image.id), alt: text(image.alt), language: nullable(image.language) };
+    }),
   };
 }
 function group(value: unknown, legacy: boolean): Group {
@@ -126,10 +130,10 @@ function group(value: unknown, legacy: boolean): Group {
 }
 export function decodeDefinition(value: unknown): Definition {
   const item = object(value);
-  if (item.schemaVersion !== 1 && item.schemaVersion !== 2)
+  if (item.schemaVersion !== 1 && item.schemaVersion !== 2 && item.schemaVersion !== 3)
     throw new Error("Version de questionnaire non prise en charge.");
-  return {
-    schemaVersion: 2,
+  const definition: Definition = {
+    schemaVersion: 3,
     title: text(item.title),
     language: text(item.language),
     welcome: text(item.welcome),
@@ -140,6 +144,12 @@ export function decodeDefinition(value: unknown): Definition {
     showWelcome:
       item.showWelcome === null || item.showWelcome === undefined ? null : bool(item.showWelcome),
   };
+  if (
+    item.schemaVersion !== 3 &&
+    definition.groups.some((group) => group.questions.some((question) => question.media.length > 0))
+  )
+    throw new Error("Les références de médias nécessitent le format natif v3.");
+  return definition;
 }
 export function decodeSourceInfo(value: unknown): ImportInfo | null {
   if (value === null || value === undefined) return null;

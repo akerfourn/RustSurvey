@@ -37,6 +37,11 @@ export function StudyViewer({
 }: StudyViewerProps) {
   const report = sourceReport ?? inspection?.report ?? { errors: 0, sections: [] };
   const runtime = useMemo(() => createRuntime(study), [study]);
+  let mediaBaseUrl: string | null = null;
+  if (study.surveyId !== null) {
+    const prefix = debug ? "/api/admin/studies" : "/api/studies";
+    mediaBaseUrl = `${prefix}/${encodeURIComponent(study.surveyId)}/media`;
+  }
   const textProblems = useMemo(() => studyTextIssues(runtime), [runtime]);
   const notices = useMemo(() => presentationNotices(runtime), [runtime]);
   const [answers, setAnswers] = useState(new Map<string, string>());
@@ -188,6 +193,7 @@ export function StudyViewer({
     pageContent = (
       <StudyPage
         runtime={runtime}
+        mediaBaseUrl={mediaBaseUrl}
         snapshot={snapshot}
         group={currentGroup}
         language={language}

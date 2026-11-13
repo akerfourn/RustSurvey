@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ApiError, decodeDefinition, saveStudy } from "./api.ts";
+import { ApiError, decodeDefinition, downloadLss, importDefinition, saveStudy } from "./api.ts";
 import { createDefinition, createQuestion } from "./model.ts";
 
 test("test_save_should_explain_oversized_payload_rejections_even_without_json", async (context) => {
@@ -24,7 +24,7 @@ test("test_save_should_explain_oversized_payload_rejections_even_without_json", 
 test("test_decoder_should_reject_future_versions_and_unknown_question_types", () => {
   const definition = createDefinition(() => "group-1");
   assert.deepEqual(decodeDefinition(definition), definition);
-  assert.throws(() => decodeDefinition({ ...definition, schemaVersion: 3 }), /Version/);
+  assert.throws(() => decodeDefinition({ ...definition, schemaVersion: 4 }), /Version/);
   definition.groups[0]!.questions.push(createQuestion(definition, () => "question-1"));
   const invalid: unknown = {
     ...definition,
@@ -83,4 +83,46 @@ test("test_save_should_surface_conflicts_and_server_validation_paths_to_the_edit
     assert.deepEqual(error.issues, [{ path: "title", message: "Titre requis." }]);
     return true;
   });
+});
+
+test("test_native_import_should_preserve_unknown_fields_for_server_rejection_instead_of_losing_them", async (context) => {
+  const definition = { ...createDefinition(() => "g1"), futureRule: "must not disappear" };
+  let body: unknown;
+  context.mock.method(globalThis, "fetch", async (_url: string, options: RequestInit) => {
+    body = JSON.parse(String(options.body));
+    return new Response(JSON.stringify({ error: { message: "Unknown field.", issues: [] } }), {
+      status: 422,
+    });
+  });
+  const file = new File([JSON.stringify(definition)], "definition.json");
+  await assert.rejects(
+    importDefinition(file, "csrf", new AbortController().signal),
+    /Unknown field/,
+  );
+  assert.deepEqual(body, definition);
+});
+
+test("test_v2_decoder_should_upgrade_without_losing_text_or_source_aliases", () => {
+  const definition = createDefinition(() => "g1");
+  const question = createQuestion(definition, () => "q1");
+  question.source = { id: "1234", kind: "S" };
+  definition.groups[0]!.questions.push(question);
+  const old = { ...definition, schemaVersion: 2 };
+  const upgraded = decodeDefinition(old);
+  assert.equal(upgraded.schemaVersion, 3);
+  assert.deepEqual(upgraded.groups[0]!.questions[0]!.source, question.source);
+  assert.deepEqual(upgraded.groups[0]!.questions[0]!.media, []);
+});
+
+test("test_lss_download_should_show_export_blockers_without_navigating_away_from_the_editor", async (context) => {
+  context.mock.method(
+    globalThis,
+    "fetch",
+    async () =>
+      new Response(
+        JSON.stringify({ error: { message: "Anciennes conditions : réexport bloqué." } }),
+        { status: 422 },
+      ),
+  );
+  await assert.rejects(downloadLss("study-1", 2, new AbortController().signal), /réexport bloqué/);
 });

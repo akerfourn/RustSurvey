@@ -109,6 +109,7 @@ async fn insert_revision(
     revision: i64,
     document: String,
     now: i64,
+    definition: &Definition,
 ) -> Result<(), AppError> {
     connection
         .execute(
@@ -118,6 +119,7 @@ async fn insert_revision(
                 .values([id.into(), revision.into(), document.into(), now.into()])?,
         )
         .await?;
+    super::media::reference(connection, id, revision, definition).await?;
     Ok(())
 }
 pub async fn create(
@@ -143,7 +145,7 @@ pub async fn create(
                 ])?,
         )
         .await?;
-    insert_revision(&transaction, id, 1, document, now).await?;
+    insert_revision(&transaction, id, 1, document, now, definition).await?;
     let source = if let Some(source) = source {
         transaction
             .execute(
@@ -204,7 +206,7 @@ pub async fn update(
             "Le questionnaire a été modifié. Rechargez sa version avant de sauvegarder.",
         ));
     }
-    insert_revision(&transaction, id, expected + 1, document, now).await?;
+    insert_revision(&transaction, id, expected + 1, document, now, definition).await?;
     let row = transaction
         .query_one(
             &Query::select()

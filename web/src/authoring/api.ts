@@ -2,7 +2,7 @@ import type { Definition, Session, StoredStudy, StudySummary, ValidationIssue } 
 import { decodeDefinition, decodeSourceInfo } from "./definition-codec.ts";
 export { decodeDefinition } from "./definition-codec.ts";
 
-function object(value: unknown): Record<string, unknown> {
+export function object(value: unknown): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value))
     throw new Error("Réponse du serveur invalide.");
   return value as Record<string, unknown>;
@@ -62,7 +62,7 @@ export class ApiError extends Error {
     this.issues = issues;
   }
 }
-async function request(url: string, options: RequestInit = {}): Promise<unknown> {
+export async function request(url: string, options: RequestInit = {}): Promise<unknown> {
   const response = await fetch(url, { credentials: "same-origin", cache: "no-store", ...options });
   let body: unknown;
   try {
@@ -84,7 +84,7 @@ async function request(url: string, options: RequestInit = {}): Promise<unknown>
   }
   return body;
 }
-function write(method: string, body: unknown, csrf?: string): RequestInit {
+export function write(method: string, body: unknown, csrf?: string): RequestInit {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-Requested-With": "RustSurvey",
@@ -142,6 +142,63 @@ export function message(error: unknown): string {
   return "L’opération a échoué.";
 }
 
+export interface RevisionSummary {
+  revision: number;
+  createdAt: number;
+}
+export interface DefinitionRevision extends RevisionSummary {
+  studyId: string;
+  definition: Definition;
+}
+export async function listRevisions(
+  id: string,
+  before: number,
+  signal: AbortSignal,
+): Promise<{ items: RevisionSummary[]; hasMore: boolean }> {
+  const body = object(
+    await request(`/api/admin/studies/${encodeURIComponent(id)}/revisions?before=${before}`, {
+      signal,
+    }),
+  );
+  if (typeof body.hasMore !== "boolean") throw new Error("Pagination invalide.");
+  return {
+    items: array(body.items, (value) => {
+      const item = object(value);
+      return { revision: number(item.revision), createdAt: number(item.createdAt) };
+    }),
+    hasMore: body.hasMore,
+  };
+}
+export async function getRevision(
+  id: string,
+  revision: number,
+  signal: AbortSignal,
+): Promise<DefinitionRevision> {
+  const item = object(
+    await request(`/api/admin/studies/${encodeURIComponent(id)}/revisions/${revision}`, { signal }),
+  );
+  return {
+    studyId: text(item.studyId),
+    revision: number(item.revision),
+    createdAt: number(item.createdAt),
+    definition: decodeDefinition(item.definition),
+  };
+}
+export async function restoreRevision(
+  id: string,
+  revision: number,
+  expectedRevision: number,
+  csrf: string,
+  signal: AbortSignal,
+): Promise<StoredStudy> {
+  return stored(
+    await request(`/api/admin/studies/${encodeURIComponent(id)}/restore`, {
+      ...write("POST", { revision, expectedRevision }, csrf),
+      signal,
+    }),
+  );
+}
+
 export async function importLss(
   file: File,
   csrf: string,
@@ -161,4 +218,46 @@ export async function importLss(
       },
     }),
   );
+}
+
+export async function importDefinition(
+  file: File,
+  csrf: string,
+  signal: AbortSignal,
+): Promise<StoredStudy> {
+  if (file.size === 0 || file.size > 8 * 1024 * 1024)
+    throw new Error("Définition JSON non vide, limitée à 8 Mio.");
+  let definition: unknown;
+  try {
+    definition = JSON.parse(await file.text());
+  } catch {
+    throw new Error("Le fichier ne contient pas un JSON valide.");
+  }
+  // Preserve unknown fields so the Rust decoder can reject them rather than silently discard data.
+  return stored(
+    await request("/api/admin/studies", { ...write("POST", definition, csrf), signal }),
+  );
+}
+
+export async function downloadLss(
+  id: string,
+  revision: number | null,
+  signal: AbortSignal,
+): Promise<Blob> {
+  let path = `/api/admin/studies/${encodeURIComponent(id)}/original.lss`;
+  if (revision !== null)
+    path = `/api/admin/studies/${encodeURIComponent(id)}/revisions/${revision}/modified.lss`;
+  const response = await fetch(path, { credentials: "same-origin", cache: "no-store", signal });
+  if (!response.ok) {
+    let reason: string;
+    try {
+      reason = text(object(object(await response.json()).error).message);
+    } catch {
+      reason = "Le serveur a refusé le téléchargement du LSS.";
+    }
+    throw new ApiError(response.status, reason);
+  }
+  if (!response.headers.get("Content-Type")?.startsWith("application/xml"))
+    throw new Error("La réponse du serveur ne contient pas un LSS.");
+  return response.blob();
 }

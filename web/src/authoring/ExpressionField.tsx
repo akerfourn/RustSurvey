@@ -5,8 +5,16 @@ interface Props {
   value: string;
   variables: readonly Variable[];
   onChange: (value: string) => void;
+  label?: string;
+  hint?: string;
 }
-export function ExpressionField({ value, variables, onChange }: Props) {
+export function ExpressionField({
+  value,
+  variables,
+  onChange,
+  label = "Expression d’affichage",
+  hint = "Exemple : AGE >= 18 && CONSENT == 'Y'. Expressions interprétées par le moteur.",
+}: Props) {
   const id = useId();
   const textarea = useRef<HTMLTextAreaElement>(null);
   const [search, setSearch] = useState("");
@@ -35,7 +43,7 @@ export function ExpressionField({ value, variables, onChange }: Props) {
   return (
     <div>
       <label>
-        Expression d’affichage
+        {label}
         <textarea
           ref={textarea}
           rows={3}
@@ -46,7 +54,7 @@ export function ExpressionField({ value, variables, onChange }: Props) {
         />
       </label>
       <p id={id} className="muted">
-        Exemple : AGE &gt;= 18 &amp;&amp; CONSENT == 'Y'. Expressions interprétées par le moteur.
+        {hint}
       </p>
       <div className="button-row">
         <label>

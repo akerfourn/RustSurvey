@@ -44,6 +44,7 @@ interface StudyPageProps extends NavigationProps {
   onAnswer: (field: string, value: string) => void;
   onClear: (fields: readonly string[]) => void;
   onLanguage: (language: string) => void;
+  mediaBaseUrl: string | null;
 }
 
 export function StudyPage(props: StudyPageProps) {
@@ -102,6 +103,7 @@ export function StudyPage(props: StudyPageProps) {
         readOnly={readOnly}
         onAnswer={onAnswer}
         onClear={onClear}
+        mediaBaseUrl={props.mediaBaseUrl}
       />
     );
   });

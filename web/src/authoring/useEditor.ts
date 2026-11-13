@@ -5,6 +5,7 @@ import {
   type Definition,
   type ImportInfo,
   type ValidationIssue,
+  type StoredStudy,
 } from "./model.ts";
 
 export function useEditor(id: string | null, csrf: string | null) {
@@ -54,6 +55,14 @@ export function useEditor(id: string | null, csrf: string | null) {
     setDefinition(updated);
     setDirty(true);
   }
+  function acceptSaved(study: StoredStudy): void {
+    setDefinition(study.definition);
+    setSource(study.source);
+    setRevision(study.revision);
+    setDirty(false);
+    setError(null);
+    setIssues([]);
+  }
   function reloadSaved(): void {
     if (dirty && !window.confirm("Remplacer le brouillon par la dernière version enregistrée ?"))
       return;
@@ -69,10 +78,7 @@ export function useEditor(id: string | null, csrf: string | null) {
     try {
       const study = await saveStudy(id, revision, definition, csrf, controller.signal);
       if (controller.signal.aborted) return;
-      setDefinition(study.definition);
-      setSource(study.source);
-      setRevision(study.revision);
-      setDirty(false);
+      acceptSaved(study);
       if (id === null) window.location.hash = `/admin/edit/${study.id}`;
     } catch (cause) {
       if (controller.signal.aborted) return;
@@ -97,6 +103,7 @@ export function useEditor(id: string | null, csrf: string | null) {
     needsLogin,
     setNeedsLogin,
     change,
+    acceptSaved,
     reloadSaved,
     save,
   };

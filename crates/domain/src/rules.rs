@@ -1,4 +1,5 @@
 //! Bounded syntax/reference validation. Evaluation remains in the client until collection exists.
+mod settings;
 mod syntax;
 
 use crate::{Definition, Question, QuestionKind, ValidationIssue};
@@ -130,27 +131,102 @@ pub fn validate(definition: &Definition, previous: Option<&Definition>) -> Vec<V
                 &mut issues,
             );
             dependencies.extend(group_refs.iter().copied());
-            // Existing subquestion rules and equations participate in cycle detection, even when read-only.
-            for row in &question.subquestions {
-                dependencies.extend(check(&row.relevance, &path, false, &variables, &mut issues));
+            let question_path = format!("groups[{group_index}].questions[{index}]");
+            settings::validate(question, old, &question_path, &mut issues);
+            for (row_index, row) in question.subquestions.iter().enumerate() {
+                let row_changed = old
+                    .and_then(|old| old.subquestions.iter().find(|item| item.id == row.id))
+                    .is_none_or(|old| old.relevance != row.relevance);
+                if row_changed {
+                    changed.insert(question.id.as_str());
+                }
+                dependencies.extend(check(
+                    &row.relevance,
+                    &format!("{question_path}.subquestions[{row_index}].relevance"),
+                    row_changed,
+                    &variables,
+                    &mut issues,
+                ));
             }
-            for attribute in &question.attributes {
-                if attribute.name == "equation" || attribute.name == "em_validation_q" {
+            for (attribute_index, attribute) in question.attributes.iter().enumerate() {
+                let attribute_changed = old.is_none_or(|old| !old.attributes.contains(attribute));
+                let attribute_path = format!("{question_path}.attributes[{attribute_index}].value");
+                if is_constraint(&attribute.name) && !attribute.value.trim().is_empty() {
+                    // Validation reads the final snapshot; self-references are valid and do not affect ordering.
+                    check(
+                        &attribute.value,
+                        &attribute_path,
+                        attribute_changed,
+                        &variables,
+                        &mut issues,
+                    );
+                }
+                if attribute.name == "equation" && question.kind == QuestionKind::Equation {
+                    if attribute_changed {
+                        changed.insert(question.id.as_str());
+                    }
                     dependencies.extend(check(
                         &attribute.value,
-                        &path,
-                        false,
+                        &attribute_path,
+                        attribute_changed,
                         &variables,
                         &mut issues,
                     ));
                 }
                 if ["array_filter", "array_filter_exclude"].contains(&attribute.name.as_str()) {
-                    for code in attribute.value.split(';').map(str::trim) {
-                        if let Some(source) = questions.iter().find(|item| item.code == code) {
+                    if attribute_changed {
+                        changed.insert(question.id.as_str());
+                    }
+                    for code in attribute
+                        .value
+                        .split(';')
+                        .map(str::trim)
+                        .filter(|code| !code.is_empty())
+                    {
+                        if let Some(source) = questions.iter().find(|item| {
+                            item.code == code
+                                && matches!(
+                                    item.kind,
+                                    QuestionKind::MultipleChoice
+                                        | QuestionKind::MultipleChoiceComment
+                                )
+                        }) {
                             dependencies.insert(source.id.as_str());
+                        } else if attribute_changed && issues.len() < 100 {
+                            issues.push(ValidationIssue {
+                                path: attribute_path.clone(),
+                                message: format!(
+                                    "Le filtre {code} doit désigner une question à choix multiples."
+                                ),
+                            });
                         }
                     }
                 }
+            }
+            if question.kind == QuestionKind::Equation
+                && !question
+                    .attributes
+                    .iter()
+                    .any(|item| item.name == "equation" && !item.value.is_empty())
+            {
+                let expression = question
+                    .title
+                    .trim()
+                    .strip_prefix('{')
+                    .and_then(|text| text.strip_suffix('}'))
+                    .unwrap_or(question.title.trim());
+                let equation_changed =
+                    old.is_none_or(|old| old.title != question.title || old.kind != question.kind);
+                if equation_changed {
+                    changed.insert(question.id.as_str());
+                }
+                dependencies.extend(check(
+                    expression,
+                    &format!("{question_path}.title"),
+                    equation_changed,
+                    &variables,
+                    &mut issues,
+                ));
             }
             edges.insert(&question.id, dependencies);
         }
@@ -166,6 +242,21 @@ pub fn validate(definition: &Definition, previous: Option<&Definition>) -> Vec<V
     }
     issues.truncate(100);
     issues
+}
+
+fn is_constraint(name: &str) -> bool {
+    matches!(
+        name,
+        "min_num_value_n"
+            | "max_num_value_n"
+            | "min_answers"
+            | "max_answers"
+            | "maximum_chars"
+            | "em_validation_q"
+            | "min_num_value"
+            | "max_num_value"
+            | "equals_num_value"
+    )
 }
 
 fn check<'a>(

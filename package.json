@@ -26,6 +26,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",
     "test": "npm test --workspace web",
+    "test:databases": "node scripts/test-databases.mjs",
     "typecheck": "npm run typecheck --workspace web"
   },
   "type": "module",

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { TargetedEvent } from "preact";
-import { ApiError, importLss, message } from "./api.ts";
+import { ApiError, importLss, importDefinition, message } from "./api.ts";
 interface Props {
   csrf: string;
   onExpired: () => void;
+  format?: "lss" | "native";
 }
-export function ImportPanel({ csrf, onExpired }: Props) {
+export function ImportPanel({ csrf, onExpired, format = "lss" }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,9 @@ export function ImportPanel({ csrf, onExpired }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const study = await importLss(file, csrf, request.signal);
+      let study;
+      if (format === "native") study = await importDefinition(file, csrf, request.signal);
+      else study = await importLss(file, csrf, request.signal);
       if (!request.signal.aborted) window.location.hash = `/admin/edit/${study.id}`;
     } catch (cause) {
       if (request.signal.aborted) return;
@@ -40,22 +43,27 @@ export function ImportPanel({ csrf, onExpired }: Props) {
       </p>
     );
   let label = "Importer et enregistrer le LSS";
+  let title = "Importer une étude LimeSurvey";
+  let description =
+    "Schéma 623, fichier de 8 Mio maximum. L’original est conservé en SQL. Les réponses restent locales.";
+  let fileLabel = "Fichier LSS";
+  let accept = ".lss,application/xml,text/xml";
+  if (format === "native") {
+    title = "Importer une définition native";
+    description =
+      "JSON de définition, 8 Mio maximum, importé comme nouveau questionnaire. Les médias et l’archive LSS privée ne font pas partie de ce fichier.";
+    fileLabel = "Fichier JSON";
+    accept = ".json,application/json";
+    label = "Importer la définition";
+  }
   if (busy) label = "Import et enregistrement…";
   return (
     <section className="panel">
-      <h2>Importer une étude LimeSurvey</h2>
-      <p>
-        Schéma 623, fichier de 8 Mio maximum. L’original est conservé en SQL. Les réponses restent
-        locales.
-      </p>
+      <h2>{title}</h2>
+      <p>{description}</p>
       <label>
-        Fichier LSS
-        <input
-          type="file"
-          accept=".lss,application/xml,text/xml"
-          disabled={busy}
-          onChange={handleFile}
-        />
+        {fileLabel}
+        <input type="file" accept={accept} disabled={busy} onChange={handleFile} />
       </label>
       {notice}
       <button type="button" onClick={handleImport} disabled={file === null || busy}>

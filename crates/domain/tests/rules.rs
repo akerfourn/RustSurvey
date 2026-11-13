@@ -1,10 +1,104 @@
-use rustsurvey_domain::{Definition, rules};
+use rustsurvey_domain::{Attribute, Definition, QuestionKind, rules};
 use serde_json::{Value, json};
 
 fn definition() -> Definition {
     serde_json::from_value(json!({"schemaVersion":2,"title":"Conditions","language":"fr","welcome":"","end":"","groups":[
         {"id":"g1","title":"Controls","description":"","questions":[{"id":"q1","code":"AGE","title":"Age","help":"","kind":"number","mandatory":"no","choices":[]}]},
         {"id":"g2","title":"Follow-up","description":"","questions":[{"id":"q2","code":"DETAIL","title":"Details","help":"","kind":"short_text","mandatory":"strict","choices":[]}]}]})).unwrap()
+}
+
+#[test]
+fn test_validation_should_allow_self_references_but_reject_unknown_variables() {
+    let mut value = definition();
+    value.groups[0].questions[0].attributes.push(Attribute {
+        name: "em_validation_q".to_owned(),
+        value: "AGE >= 18".to_owned(),
+        language: None,
+    });
+    assert!(rules::validate(&value, None).is_empty());
+    value.groups[0].questions[0].attributes[0].value = "MISSING > 0".to_owned();
+    let issues = rules::validate(&value, None);
+    assert!(
+        issues
+            .iter()
+            .any(|issue| issue.path.ends_with("attributes[0].value")
+                && issue.message.contains("MISSING"))
+    );
+}
+
+#[test]
+fn test_calculations_should_reject_cycles_and_accept_dependencies_on_prior_answers() {
+    let mut value = definition();
+    let calculated = &mut value.groups[1].questions[0];
+    calculated.kind = QuestionKind::Equation;
+    calculated.attributes.push(Attribute {
+        name: "equation".to_owned(),
+        value: "AGE * 2".to_owned(),
+        language: None,
+    });
+    assert!(rules::validate(&value, None).is_empty());
+    value.groups[0].questions[0].relevance = "DETAIL > 0".to_owned();
+    assert!(
+        rules::validate(&value, None)
+            .iter()
+            .any(|issue| issue.message.contains("cycle"))
+    );
+}
+
+#[test]
+fn test_settings_should_refuse_invalid_slider_ranges_and_preserve_unchanged_imports() {
+    let mut value = definition();
+    let question = &mut value.groups[0].questions[0];
+    question.kind = QuestionKind::MultipleNumbers;
+    for (name, setting) in [
+        ("slider_layout", "1"),
+        ("slider_min", "10"),
+        ("slider_max", "5"),
+    ] {
+        question.attributes.push(Attribute {
+            name: name.to_owned(),
+            value: setting.to_owned(),
+            language: None,
+        });
+    }
+    assert!(
+        rules::validate(&value, None)
+            .iter()
+            .any(|issue| issue.message.contains("Intervalle invalide"))
+    );
+    assert!(rules::validate(&value, Some(&value)).is_empty());
+}
+
+#[test]
+fn test_free_numeric_matrix_inputs_should_only_compare_explicit_bounds_and_ignore_the_list_step() {
+    let mut value = definition();
+    let question = &mut value.groups[0].questions[0];
+    question.kind = QuestionKind::NumberMatrix;
+    for (name, setting) in [
+        ("input_boxes", "1"),
+        ("multiflexible_min", " 50 "),
+        ("multiflexible_step", "0"),
+    ] {
+        question.attributes.push(Attribute {
+            name: name.to_owned(),
+            value: setting.to_owned(),
+            language: None,
+        });
+    }
+    assert!(
+        rules::validate(&value, None).is_empty(),
+        "an omitted upper bound must remain unbounded"
+    );
+    value.groups[0].questions[0].attributes.push(Attribute {
+        name: "multiflexible_max".to_owned(),
+        value: "40".to_owned(),
+        language: None,
+    });
+    assert!(
+        rules::validate(&value, None)
+            .iter()
+            .any(|issue| issue.message.contains("Intervalle invalide"))
+    );
 }
 #[test]
 fn test_rule_syntax_should_match_the_shared_client_server_corpus() {
@@ -71,7 +165,7 @@ fn test_expression_budgets_should_bound_depth_size_and_token_count() {
 fn test_legacy_upgrade_should_preserve_ids_choice_codes_and_unconditional_behavior() {
     let mut old:Definition=serde_json::from_value(json!({"schemaVersion":1,"title":"Old","language":"fr","welcome":"","end":"","groups":[{"id":"g1","title":"Group","description":"","questions":[{"id":"q1","code":"CHOICES","title":"Choices","help":"","kind":"multiple_choice","mandatory":"no","choices":[{"id":"a1","code":"01","label":"First"},{"id":"a2","code":"02","label":"Second"}]}]}]})).unwrap();
     old.upgrade().unwrap();
-    assert_eq!(old.schema_version, 2);
+    assert_eq!(old.schema_version, 3);
     assert_eq!(old.groups[0].relevance, "1");
     let question = &old.groups[0].questions[0];
     assert_eq!(question.id, "q1");

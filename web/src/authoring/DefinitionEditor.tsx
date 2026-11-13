@@ -5,6 +5,8 @@ import { DefinitionOutline } from "./DefinitionOutline.tsx";
 import type { TargetedEvent } from "preact";
 import { createGroup, createQuestion, moveItem, type Definition, type Group } from "./model.ts";
 import { GroupEditor } from "./GroupEditor.tsx";
+import { LanguageSettings } from "./LanguageSettings.tsx";
+import { TranslationEditor } from "./TranslationEditor.tsx";
 
 export function DefinitionEditor({
   definition,
@@ -19,9 +21,6 @@ export function DefinitionEditor({
   function handleTitle(event: TargetedEvent<HTMLInputElement>): void {
     onChange({ ...definition, title: event.currentTarget.value });
   }
-  function handleLanguage(event: TargetedEvent<HTMLSelectElement>): void {
-    onChange({ ...definition, language: event.currentTarget.value });
-  }
   function handleWelcome(event: TargetedEvent<HTMLTextAreaElement>): void {
     onChange({ ...definition, welcome: event.currentTarget.value });
   }
@@ -35,9 +34,9 @@ export function DefinitionEditor({
     (count, group) => count + group.questions.length,
     0,
   );
-  let extraLanguage = null;
-  if (!["fr", "en"].includes(definition.language))
-    extraLanguage = <option value={definition.language}>{definition.language}</option>;
+  let translations = null;
+  if (!readOnlyContent)
+    translations = <TranslationEditor definition={definition} onChange={onChange} />;
   const groups = definition.groups.map((group, index) => {
     function handleChange(updated: Group): void {
       onChange({
@@ -83,14 +82,7 @@ export function DefinitionEditor({
           Titre du questionnaire
           <input value={definition.title} maxLength={200} onInput={handleTitle} />
         </label>
-        <label>
-          Langue
-          <select value={definition.language} onChange={handleLanguage}>
-            {extraLanguage}
-            <option value="fr">Français</option>
-            <option value="en">English</option>
-          </select>
-        </label>
+        <LanguageSettings definition={definition} onChange={onChange} />
         <label>
           Texte d’accueil
           <textarea value={definition.welcome} rows={3} onInput={handleWelcome} />
@@ -100,6 +92,7 @@ export function DefinitionEditor({
           <textarea value={definition.end} rows={3} onInput={handleEnd} />
         </label>
       </fieldset>
+      {translations}
       {groups}
       <button
         type="button"

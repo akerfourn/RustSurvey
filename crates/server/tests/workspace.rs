@@ -20,6 +20,23 @@ use std::sync::{
 use tower::ServiceExt;
 
 const PASSWORD: &str = "synthetic-admin-password";
+#[path = "workspace/exports.rs"]
+mod export_tests;
+#[path = "workspace/history.rs"]
+mod history_tests;
+#[path = "workspace/media.rs"]
+mod media_tests;
+#[path = "../../object-store/tests/common/mod.rs"]
+mod object_contract;
+
+#[tokio::test]
+async fn test_sql_objects_should_respect_the_same_contract_as_the_memory_adapter() {
+    let fixture = fixture().await;
+    object_contract::contract(&rustsurvey_server::object_store::SqlObjectStore::new(
+        fixture.database,
+    ))
+    .await;
+}
 struct FixedRuntime {
     now: AtomicI64,
     serial: AtomicU64,
@@ -535,7 +552,7 @@ async fn test_invalid_definitions_and_oversized_bodies_should_not_create_records
     let fixture = fixture().await;
     let (cookie, csrf) = login(&fixture).await;
     let mut invalid = definition();
-    invalid["schemaVersion"] = json!(3);
+    invalid["schemaVersion"] = json!(4);
     let response = call(
         &fixture.app,
         "POST",
@@ -721,7 +738,7 @@ async fn import_roundtrip(fixture: &Fixture) {
     let status = response.status();
     let stored = json(response).await;
     assert_eq!(status, StatusCode::CREATED, "{stored}");
-    assert_eq!(stored["definition"]["schemaVersion"], 2);
+    assert_eq!(stored["definition"]["schemaVersion"], 3);
     assert_eq!(stored["definition"]["languages"], json!(["fr", "en"]));
     let id = stored["id"].as_str().unwrap();
     assert!(
@@ -825,6 +842,65 @@ async fn import_roundtrip(fixture: &Fixture) {
     assert_eq!(status, StatusCode::OK, "{saved}");
     assert_eq!(saved["revision"], 2);
     assert_eq!(saved["definition"], edited);
+    let modified_path = format!("/api/admin/studies/{id}/revisions/2/modified.lss");
+    assert_eq!(
+        call(&fixture.app, "GET", &modified_path, None, None, None)
+            .await
+            .status(),
+        StatusCode::UNAUTHORIZED
+    );
+    let modified = call(
+        &fixture.app,
+        "GET",
+        &modified_path,
+        None,
+        Some(&cookie),
+        None,
+    )
+    .await;
+    assert_eq!(modified.status(), StatusCode::OK);
+    let modified = to_bytes(modified.into_body(), 2 * 1024 * 1024)
+        .await
+        .unwrap();
+    let parsed = rustsurvey_limesurvey::LssDocument::parse(
+        &modified,
+        rustsurvey_limesurvey::Limits::default(),
+    )
+    .unwrap();
+    let projected = parsed.source_model().unwrap();
+    let group_id: u64 = saved["definition"]["groups"][2]["source"]["id"]
+        .as_str()
+        .unwrap()
+        .parse()
+        .unwrap();
+    let question_id: u64 = saved["definition"]["groups"][2]["questions"][0]["source"]["id"]
+        .as_str()
+        .unwrap()
+        .parse()
+        .unwrap();
+    assert_eq!(
+        projected
+            .groups
+            .iter()
+            .find(|group| group.id.0 == group_id)
+            .unwrap()
+            .relevance,
+        format!("!is_empty({first_code})")
+    );
+    assert_eq!(
+        projected
+            .questions
+            .iter()
+            .find(|question| question.id.0 == question_id)
+            .unwrap()
+            .relevance,
+        format!("{first_code} == 'visible'")
+    );
+    assert!(
+        std::str::from_utf8(&modified)
+            .unwrap()
+            .contains("SOURCE_ONLY_ORIGINAL")
+    );
     let state =
         WorkspaceState::with_runtime(fixture.database.clone(), false, fixture.runtime.clone());
     let restarted = routes(state);
@@ -941,7 +1017,7 @@ async fn test_second_migration_should_preserve_v1_documents_and_upgrade_them_on_
     ));
     let stored =
         json(call(&app, "GET", &format!("/api/studies/{id}"), None, None, None).await).await;
-    assert_eq!(stored["definition"]["schemaVersion"], 2);
+    assert_eq!(stored["definition"]["schemaVersion"], 3);
     assert_eq!(stored["definition"]["title"], "Legacy");
     assert_eq!(stored["revision"], 1);
     let row = database
@@ -1020,6 +1096,12 @@ async fn test_external_database_should_apply_migrations_and_roundtrip_large_docu
     large_document_roundtrip(&fixture).await;
     import_roundtrip(&fixture).await;
     concurrent_updates(&fixture).await;
+    history_tests::roundtrip(&fixture).await;
+    media_tests::roundtrip(&fixture).await;
+    object_contract::contract(&rustsurvey_server::object_store::SqlObjectStore::new(
+        fixture.database.clone(),
+    ))
+    .await;
     let (cookie, csrf) = login(&fixture).await;
     let stored = create(&fixture, &cookie, &csrf, definition()).await;
     let response = call(

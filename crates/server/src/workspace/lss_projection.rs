@@ -162,6 +162,7 @@ fn project_question(
         randomization_group: question.randomization_group.clone(),
         theme: question.theme.clone(),
         source: source(question.id, Some(&question.source_type)),
+        media: Vec::new(),
     };
     let mut choices: Vec<_> = study
         .answers

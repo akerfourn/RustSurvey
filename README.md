@@ -7,18 +7,24 @@ responsable des autorisations, de la validation et de la persistance.
 
 ## État du projet
 
-**Premier éditeur avec stockage SQL.** Un compte administrateur permet de créer
-et modifier des questionnaires. Ils sont publics dès leur enregistrement :
+**Éditeur de questionnaires avec stockage SQL.** Un compte administrateur permet
+de créer et modifier des questionnaires. Ils sont publics dès leur
+enregistrement :
 
 - groupes et questions réordonnables, textes, codes et choix de réponse ;
-- huit types : texte court/long, nombre, date, choix unique/multiples, oui/non
-  et information ;
+- 28 types sans fichiers : textes, nombres, choix, tableaux, classement et
+  calculs ;
+- axes, doubles échelles, filtres, validations et réglages de présentation ;
+- langues et traductions des textes, sous-questions et choix ;
 - caractère facultatif, recommandé ou obligatoire ; aperçu avec le viewer ;
 - import LSS depuis l’administration, conservé en SQL avec son original ;
 - conditions de groupes/questions : constructeur ET/OU et mode expression ;
 - catalogue des variables et inspection locale des valeurs dans l’aperçu ;
 - définitions natives validées côté Rust et versions immuables en SQL ;
 - sauvegarde protégée contre l’écrasement entre deux onglets ;
+- historique consultable et restaurable, import/export JSON des définitions ;
+- médiathèque PNG/JPEG, objets SQL privés et images associées aux questions ;
+- réexport des conditions modifiées dans le LSS, avec blocages explicites ;
 - sessions administrateur en SQL, mot de passe Argon2id et protection CSRF ;
 - SQLite par défaut, migrations testées aussi sur PostgreSQL et MariaDB.
 
@@ -41,8 +47,9 @@ une saisie locale sans compte :
 Les réponses ne sont jamais envoyées au serveur. La collecte, les sessions de
 réponse durables et les archives `.lsa` restent à implémenter. Les conditions
 des études importées sont éditables ; leurs autres réglages sont conservés et
-protégés. Le téléchargement restitue le LSS original inchangé : le réexport LSS
-intégrant les modifications reste à réaliser. Le moteur d’aperçu couvre un
+protégés. Deux téléchargements distinguent le LSS original inchangé du LSS
+contenant les conditions de la révision enregistrée. Les anciennes sections de
+conditions peuvent bloquer ce second export. Le moteur d’aperçu couvre un
 sous-ensemble explicite ; il ne certifie pas encore le comportement complet
 d’une étude LimeSurvey. Voir le [périmètre du viewer](docs/viewer.md).
 
@@ -52,9 +59,12 @@ règles manquants, avec un plan pour les fonctions demandant du stockage. Le
 [catalogue](docs/form-catalog.md) recense les options et fonctions à suivre.
 L’absence de blocage sur une étude n’équivaut pas à une compatibilité complète.
 
-La persistance actuelle concerne les définitions et l’administration. Les futurs
-médias et fichiers utiliseront une
-[interface objet avec adaptateurs S3 et disque](docs/decisions/0002-object-storage.md).
+La persistance couvre les définitions, l’administration et les images natives.
+Les contenus binaires passent par un
+[port objet](docs/decisions/0002-object-storage.md), avec adaptateurs SQL et
+mémoire. S3 et fichiers locaux restent à ajouter derrière ce même port ; aucun
+répertoire de médias n’est requis. Les fichiers envoyés par les participants ne
+sont pas encore pris en charge.
 
 ## Essayer l’adaptateur de fichiers
 
@@ -111,6 +121,8 @@ et permet les tests PostgreSQL/MariaDB sur des bases jetables.
 node scripts/doctor.mjs
 npm ci
 npm run check:all
+# Optionnel, avec les images Docker déjà chargées :
+npm run test:databases
 ```
 
 Le diagnostic vérifie la présence des outils. Les versions attendues et les
@@ -136,8 +148,16 @@ Pour reprendre un LSS, utiliser **Importer une étude LimeSurvey** dans
 l’administration. Après enregistrement, **Modifier** ouvre ses groupes et
 questions. Le panneau **Conditions d’affichage** propose les règles courantes ou
 une expression avancée. **Aperçu** permet d’essayer le parcours et d’inspecter
-les variables. Le LSS original se télécharge depuis cette même page, après
-connexion. Le parcours **Essayer un LSS** reste une inspection temporaire.
+les variables. L’original et le LSS contenant les conditions enregistrées se
+téléchargent depuis cette page, après connexion. Le parcours **Essayer un LSS**
+reste une inspection temporaire.
+
+Pour les créations natives, **Calculs, validation et présentation** expose les
+réglages interprétés. **Traductions** permet d’éditer les langues
+supplémentaires. Après une première sauvegarde, la **Médiathèque** permet
+d’enregistrer une image, de l’associer à une question et d’en décrire le
+contenu. Enregistrer à nouveau pour publier cette association. **Historique des
+révisions** permet de consulter, exporter ou restaurer un état antérieur.
 
 Le backend Rust charge automatiquement le `.env` du répertoire courant. Les
 variables déjà définies dans l’environnement sont prioritaires. Cette

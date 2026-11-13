@@ -1,5 +1,9 @@
 # Catalogue des options et expressions de formulaire
 
+L’édition native expose maintenant les 28 types et leurs paramètres interprétés.
+Les images natives passent par `ObjectStore` ; cela n’implémente ni les médias
+embarqués dans le HTML LSS ni le type de téléversement participant `|`.
+
 ## Périmètre de l’inventaire
 
 Complément de l’[analyse de couverture](form-coverage.md), relevé le 11

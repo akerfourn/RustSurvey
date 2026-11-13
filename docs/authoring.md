@@ -7,26 +7,28 @@ et les définitions sont publics, sans compte participant ni jeton d’accès. T
 sauvegarde devient immédiatement visible. Il n’existe pas encore d’étape de
 publication, de campagne ou de suppression de questionnaire.
 
-L’éditeur gère titre, langue française/anglaise, accueil, fin, groupes,
-questions, aide, caractère obligatoire et choix. Groupes et questions peuvent
-être ajoutés, retirés et réordonnés. Les identifiants des éléments restent
-stables pendant l’édition. Les huit types proposés sont texte court, texte long,
-nombre, date, choix unique, choix multiples, oui/non et information.
+L’éditeur propose les 28 types sans fichiers rendus par le viewer : textes,
+nombres, dates, choix, commentaires, tableaux, doubles échelles, matrices,
+classements, langues, informations et calculs. Les groupes, questions et axes
+s’ajoutent, se retirent et se réordonnent. Les identifiants restent stables
+lorsque les éléments sont conservés. Les réglages interprétés, traductions et
+images natives s’éditent aussi dans ce parcours.
 
 L’aperçu et les liens publics réutilisent le moteur de saisie du viewer. **Les
 réponses restent dans l’onglet** : recharger les efface. Aucune API ne collecte
 de réponses. Le JSON téléchargeable reste un brouillon local.
 
 L’administration dispose d’un import LSS persistant. Il alimente la même
-définition v2 que les créations, en conservant langues, types, traductions,
+définition v3 que les créations, en conservant langues, types, traductions,
 sous-questions, échelles, paramètres et règles. La fixture des 28 types sans
 fichiers est couverte. L’édition des imports est limitée aux conditions des
 groupes et questions ; les autres propriétés sont protégées côté serveur.
 
 Le XML original est conservé séparément en SQL et téléchargé uniquement après
 authentification. Il reste identique après les modifications de conditions. Ce
-téléchargement ne constitue pas un réexport de la définition modifiée. Le
-parcours `#/import` reste une inspection temporaire, sans enregistrement.
+téléchargement ne constitue pas un réexport de la définition modifiée. Un second
+lien exporte les conditions de la révision enregistrée dans le LSS. Le parcours
+`#/import` reste une inspection temporaire, sans enregistrement.
 
 ## Importer et modifier des conditions
 
@@ -47,8 +49,8 @@ parcours `#/import` reste une inspection temporaire, sans enregistrement.
 Exemple : `AGE >= 18 && CONSENT == 'Y'`. Les codes de choix restent des chaînes,
 notamment `'01'`. Les règles s’appuient sur le moteur borné existant, sans
 `eval`. Le catalogue expose les cellules texte, numériques, date, choix et
-calculées ; ce lot n’ajoute pas encore un éditeur de calculs ou de paramètres
-externes, ni une inférence complète des types d’expression.
+calculées. Les paramètres externes et l’inférence complète des types
+d’expression restent à réaliser.
 
 Rust contrôle syntaxe, fonctions admises, arité, références et cycles pour les
 conditions éditées. Les conditions non interprétées d’un import restent
@@ -56,6 +58,74 @@ préservées lorsqu’elles sont inchangées, avec les diagnostics du viewer. Un
 nouvelle condition invalide est refusée. Les anciennes sections `conditions`,
 les fonctions et options non gérées ne deviennent pas exécutables par le seul
 fait d’avoir été stockées. Le profil du [viewer](viewer.md) reste applicable.
+
+## Types, réglages et traductions natifs
+
+**Calculs, validation et présentation** expose les options prises en charge :
+équation, règle de validation, bornes par cellule et sur la somme, nombre de
+réponses, longueur du texte, filtres de sous-questions, curseurs et matrices.
+Les réglages de présentation incluent champs indicatifs, préfixes/suffixes,
+option « autre », masquage et en-têtes des doubles échelles.
+
+Les sous-questions et colonnes ont leurs propres conditions. Les axes des
+matrices et les deux échelles de réponse possèdent des identifiants distincts.
+Changer de type conserve les axes applicables et réinitialise les réglages
+propres à l’ancien type. Renommer un code ne réécrit pas automatiquement les
+expressions : les références devenues inconnues doivent être corrigées avant la
+sauvegarde.
+
+Rust contrôle syntaxe, références et cycles des nouvelles expressions. Les
+validations peuvent lire leur propre réponse ; les pertinences et calculs ne
+peuvent pas former de cycle. Rust contrôle aussi les sources M/P des filtres,
+les valeurs littérales et les intervalles de curseurs/matrices. Il ne valide pas
+encore les réponses d’une collecte.
+
+**Langues du questionnaire** accepte au plus 32 codes. **Traductions** permet de
+choisir une langue et de rechercher un groupe, une question ou un choix. Les
+nouvelles traductions sont initialisées depuis le texte de base. Changer la
+langue principale conserve les textes de la précédente. Retirer une langue du
+parcours conserve ses traductions dans le document.
+
+## Images natives et stockage objet
+
+Après un premier enregistrement natif, ouvrir **Médiathèque du questionnaire** :
+
+1. Sélectionner une image PNG/JPEG puis **Enregistrer l’image**.
+2. Choisir la question à illustrer et **Associer à la question**.
+3. Renseigner la description alternative dans **Images associées**.
+4. Enregistrer le questionnaire pour rendre cette association publique.
+
+L’aperçu privé peut afficher les images du brouillon. Une image n’est accessible
+publiquement que si la révision courante la référence. Elle doit appartenir à la
+même étude et son envoi doit être terminé. Une question accepte huit images.
+Dissocier conserve le fichier et les anciennes révisions. Un envoi interrompu
+peut être repris depuis sa carte avec **Reprendre cet envoi**, en sélectionnant
+le même fichier ; le serveur vérifie aussi son empreinte.
+
+Les binaires passent par le port `ObjectStore`, avec SQL par défaut. Aucun
+répertoire de médias n’est requis. Le parcours borne images, dimensions,
+concurrence et envois ; il supporte la reprise d’un upload avec le même
+identifiant. Voir la [décision 0002](decisions/0002-object-storage.md). S3,
+fichiers locaux, nettoyage et téléversements participants restent à faire.
+
+## Exports de définition et LSS
+
+L’historique fournit la définition JSON d’une révision. **Importer une
+définition native** la valide comme un nouveau questionnaire. Le fichier ne
+contient ni binaires ni XML original privé. Une référence à une image d’une
+autre étude est refusée ; le transfert complet des ressources reste à
+implémenter.
+
+Pour un import LSS, **Télécharger le LSS modifié** applique les conditions
+`grelevance`/`relevance` enregistrées à ses identifiants source. Le reste des
+octets est conservé. L’export relit et contrôle la structure produite, avec la
+limite de 8 Mio. Les anciennes sections `conditions` non vides bloquent une
+transformation de pertinence plutôt que produire des règles contradictoires.
+L’original reste toujours distinct et immuable.
+
+Les fixtures synthétiques vérifient lecture, conservation et relecture des
+conditions. L’import fonctionnel du résultat dans LimeSurvey 6.5.14 reste à
+certifier. Les créations natives ne sont pas encore exportables en LSS.
 
 ## Installation et connexion
 
@@ -118,15 +188,16 @@ migrations simultanées sur plusieurs instances restent à coordonner.
 
 ## Définition et sauvegarde
 
-`crates/domain` porte le document natif `schemaVersion: 2`, sans dépendance à
+`crates/domain` porte le document natif `schemaVersion: 3`, sans dépendance à
 HTTP, SQL ou LimeSurvey. Les textes, groupes, questions et choix sont typés. Le
 serveur refuse versions, champs et types inconnus au lieu de les perdre.
 
-La lecture et la sauvegarde convertissent explicitement la v1 : les choix
+La lecture et la sauvegarde convertissent explicitement les v1/v2 : les choix
 multiples deviennent des sous-questions avec les mêmes identifiants et codes, et
 les conditions absentes valent `1`. Les révisions historiques ne sont pas
-réécrites. Une nouvelle sauvegarde produit une révision v2. Les informations
-source non projetées restent dans l’archive XML privée.
+réécrites. La v3 ajoute les références d’images ; une ancienne version qui en
+déclare est refusée. Une nouvelle sauvegarde produit une révision v3. Les
+informations source non projetées restent dans l’archive XML privée.
 
 Les limites actuelles sont 8 Mio par document et par XML, 50 groupes, 500
 questions, 200 éléments par axe, 32 langues, 2000 cellules par question, 20000
@@ -138,16 +209,19 @@ Chaque sauvegarde ajoute une révision immuable et met à jour la version couran
 dans une transaction. Une mise à jour porte `expectedRevision`. Si un autre
 onglet a enregistré entre-temps, la transaction échoue avec HTTP 409 sans
 écraser sa version. Le brouillon reste dans l’éditeur ; le bouton de
-rechargement propose de le remplacer explicitement. L’historique est stocké mais
-n’a pas encore d’interface de restauration.
+rechargement propose de le remplacer explicitement. **Historique des révisions**
+permet de consulter les versions par lots de vingt, essayer leur aperçu,
+exporter leur définition et restaurer un instantané dans une nouvelle révision.
+La restauration exige la version courante attendue et conserve tout
+l’historique.
 
 Le serveur borne à deux les écritures simultanées par processus. Les routes de
 ce module ont un délai de 15 secondes, des corps limités et
 `Cache-Control: no-store`. Le catalogue est paginé par 50 éléments. Il ne charge
-pas les définitions complètes. Les imports ont également deux places de calcul
-avec `spawn_blocking` ; leur permis reste détenu jusqu’à la fin du calcul, même
-si la requête expire. Une expression admet au plus 4096 unités UTF-16, 512
-jetons et une profondeur de 32.
+pas les définitions complètes. Les imports et réexports LSS partagent également
+deux places de calcul avec `spawn_blocking` ; leur permis reste détenu jusqu’à
+la fin du calcul, même si la requête expire. Une expression admet au plus 4096
+unités UTF-16, 512 jetons et une profondeur de 32.
 
 Une création ou un import n’est pas encore idempotent en cas de perte de sa
 réponse HTTP. L’interface désactive l’édition pendant la sauvegarde ; elle ne
@@ -160,17 +234,26 @@ général ne sont pas revendiquées par cet éditeur.
 Les documents utilisent les noms JSON en `camelCase`. Les dates sont des
 secondes Unix UTC ; les identifiants d’études sont des UUID textuels.
 
-| Méthode | Chemin                                 | Accès et résultat                               |
-| ------- | -------------------------------------- | ----------------------------------------------- |
-| GET     | `/api/studies?offset=0`                | Public ; `items` et `hasMore`                   |
-| GET     | `/api/studies/{id}`                    | Public ; définition courante                    |
-| GET     | `/api/admin/session`                   | État, identifiant et jeton CSRF si connecté     |
-| POST    | `/api/admin/login`                     | `username`, `password` ; cookie                 |
-| POST    | `/api/admin/logout`                    | Révocation et suppression cookie                |
-| POST    | `/api/admin/studies`                   | Admin + CSRF ; définition, HTTP 201             |
-| PUT     | `/api/admin/studies/{id}`              | Admin + CSRF ; `expectedRevision`, `definition` |
-| POST    | `/api/admin/imports/lss`               | Admin + CSRF ; XML brut, HTTP 201               |
-| GET     | `/api/admin/studies/{id}/original.lss` | Admin ; original inchangé, téléchargement       |
+| Méthode  | Chemin                                                         | Accès et résultat                                  |
+| -------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| GET      | `/api/studies?offset=0`                                        | Public ; `items` et `hasMore`                      |
+| GET      | `/api/studies/{id}`                                            | Public ; définition courante                       |
+| GET      | `/api/admin/session`                                           | État, identifiant et jeton CSRF si connecté        |
+| POST     | `/api/admin/login`                                             | `username`, `password` ; cookie                    |
+| POST     | `/api/admin/logout`                                            | Révocation et suppression cookie                   |
+| POST     | `/api/admin/studies`                                           | Admin + CSRF ; définition, HTTP 201                |
+| PUT      | `/api/admin/studies/{id}`                                      | Admin + CSRF ; `expectedRevision`, `definition`    |
+| POST     | `/api/admin/imports/lss`                                       | Admin + CSRF ; XML brut, HTTP 201                  |
+| GET      | `/api/admin/studies/{id}/original.lss`                         | Admin ; original inchangé, téléchargement          |
+| GET      | `/api/admin/studies/{id}/revisions?before=1000000000`          | Admin ; historique paginé                          |
+| GET      | `/api/admin/studies/{id}/revisions/{revision}`                 | Admin ; instantané                                 |
+| GET      | `/api/admin/studies/{id}/revisions/{revision}/definition.json` | Admin ; JSON natif                                 |
+| GET      | `/api/admin/studies/{id}/revisions/{revision}/modified.lss`    | Admin ; LSS avec conditions enregistrées           |
+| POST     | `/api/admin/studies/{id}/restore`                              | Admin + CSRF ; `expectedRevision`, `revision`      |
+| GET      | `/api/admin/studies/{id}/media?offset=0`                       | Admin ; métadonnées, lots de 50                    |
+| PUT      | `/api/admin/studies/{id}/media/{mediaId}?name=...`             | Admin + CSRF ; image brute, envoi répétable        |
+| GET/HEAD | `/api/admin/studies/{id}/media/{mediaId}`                      | Admin ; image privée                               |
+| GET/HEAD | `/api/studies/{id}/media/{mediaId}`                            | Public ; image référencée par la révision courante |
 
 La représentation enregistrée contient `id`, `revision`, `createdAt`,
 `updatedAt`, `definition` et `source` (`null` pour une création native).
@@ -183,3 +266,6 @@ La [stratégie SQL](database.md) détaille les tables et leurs tests. Les
 dépendances et les limites de cette première étape. La
 [décision 0004](decisions/0004-rich-definitions-and-lss.md) détaille le format
 enrichi, les règles et la conservation des sources.
+
+La [décision 0005](decisions/0005-authoring-media-and-history.md) précise les
+choix d’édition, l’historique et les références d’images du format v3.

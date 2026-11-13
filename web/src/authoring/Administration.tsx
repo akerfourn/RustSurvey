@@ -58,6 +58,7 @@ export function Administration({ id, editing }: { id: string | null; editing: bo
       let workspace = (
         <>
           <ImportPanel csrf={session.csrfToken ?? ""} onExpired={handleExpired} />
+          <ImportPanel csrf={session.csrfToken ?? ""} onExpired={handleExpired} format="native" />
           <Catalogue administrator={true} />
         </>
       );

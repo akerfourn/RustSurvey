@@ -13,13 +13,16 @@ le 11 novembre 2026, puis complétée par l’incrément local sans stockage du 
 jour. Les états ci-dessous décrivent le moteur de formulaire. L’incrément
 d’[édition native](authoring.md) ajoute ensuite le stockage SQL des définitions
 et de l’administration, puis les sources LSS privées et les conditions éditables
-de groupes/questions dans le format v2, sans ajouter de collecte de réponses.
+de groupes/questions dans le format v2. Le format v3 ajoute les images natives ;
+l’éditeur expose maintenant 28 types, paramètres et traductions, sans collecte
+de réponses.
 
 Les fonctions F5/F6 demandant un stockage des participations restent différées ;
 les propositions correspondantes ci-dessous décrivent la cible future. Les
-médias et fichiers suivront la
-[décision de stockage objet](decisions/0002-object-storage.md), avec adaptateurs
-S3 et fichiers locaux.
+médias et fichiers suivent la
+[décision de stockage objet](decisions/0002-object-storage.md). Le port, les
+adaptateurs SQL/mémoire et les images natives sont présents ; S3, fichiers
+locaux et téléversements participants restent à réaliser.
 
 Le périmètre est le formulaire vu et rempli par le participant. L’éditeur
 administrateur, les invitations, les statistiques et RemoteControl sont des
@@ -386,13 +389,12 @@ administrateur ne sont un préalable.
 
 ### Pièces jointes et ressources
 
-Le cœur utilisera un port de stockage objet, avec un adaptateur compatible S3 et
-un adaptateur représentant les objets par des fichiers locaux. Les métadonnées
-et relations resteront dans SQL. Le déploiement S3 ne dépendra pas d’un volume
-disque persistant ; voir la [décision 0002](decisions/0002-object-storage.md).
-Cette réalisation est différée. Le navigateur pourra prévisualiser un fichier,
-mais le serveur devra vérifier accès, tailles, quantités, types admis et contenu
-avant son association.
+Le port de stockage objet est présent avec adaptateurs SQL et mémoire. Un
+premier parcours d’images natives contrôle propriétaire, taille, signature,
+dimensions et association à une révision. Les adaptateurs S3/disque et les
+pièces jointes des participants restent à réaliser ; voir la
+[décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne devra
+pas dépendre d’un volume disque persistant.
 
 Prévoir un protocole temporaire → prêt → associé et une collecte des fichiers
 orphelins : le stockage objet et SQL ont des cycles d’écriture distincts. Les
@@ -448,9 +450,11 @@ et F4 ont progressé avec les diagnostics, expressions, filtres et contrôles.
 Leurs variantes restantes et le corpus de référence constituent la suite du
 travail sans stockage. F2/F3 doivent ensuite précéder toute annonce de règles
 générales compatibles. F4 avance sur les rendus autonomes ; ses fonctions
-nécessitant des médias durables attendent le stockage objet. F5/F6 sont reportés
-pour le moment. F7 peut préparer le corpus et comparer les profils locaux dès
-maintenant ; la parité complète reste à vérifier après les fonctions différées.
+nécessitant des médias importés restent à compléter. Le port objet et les images
+natives couvrent une première partie de F6. Collecte, reprise, fichiers
+participants, quotas et minuteries de F5/F6 restent à réaliser. F7 peut préparer
+le corpus et comparer les profils locaux dès maintenant ; la parité complète
+reste à vérifier après les fonctions différées.
 
 ## Preuves à obtenir pour chaque capacité
 

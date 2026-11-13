@@ -18,22 +18,28 @@ décrit le profil effectivement implémenté.
 
 Un [premier éditeur natif](authoring.md) et la persistance SQL des définitions
 et de l’administration sont présents. Il permet de créer des questionnaires
-publics avec huit types de questions et un aperçu. L’administration importe les
-LSS en SQL dans un format natif enrichi, conserve l’original privé et permet
-d’éditer les conditions de groupes/questions. Le parcours LSS conserve ses 28
-types sans fichiers. Les réponses restent en mémoire dans le navigateur.
+publics avec 28 types de questions, des paramètres et un aperçu.
+L’administration importe les LSS en SQL dans un format natif enrichi, conserve
+l’original privé et permet d’éditer les conditions de groupes/questions. Le
+parcours LSS conserve ses 28 types sans fichiers. Les réponses restent en
+mémoire dans le navigateur.
 
 F5/F6 restent différés pour la collecte, la reprise, les fichiers, les
-ressources durables, les quotas globaux et les effets serveur. Les prochaines
-étapes d’édition devront étendre les propriétés modifiables des imports,
-introduire l’édition des calculs/paramètres et préparer le réexport LSS modifié
-avec un contrôle d’impact sur les références préservées.
+transferts de ressources LimeSurvey, les quotas globaux et les effets serveur.
+Les prochaines étapes d’édition devront étendre les propriétés modifiables des
+imports, compléter le moteur Rust d’exécution et préparer les campagnes figées.
+Les calculs/paramètres natifs sont éditables ; le réexport LSS des seules
+conditions conserve les autres octets et bloque les anciennes conditions
+contradictoires.
 
 La persistance des participations et leur migration restent des objectifs
 ultérieurs. Les futurs médias et pièces jointes suivront la
 [décision de stockage objet](decisions/0002-object-storage.md) : port commun,
 adaptateur S3 et adaptateur fichiers locaux, sans volume persistant requis pour
-le déploiement S3. Aucun stockage de médias n’est ajouté pendant ce cycle.
+le déploiement S3. Un premier adaptateur SQL et une médiathèque d’images natives
+sont présents. L’historique restaurable, les traductions et l’import/export JSON
+complètent l’édition. La collecte des réponses et les adaptateurs S3/disque
+restent à faire.
 
 ## Étape 0 — Cadrage et squelette
 

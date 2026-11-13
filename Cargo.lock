@@ -1951,6 +1951,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "rustsurvey-object-store"
+version = "0.1.0"
+dependencies = [
+ "sha2 0.11.1",
+ "tokio",
+]
+
+[[package]]
 name = "rustsurvey-server"
 version = "0.1.0"
 dependencies = [
@@ -1958,10 +1966,12 @@ dependencies = [
  "axum",
  "dotenvy",
  "getrandom 0.4.3",
+ "http-body",
  "http-body-util",
  "rustsurvey-domain",
  "rustsurvey-limesurvey",
  "rustsurvey-migration",
+ "rustsurvey-object-store",
  "sea-orm",
  "serde",
  "serde_json",

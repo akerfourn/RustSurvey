@@ -82,7 +82,7 @@ fn test_definition_should_reject_ambiguous_answer_names_and_required_information
 #[test]
 fn test_definition_should_bound_structure_text_and_schema_versions() {
     let mut value = fixture();
-    value["schemaVersion"] = json!(3);
+    value["schemaVersion"] = json!(4);
     value["title"] = json!("a".repeat(201));
     let issues = serde_json::from_value::<Definition>(value)
         .unwrap()
@@ -114,5 +114,28 @@ fn test_definition_should_refuse_more_answer_cells_than_the_viewer_can_execute()
         issues
             .iter()
             .any(|issue| issue.path == "groups" && issue.message.contains("20000 cellules"))
+    );
+}
+
+#[test]
+fn test_v2_upgrade_should_add_empty_media_without_changing_ids_and_reject_v3_references_in_an_old_format()
+ {
+    let mut value = fixture();
+    value["schemaVersion"] = json!(2);
+    let mut upgraded: Definition = serde_json::from_value(value.clone()).unwrap();
+    upgraded.upgrade().unwrap();
+    assert_eq!(upgraded.schema_version, 3);
+    assert_eq!(upgraded.groups[0].questions[0].id, "q1");
+    assert_eq!(upgraded.groups[0].questions[0].choices[0].code, "01");
+    assert!(upgraded.groups[0].questions[0].media.is_empty());
+    value["groups"][0]["questions"][0]["media"] = json!([{"id":"00000000-0000-4000-8000-000000000010","alt":"Synthetic pixel","language":null}]);
+    let mut invalid: Definition = serde_json::from_value(value).unwrap();
+    assert_eq!(
+        invalid.upgrade().unwrap_err(),
+        "Les références de médias nécessitent le format natif v3."
+    );
+    assert_eq!(
+        invalid.schema_version, 2,
+        "a rejected upgrade must not partially mutate the document"
     );
 }

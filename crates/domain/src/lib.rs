@@ -6,7 +6,7 @@ mod validation;
 pub const MAX_DOCUMENT_BYTES: usize = 8 * 1024 * 1024;
 pub const MAX_QUESTIONS: usize = 500;
 pub const MAX_ANSWER_CELLS: usize = 20000;
-pub const SCHEMA_VERSION: u32 = 2;
+pub const SCHEMA_VERSION: u32 = 3;
 
 pub fn always() -> String {
     "1".to_owned()
@@ -41,6 +41,14 @@ pub struct SurveyTranslation {
 pub struct Attribute {
     pub name: String,
     pub value: String,
+    pub language: Option<String>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct QuestionMedia {
+    pub id: String,
+    pub alt: String,
     pub language: Option<String>,
 }
 
@@ -106,6 +114,8 @@ pub struct Question {
     pub theme: String,
     #[serde(default)]
     pub source: Option<SourceReference>,
+    #[serde(default)]
+    pub media: Vec<QuestionMedia>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -177,6 +187,15 @@ pub struct ValidationIssue {
 
 impl Definition {
     pub fn upgrade(&mut self) -> Result<(), &'static str> {
+        if self.schema_version < 3
+            && self
+                .groups
+                .iter()
+                .flat_map(|group| &group.questions)
+                .any(|question| !question.media.is_empty())
+        {
+            return Err("Les références de médias nécessitent le format natif v3.");
+        }
         if self.schema_version == 1 {
             if self
                 .groups
@@ -200,6 +219,9 @@ impl Definition {
                     question.subquestions = std::mem::take(&mut question.choices);
                 }
             }
+            self.schema_version = 2;
+        }
+        if self.schema_version == 2 {
             self.schema_version = SCHEMA_VERSION;
         }
         if self.schema_version != SCHEMA_VERSION {
@@ -209,7 +231,7 @@ impl Definition {
     }
 
     pub fn validate(&self) -> Vec<ValidationIssue> {
-        if self.schema_version == 1 {
+        if self.schema_version == 1 || self.schema_version == 2 {
             let mut definition = self.clone();
             if let Err(message) = definition.upgrade() {
                 return vec![ValidationIssue {

@@ -51,6 +51,7 @@ export interface SurveyQuestion {
   other: boolean;
   labels: QuestionLabel[];
   attributes: QuestionAttribute[];
+  media?: { id: string; alt: string; language: string | null }[];
 }
 
 export interface SurveySubquestion {

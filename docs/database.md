@@ -100,9 +100,9 @@ document Unicode supérieur à 64 Kio sur les trois moteurs.
 
 Les changements de format des documents ont leur propre versionnement et leur
 stratégie de conversion. Ils ne se confondent ni avec les migrations SQL, ni
-avec le `DBVersion` LimeSurvey. Études, révisions, sources LSS privées et
-administration sont implémentées. Campagnes, réponses, participants et
-transferts restent à réaliser.
+avec le `DBVersion` LimeSurvey. Études, révisions, sources LSS privées
+administration et images natives sont implémentées. Campagnes, réponses,
+participants et transferts restent à réaliser.
 
 ## Automatisation et déploiement
 
@@ -181,3 +181,41 @@ migration mais n’est pas une procédure de sauvegarde/restauration.
   https://www.sea-ql.org/SeaORM/docs/install-and-config/database-and-async-runtime/
 [run]: https://www.sea-ql.org/SeaORM/docs/migration/running-migration/
 [write]: https://www.sea-ql.org/SeaORM/docs/migration/writing-migration/
+
+## Objets et médias natifs
+
+La migration `m20261113_000003_media` ajoute :
+
+| Table              | Contenu                                                      |
+| ------------------ | ------------------------------------------------------------ |
+| `objects`          | Objets immuables, binaire borné, taille et empreinte SHA-256 |
+| `media`            | Intention d’upload, étude propriétaire, métadonnées et état  |
+| `media_references` | Associations aux révisions, protégées par clés étrangères    |
+
+Le binaire est `LONGBLOB` sur MariaDB, `BYTEA` sur PostgreSQL et `BLOB` sur
+SQLite. Les références sont validées et insérées dans la transaction de
+définition. Les médias de l’historique restent conservés après dissociation de
+la version courante. La v3 du document s’obtient à la lecture des v1/v2 ; les
+documents historiques ne sont pas réécrits par la migration.
+
+Le 13 novembre 2026, les trois migrations et les parcours d’import, réexport,
+historique, objets et médias ont été exécutés sur SQLite, PostgreSQL 17 et
+MariaDB 11.4. Les tests portent aussi sur les binaires de plus de 64 Kio et les
+associations entre études, sans dépendre d’un opérateur JSON SQL.
+
+Le lanceur optionnel automatise les deux bases externes dans des conteneurs
+jetables, avec données en mémoire et ports locaux attribués automatiquement :
+
+```sh
+# Téléchargements explicites, une première fois si les images sont absentes :
+docker pull postgres:17-alpine
+docker pull mariadb:11.4
+npm run test:databases
+# Ou un seul moteur :
+npm run test:databases -- postgres
+```
+
+Le lanceur n’utilise aucune URL de base existante, ne télécharge pas d’image et
+retire uniquement ses propres conteneurs. Les tests courants restent sans
+service externe. Les adaptateurs S3/disque et le nettoyage des objets ne sont
+pas encore implémentés.

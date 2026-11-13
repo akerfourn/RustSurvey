@@ -26,6 +26,8 @@ l’[éditeur avec administration](authoring.md).
 16. [Choix de persistance et d’authentification](decisions/0003-authoring.md).
 17. [Définition enrichie, import LSS et conditions](decisions/0004-rich-definitions-and-lss.md).
 
+18. [Édition étendue, historique et médias natifs](decisions/0005-authoring-media-and-history.md).
+
 ## Lire les statuts
 
 | Statut    | Signification                                            |

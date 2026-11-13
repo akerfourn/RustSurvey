@@ -31,7 +31,7 @@ L’[éditeur natif](authoring.md) utilise aussi ce viewer pour ses aperçus et 
 liens publics. La définition est alors chargée depuis SQL ; les réponses restent
 locales dans les deux parcours. Le compte administrateur n’intervient que pour
 créer et modifier les définitions. L’import depuis l’administration conserve la
-source et une définition v2 en SQL. Ses conditions de groupes et questions sont
+source et une définition v3 en SQL. Ses conditions de groupes et questions sont
 éditables ; l’aperçu reçoit aussi le rapport d’import pour garder les
 diagnostics, notamment les sections non prises en charge. L’inspection des
 valeurs et de la visibilité est réservée à l’aperçu d’administration.
@@ -137,7 +137,9 @@ changement de langue conserve la saisie et synchronise les questions I. Accueil,
 fin, aides, descriptions de groupe, options et sous-questions prennent en charge
 les substitutions du profil d’expression. Le HTML est converti en texte dans un
 `template` inerte ; aucun HTML importé n’est inséré dans le DOM actif. Les
-médias et le rendu HTML enrichi restent à réaliser.
+médias importés et le rendu HTML enrichi restent à réaliser. Les images
+associées aux questions natives sont affichées via le port de stockage objet,
+avec contrôle de propriété et de publication côté serveur.
 
 `display_columns`, `display_rows`, `input_size`, préfixes, suffixes et
 placeholders sont appliqués. Les en-têtes de double échelle peuvent être
@@ -173,7 +175,8 @@ reproduire encore toute la sémantique ExpressionScript de pertinence. Les alias
 SGQA, attributs `.shown`/`.value`, variables réservées, évaluations natives et
 extensions ne sont pas implémentés. Les valeurs par défaut, anciennes
 conditions, regex, ordres aléatoires, quotas et minuteries actives restent
-diagnostiqués. Les fonctions avec stockage demeurent différées.
+diagnostiqués. Hors images natives, les fonctions avec stockage des
+participations demeurent différées.
 
 Un attribut inconnu de valeur `0` n’est plus supposé désactivé. Seuls les noms
 et valeurs neutres explicitement reconnus sont tolérés. Les options secondaires

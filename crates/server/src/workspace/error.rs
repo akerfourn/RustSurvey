@@ -13,6 +13,28 @@ pub struct AppError {
     issues: Vec<rustsurvey_domain::ValidationIssue>,
 }
 impl AppError {
+    pub(super) fn json(error: axum::extract::rejection::JsonRejection) -> Self {
+        let status = error.status();
+        let (code, message) = match status {
+            StatusCode::PAYLOAD_TOO_LARGE => (
+                "body_too_large",
+                "Le document dépasse la taille maximale autorisée pour cette route.",
+            ),
+            StatusCode::UNSUPPORTED_MEDIA_TYPE => (
+                "json_required",
+                "Envoyez le document avec le type application/json.",
+            ),
+            StatusCode::UNPROCESSABLE_ENTITY => (
+                "invalid_definition_json",
+                "Définition JSON incompatible : champ inconnu, type incorrect ou propriété requise absente.",
+            ),
+            _ => (
+                "invalid_json",
+                "Le corps de la requête n’est pas un JSON valide.",
+            ),
+        };
+        Self::new(status, code, message)
+    }
     pub fn new(status: StatusCode, code: &'static str, message: &'static str) -> Self {
         Self {
             status,

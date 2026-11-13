@@ -16,6 +16,19 @@ pub use report::{Capability, Diagnostic, DiagnosticCode, Report, SectionSummary,
 
 pub const TARGET_SCHEMA: u32 = 623;
 
+#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+pub enum RelevanceTarget {
+    Group,
+    Question,
+}
+
+#[derive(Clone, Debug)]
+pub struct RelevanceEdit {
+    pub target: RelevanceTarget,
+    pub id: SourceId,
+    pub expression: String,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Limits {
     pub max_bytes: usize,
@@ -89,5 +102,21 @@ impl LssDocument {
         }
         let updated = structure::replace_title(&self.xml, language, title, self.limits)?;
         Self::parse(updated.as_bytes(), self.limits)
+    }
+
+    /// Patch only the requested group/question relevance fields. All other bytes stay unchanged.
+    pub fn with_relevances(&self, edits: &[RelevanceEdit]) -> Result<Self, Error> {
+        if self.report.source_schema != TARGET_SCHEMA {
+            return Err(Error::UnsupportedSchema(self.report.source_schema));
+        }
+        if self.report.has_errors() {
+            return Err(Error::InvalidStructure);
+        }
+        let updated = structure::replace_relevances(&self.xml, edits, self.limits)?;
+        let result = Self::parse(updated.as_bytes(), self.limits)?;
+        if result.report.has_errors() {
+            return Err(Error::InvalidStructure);
+        }
+        Ok(result)
     }
 }

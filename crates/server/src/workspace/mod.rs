@@ -3,8 +3,14 @@ mod auth;
 mod auth_repository;
 mod error;
 mod forms;
+mod history;
 mod imports;
+mod lss_export;
 mod lss_projection;
+mod media;
+mod media_body;
+mod media_content;
+mod media_repository;
 mod password_policy;
 mod repository;
 mod runtime;
@@ -30,6 +36,8 @@ pub struct WorkspaceState {
     secure_cookie: bool,
     writes: Arc<Semaphore>,
     imports: Arc<Semaphore>,
+    objects: Arc<dyn rustsurvey_object_store::ObjectStore>,
+    object_reads: Arc<Semaphore>,
 }
 
 impl WorkspaceState {
@@ -42,6 +50,8 @@ impl WorkspaceState {
         runtime: Arc<dyn Runtime>,
     ) -> Self {
         Self {
+            objects: Arc::new(crate::object_store::SqlObjectStore::new(database.clone())),
+            object_reads: Arc::new(Semaphore::new(4)),
             database,
             runtime,
             login_slots: Arc::new(Semaphore::new(1)),
@@ -49,6 +59,13 @@ impl WorkspaceState {
             imports: Arc::new(Semaphore::new(2)),
             secure_cookie,
         }
+    }
+    pub fn with_object_store(
+        mut self,
+        objects: Arc<dyn rustsurvey_object_store::ObjectStore>,
+    ) -> Self {
+        self.objects = objects;
+        self
     }
 }
 
@@ -67,10 +84,37 @@ pub fn routes(state: WorkspaceState) -> Router {
         )
         .route("/api/admin/imports/lss", post(imports::import))
         .route("/api/admin/studies/{id}", put(forms::update))
+        .route("/api/admin/studies/{id}/restore", post(history::restore))
+        .route(
+            "/api/admin/studies/{id}/media/{media_id}",
+            put(media::upload),
+        )
         .route_layer(axum::middleware::from_fn_with_state(state.clone(), protect));
     Router::new()
         .route("/api/studies", get(forms::list))
         .route("/api/studies/{id}", get(forms::get))
+        .route(
+            "/api/studies/{id}/media/{media_id}",
+            get(media::get_public).head(media::head_public),
+        )
+        .route(
+            "/api/admin/studies/{id}/media/{media_id}",
+            get(media::get_private).head(media::head_private),
+        )
+        .route("/api/admin/studies/{id}/media", get(media::list))
+        .route("/api/admin/studies/{id}/revisions", get(history::list))
+        .route(
+            "/api/admin/studies/{id}/revisions/{revision}",
+            get(history::get),
+        )
+        .route(
+            "/api/admin/studies/{id}/revisions/{revision}/definition.json",
+            get(history::export),
+        )
+        .route(
+            "/api/admin/studies/{id}/revisions/{revision}/modified.lss",
+            get(lss_export::export),
+        )
         .route(
             "/api/admin/studies/{id}/original.lss",
             get(imports::original),
