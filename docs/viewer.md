@@ -235,6 +235,8 @@ Le parcours HTTP local a été vérifié avec Vite, le backend, le décodeur JSO
 le moteur réels. Le navigateur pilotable étant indisponible dans la session de
 développement, le contrôle visuel et les interactions DOM restent à vérifier.
 
-La collecte durable exigera la validation des réponses et des transitions côté
-Rust, ainsi que les tables et migrations correspondantes. La validation locale
-actuelle n’autorise aucune écriture serveur et ne remplace pas ces contrôles.
+La [collecte native](collection.md) réutilise ce viewer sur un profil de 17
+types. Les campagnes ont leurs propres liens, la validation Rust et les API de
+sauvegarde/reprise. L’inspection LSS, l’aperçu d’administration et les liens
+`#/studies/...` restent locaux. Leur validation ne remplace aucun contrôle
+serveur.

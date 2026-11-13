@@ -20,6 +20,8 @@ use std::sync::{
 use tower::ServiceExt;
 
 const PASSWORD: &str = "synthetic-admin-password";
+#[path = "workspace/collection.rs"]
+mod collection_tests;
 #[path = "workspace/exports.rs"]
 mod export_tests;
 #[path = "workspace/history.rs"]
@@ -317,7 +319,7 @@ async fn test_administration_should_require_authentication_and_csrf_before_writi
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
     assert_eq!(json(response).await["definition"], definition());
     assert!(
-        !SchemaManager::new(&fixture.database)
+        SchemaManager::new(&fixture.database)
             .has_table("responses")
             .await
             .unwrap()
@@ -1102,6 +1104,7 @@ async fn test_external_database_should_apply_migrations_and_roundtrip_large_docu
     concurrent_updates(&fixture).await;
     history_tests::roundtrip(&fixture).await;
     media_tests::roundtrip(&fixture).await;
+    collection_tests::roundtrip(&fixture).await;
     object_contract::contract(&rustsurvey_server::object_store::SqlObjectStore::new(
         fixture.database.clone(),
     ))

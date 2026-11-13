@@ -15,8 +15,9 @@ lorsque les éléments sont conservés. Les réglages interprétés, traductions
 images natives s’éditent aussi dans ce parcours.
 
 L’aperçu et les liens publics réutilisent le moteur de saisie du viewer. **Les
-réponses restent dans l’onglet** : recharger les efface. Aucune API ne collecte
-de réponses. Le JSON téléchargeable reste un brouillon local.
+réponses restent dans l’onglet** : recharger les efface. Le JSON téléchargeable
+reste un brouillon local. Le panneau **Collecter des réponses** ouvre séparément
+une [campagne native durable](collection.md) sur une révision enregistrée.
 
 L’administration dispose d’un import LSS persistant. Il alimente la même
 définition v3 que les créations, en conservant langues, types, traductions,
@@ -77,8 +78,9 @@ sauvegarde.
 Rust contrôle syntaxe, références et cycles des nouvelles expressions. Les
 validations peuvent lire leur propre réponse ; les pertinences et calculs ne
 peuvent pas former de cycle. Rust contrôle aussi les sources M/P des filtres,
-les valeurs littérales et les intervalles de curseurs/matrices. Il ne valide pas
-encore les réponses d’une collecte.
+les valeurs littérales et les intervalles de curseurs/matrices. Il valide aussi
+les réponses d’une collecte dans le profil natif décrit dans
+[Collecte et reprise](collection.md). Les autres types restent hors profil.
 
 **Langues du questionnaire** accepte au plus 32 codes. **Traductions** permet de
 choisir une langue et de rechercher un groupe, une question ou un choix. Les

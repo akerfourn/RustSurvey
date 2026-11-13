@@ -1,0 +1,299 @@
+{
+  "definition": {
+    "schemaVersion": 3,
+    "title": "Collecte synthétique",
+    "language": "fr",
+    "welcome": "",
+    "end": "",
+    "languages": ["fr", "en"],
+    "groups": [
+      {
+        "id": "main",
+        "title": "Entrée",
+        "description": "",
+        "relevance": "1",
+        "questions": [
+          {
+            "id": "gate",
+            "code": "GATE",
+            "kind": "yes_no",
+            "title": "GATE",
+            "help": "",
+            "mandatory": "strict",
+            "choices": [],
+            "relevance": "1"
+          }
+        ]
+      },
+      {
+        "id": "details",
+        "title": "Détails",
+        "description": "",
+        "relevance": "GATE == 'Y'",
+        "questions": [
+          {
+            "id": "age",
+            "code": "AGE",
+            "kind": "number",
+            "title": "AGE",
+            "help": "",
+            "mandatory": "strict",
+            "choices": [],
+            "relevance": "1",
+            "attributes": [
+              {
+                "name": "min_num_value_n",
+                "value": "18"
+              },
+              {
+                "name": "max_num_value_n",
+                "value": "120"
+              },
+              {
+                "name": "num_value_int_only",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "id": "choice",
+            "code": "CHOICE",
+            "kind": "single_choice",
+            "title": "CHOICE",
+            "help": "",
+            "mandatory": "no",
+            "choices": [
+              {
+                "id": "choice-01",
+                "code": "01",
+                "label": "Premier"
+              },
+              {
+                "id": "choice-02",
+                "code": "02",
+                "label": "Second"
+              }
+            ],
+            "relevance": "1",
+            "other": true
+          },
+          {
+            "id": "note",
+            "code": "NOTE",
+            "kind": "long_text",
+            "title": "NOTE",
+            "help": "",
+            "mandatory": "soft",
+            "choices": [],
+            "relevance": "1",
+            "attributes": [
+              {
+                "name": "maximum_chars",
+                "value": "8"
+              }
+            ]
+          },
+          {
+            "id": "score",
+            "code": "SCORE",
+            "kind": "equation",
+            "title": "SCORE",
+            "help": "",
+            "mandatory": "no",
+            "choices": [],
+            "relevance": "1",
+            "attributes": [
+              {
+                "name": "equation",
+                "value": "AGE + 1"
+              },
+              {
+                "name": "hidden",
+                "value": "1"
+              }
+            ]
+          },
+          {
+            "id": "follow",
+            "code": "FOLLOW",
+            "kind": "short_text",
+            "title": "FOLLOW",
+            "help": "",
+            "mandatory": "no",
+            "choices": [],
+            "relevance": "SCORE >= 19"
+          },
+          {
+            "id": "multiple",
+            "code": "MULTI",
+            "kind": "multiple_choice",
+            "title": "MULTI",
+            "help": "",
+            "mandatory": "no",
+            "choices": [],
+            "relevance": "1",
+            "other": true,
+            "subquestions": [
+              {
+                "id": "row-a",
+                "code": "A",
+                "label": "A",
+                "relevance": "1"
+              },
+              {
+                "id": "row-b",
+                "code": "B",
+                "label": "B",
+                "relevance": "AGE >= 20"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "empty draft",
+      "answers": {},
+      "submit": false,
+      "expected": {},
+      "groups": ["main"],
+      "relevant": ["gate"],
+      "warnings": []
+    },
+    {
+      "name": "server recomputes equations and clears inactive rows",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "18",
+        "CHOICE": "01",
+        "NOTE": "été",
+        "SCORE": "999",
+        "FOLLOW": "hello",
+        "MULTI_A": "Y",
+        "MULTI_B": "Y",
+        "MULTI_other": "free"
+      },
+      "submit": true,
+      "expected": {
+        "GATE": "Y",
+        "AGE": "18",
+        "CHOICE": "01",
+        "NOTE": "été",
+        "SCORE": "19",
+        "FOLLOW": "hello",
+        "MULTI_A": "Y",
+        "MULTI_other": "free"
+      },
+      "groups": ["main", "details"],
+      "relevant": ["age", "choice", "follow", "gate", "multiple", "note", "score"],
+      "warnings": []
+    },
+    {
+      "name": "hidden groups clear their answers before dependent rules",
+      "answers": {
+        "GATE": "N",
+        "AGE": "40",
+        "CHOICE": "01",
+        "NOTE": "private",
+        "SCORE": "999",
+        "FOLLOW": "private",
+        "MULTI_A": "Y"
+      },
+      "submit": true,
+      "expected": {
+        "GATE": "N"
+      },
+      "groups": ["main"],
+      "relevant": ["gate"],
+      "warnings": []
+    },
+    {
+      "name": "soft mandatory stays nonblocking",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "20"
+      },
+      "submit": true,
+      "expected": {
+        "GATE": "Y",
+        "AGE": "20",
+        "SCORE": "21"
+      },
+      "groups": ["main", "details"],
+      "relevant": ["age", "choice", "follow", "gate", "multiple", "note", "score"],
+      "warnings": ["note"]
+    },
+    {
+      "name": "other detail clears when a standard choice replaces it",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "21",
+        "CHOICE": "02",
+        "CHOICE_other": "old"
+      },
+      "submit": true,
+      "expected": {
+        "GATE": "Y",
+        "AGE": "21",
+        "CHOICE": "02",
+        "SCORE": "22"
+      },
+      "groups": ["main", "details"],
+      "relevant": ["age", "choice", "follow", "gate", "multiple", "note", "score"],
+      "warnings": ["note"]
+    },
+    {
+      "name": "unknown lexical choice codes are rejected",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "20",
+        "CHOICE": "1"
+      },
+      "submit": true,
+      "error": "Choix de réponse inconnu"
+    },
+    {
+      "name": "missing mandatory response is rejected",
+      "answers": {},
+      "submit": true,
+      "error": "obligatoire"
+    },
+    {
+      "name": "other detail is required on submission",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "20",
+        "CHOICE": "-oth-"
+      },
+      "submit": true,
+      "error": "Précisez"
+    },
+    {
+      "name": "invalid numeric answers cannot be saved as drafts",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "abc"
+      },
+      "submit": false,
+      "error": "nombre"
+    },
+    {
+      "name": "mandatory and constraints can stay incomplete in a draft",
+      "answers": {
+        "GATE": "Y",
+        "AGE": "1"
+      },
+      "submit": false,
+      "expected": {
+        "GATE": "Y",
+        "AGE": "1",
+        "SCORE": "2"
+      },
+      "groups": ["main", "details"],
+      "relevant": ["age", "choice", "gate", "multiple", "note", "score"],
+      "warnings": []
+    }
+  ]
+}

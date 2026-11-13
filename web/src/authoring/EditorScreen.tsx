@@ -9,6 +9,7 @@ import { DefinitionEditor } from "./DefinitionEditor.tsx";
 import { LoginPanel } from "./LoginPanel.tsx";
 import { StudyViewer } from "../components/StudyViewer.tsx";
 import { ViewerBoundary } from "../components/ViewerBoundary.tsx";
+import { RunManager } from "../collection/RunManager.tsx";
 
 interface EditorScreenProps {
   id: string | null;
@@ -114,6 +115,17 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
       />
     );
   let history = null;
+  let collection = null;
+  if (id !== null && editor.ready && editor.source === null && session.csrfToken !== null)
+    collection = (
+      <RunManager
+        studyId={id}
+        revision={editor.revision}
+        csrf={session.csrfToken}
+        disabled={editor.dirty || writing}
+        onExpired={handleExpired}
+      />
+    );
   if (id !== null && editor.ready)
     history = (
       <RevisionHistory
@@ -140,8 +152,8 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
           <h1>Éditeur de questionnaire</h1>
           <p role="status">{status}</p>
           <p className="muted">
-            Le questionnaire devient public dès son premier enregistrement. Les réponses restent
-            locales.
+            Le questionnaire devient public dès son premier enregistrement. Une campagne distincte
+            permet de collecter les réponses du profil pris en charge.
           </p>
         </div>
         <div className="button-row">
@@ -177,6 +189,7 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
       />
       {history}
       {media}
+      {collection}
       {content}
     </div>
   );

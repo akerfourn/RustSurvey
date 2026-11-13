@@ -44,14 +44,17 @@ une saisie locale sans compte :
 - premier moteur client de pertinence et de validation, avec diagnostics ;
 - un exemple synthétique bilingue pour essayer le parcours immédiatement.
 
-Les réponses ne sont jamais envoyées au serveur. La collecte, les sessions de
-réponse durables et les archives `.lsa` restent à implémenter. Les conditions
-des études importées sont éditables ; leurs autres réglages sont conservés et
-protégés. Deux téléchargements distinguent le LSS original inchangé du LSS
-contenant les conditions de la révision enregistrée. Les anciennes sections de
-conditions peuvent bloquer ce second export. Le moteur d’aperçu couvre un
-sous-ensemble explicite ; il ne certifie pas encore le comportement complet
-d’une étude LimeSurvey. Voir le [périmètre du viewer](docs/viewer.md).
+Dans ces aperçus, les réponses restent locales. Une première
+[collecte native durable](docs/collection.md) est disponible séparément :
+campagne sur une révision figée, 17 types, validation Rust, sauvegarde SQL, lien
+privé de reprise et soumission. Les imports LimeSurvey et les archives `.lsa`
+restent hors de ce profil. Les conditions des études importées sont éditables ;
+leurs autres réglages sont conservés et protégés. Deux téléchargements
+distinguent le LSS original inchangé du LSS contenant les conditions de la
+révision enregistrée. Les anciennes sections de conditions peuvent bloquer ce
+second export. Le moteur d’aperçu couvre un sous-ensemble explicite ; il ne
+certifie pas encore le comportement complet d’une étude LimeSurvey. Voir le
+[périmètre du viewer](docs/viewer.md).
 
 La cible couvre l’ensemble des formulaires natifs de la version de référence.
 L’[audit de couverture](docs/form-coverage.md) détaille les types, rendus et
@@ -94,6 +97,9 @@ sans afficher les textes du questionnaire. Voir les
 - Validation serveur obligatoire, même lorsqu’une règle est évaluée côté client.
 
 ## Documentation
+
+Pour collecter des réponses natives, suivre le
+[parcours de collecte](docs/collection.md).
 
 Commencer par l’[index de documentation] et les [besoins du projet].
 

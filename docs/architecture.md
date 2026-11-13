@@ -43,20 +43,22 @@ et continuité sont évalués séparément. Le
 l’ouvre qu’après validation d’un instantané cohérent.
 
 L’implémentation couvre l’adaptateur `.lss` et les premières définitions natives
-en SQL, avec [éditeur et administration](authoring.md). Le format natif v2
+en SQL, avec [éditeur et administration](authoring.md). Le format natif v3
 réunit créations et imports LSS ; une source XML privée est conservée à part. Le
-modèle de collecte et le protocole complet restent à réaliser. Ces décisions
-s’appuient sur l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans
-attendre un export de production.
+premier profil de [collecte native](collection.md) ajoute campagnes figées,
+réponses et reprise. Le protocole de migration complet reste à réaliser. Ces
+décisions s’appuient sur
+l’[audit de la version 6.5.14](limesurvey-source-audit.md), sans attendre un
+export de production.
 
 Les médias, ressources et pièces jointes passeront par un port de stockage objet
 indépendant du fournisseur. Un adaptateur compatible S3 permet le déploiement
 sans volume disque persistant ; un adaptateur local représente les mêmes objets
 par des fichiers. Les métadonnées et relations restent dans SQL. La
 [décision 0002](decisions/0002-object-storage.md) fixe ce contrat. Ces
-adaptateurs restent différés. La persistance actuelle concerne les définitions
-les sources LSS et les sessions administrateur ; la saisie des réponses reste
-locale.
+adaptateurs SQL, mémoire et fichiers locaux sont présents ; S3 reste différé. La
+persistance concerne définitions, sources LSS, sessions administrateur, images
+natives et participations du profil de collecte. Les aperçus restent locaux.
 
 ## Frontière de confiance
 
@@ -76,9 +78,9 @@ informations protégées ne doivent pas être envoyés au client.
 Les expressions LimeSurvey devront être traduites vers un langage borné et
 testable. L’évaluation arbitraire de PHP ou de JavaScript importé est exclue. La
 syntaxe et les références des conditions sont contrôlées par Rust et TypeScript
-avec un corpus commun. Leur évaluation reste côté client ; un moteur
-d’évaluation serveur sera requis avant la collecte. WASM n’est pas une
-dépendance imposée à ce stade.
+avec un corpus commun. Les 47 fonctions du profil local sont désormais évaluées
+dans les deux langages. La collecte Rust reste limitée à son profil explicite.
+WASM n’est pas une dépendance imposée à ce stade.
 
 ## Modèle et dépendances
 

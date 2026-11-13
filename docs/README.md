@@ -32,6 +32,10 @@ l’[éditeur avec administration](authoring.md).
 
 ## Lire les statuts
 
+La [collecte native et reprise](collection.md) décrit le premier profil durable.
+La [décision 0006](decisions/0006-native-collection.md) explique ses choix et
+ses limites. Les liens publics du viewer restent des aperçus locaux distincts.
+
 | Statut    | Signification                                            |
 | --------- | -------------------------------------------------------- |
 | Acquis    | Contrainte exprimée pour le projet                       |

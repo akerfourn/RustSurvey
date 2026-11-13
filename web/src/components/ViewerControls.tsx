@@ -4,9 +4,17 @@ interface ViewerHeaderProps {
   language: string;
   languages: readonly string[];
   onLanguage: (language: string) => void;
+  durable?: boolean;
+  disabled?: boolean;
 }
 
-export function ViewerHeader({ language, languages, onLanguage }: ViewerHeaderProps) {
+export function ViewerHeader({
+  language,
+  languages,
+  onLanguage,
+  durable = false,
+  disabled = false,
+}: ViewerHeaderProps) {
   function handleChange(event: TargetedEvent<HTMLSelectElement>): void {
     onLanguage(event.currentTarget.value);
   }
@@ -15,24 +23,31 @@ export function ViewerHeader({ language, languages, onLanguage }: ViewerHeaderPr
       {value.toUpperCase()}
     </option>
   ));
+  let eyebrow = "Saisie dans le navigateur";
+  let title = "Aperçu de l’étude";
+  let notice =
+    "Aperçu partiel, sans compte. Les réponses restent dans cet onglet et disparaissent au rechargement. Aucun enregistrement serveur.";
+  if (durable) {
+    eyebrow = "Participation au questionnaire";
+    title = "Vos réponses";
+    notice =
+      "Le passage au groupe suivant enregistre votre progression. Vous pouvez aussi enregistrer en cours de saisie. Le bouton final envoie définitivement vos réponses.";
+  }
   return (
     <>
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Saisie dans le navigateur</p>
-          <h2 id="viewer-title">Aperçu de l’étude</h2>
+          <p className="eyebrow">{eyebrow}</p>
+          <h2 id="viewer-title">{title}</h2>
         </div>
         <label className="language-control">
           Langue
-          <select value={language} onChange={handleChange}>
+          <select value={language} onChange={handleChange} disabled={disabled}>
             {options}
           </select>
         </label>
       </div>
-      <p className="notice">
-        Aperçu partiel, sans compte. Les réponses restent dans cet onglet et disparaissent au
-        rechargement. Aucun enregistrement serveur.
-      </p>
+      <p className="notice">{notice}</p>
     </>
   );
 }

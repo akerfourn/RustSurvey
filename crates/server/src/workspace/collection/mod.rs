@@ -1,0 +1,165 @@
+mod access;
+mod handlers;
+mod repository;
+mod runs;
+mod writes;
+
+use super::{AppError, WorkspaceState};
+use axum::{
+    Router,
+    extract::DefaultBodyLimit,
+    http::StatusCode,
+    routing::{get, post, put},
+};
+use rustsurvey_domain::{
+    Definition,
+    collection::{Answers, Questionnaire, Snapshot},
+};
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(super) struct Checkpoint {
+    pub language: String,
+    pub group_id: Option<String>,
+}
+
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Document {
+    pub answers: Answers,
+    pub checkpoint: Checkpoint,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct Run {
+    pub id: String,
+    pub study_id: String,
+    pub revision: i64,
+    pub profile: String,
+    pub is_open: bool,
+    pub created_at: i64,
+}
+
+pub(super) fn routes(state: WorkspaceState) -> Router<WorkspaceState> {
+    let writes = Router::new()
+        .route("/api/admin/studies/{id}/runs", post(runs::create))
+        .route("/api/admin/runs/{id}/close", post(runs::close))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            super::protect,
+        ));
+    let participant_writes = Router::new()
+        .route(
+            "/api/runs/{id}/responses",
+            post(handlers::start).layer(DefaultBodyLimit::max(4096)),
+        )
+        .route("/api/responses/{id}", put(handlers::save))
+        .route_layer(axum::middleware::from_fn_with_state(
+            state,
+            participant_write,
+        ));
+    Router::new()
+        .merge(writes)
+        .merge(participant_writes)
+        .route("/api/admin/studies/{id}/runs", get(runs::list))
+        .route("/api/admin/runs/{id}/responses", get(handlers::list))
+        .route(
+            "/api/admin/runs/{run_id}/responses/{id}/response.json",
+            get(handlers::export),
+        )
+        .route("/api/runs/{id}", get(runs::get))
+        .route("/api/responses/{id}", get(handlers::get))
+        .layer(DefaultBodyLimit::max(2 * 1024 * 1024))
+}
+
+async fn participant_write(
+    axum::extract::State(state): axum::extract::State<WorkspaceState>,
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> Result<axum::response::Response, AppError> {
+    access::client(request.headers())?;
+    access::token_hash(request.headers())?;
+    let _permit = access::write_slot(&state)?;
+    Ok(next.run(request).await)
+}
+
+fn conflict() -> AppError {
+    AppError::new(
+        StatusCode::CONFLICT,
+        "response_conflict",
+        "La réponse a changé. Rechargez-la avant de poursuivre.",
+    )
+}
+
+fn missing() -> AppError {
+    AppError::new(
+        StatusCode::NOT_FOUND,
+        "response_not_found",
+        "Participation introuvable ou accès invalide.",
+    )
+}
+
+fn closed() -> AppError {
+    AppError::new(
+        StatusCode::CONFLICT,
+        "run_closed",
+        "Cette campagne de collecte est fermée.",
+    )
+}
+
+fn invalid(issues: Vec<rustsurvey_domain::ValidationIssue>) -> AppError {
+    AppError::new(
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "invalid_answers",
+        "Corrigez les réponses signalées.",
+    )
+    .with_issues(issues)
+}
+
+async fn evaluate(
+    state: &WorkspaceState,
+    definition: Definition,
+    answers: Answers,
+    submit: bool,
+) -> Result<Snapshot, AppError> {
+    let permit = state.imports.clone().try_acquire_owned().map_err(|_| {
+        AppError::new(
+            StatusCode::SERVICE_UNAVAILABLE,
+            "collection_busy",
+            "Deux évaluations ou préparations sont déjà en cours. Réessayez.",
+        )
+    })?;
+    tokio::task::spawn_blocking(move || {
+        let _permit = permit;
+        let runtime = Questionnaire::compile(&definition).map_err(invalid)?;
+        runtime.evaluate(&answers, submit).map_err(invalid)
+    })
+    .await
+    .map_err(|_| AppError::internal())?
+}
+
+fn checkpoint(definition: &Definition, checkpoint: &Checkpoint) -> Result<(), AppError> {
+    if checkpoint.language != definition.language
+        && !definition.languages.contains(&checkpoint.language)
+    {
+        return Err(AppError::new(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "invalid_checkpoint",
+            "Langue du questionnaire inconnue.",
+        ));
+    }
+    if checkpoint
+        .group_id
+        .as_ref()
+        .is_some_and(|id| !definition.groups.iter().any(|group| &group.id == id))
+    {
+        return Err(AppError::new(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "invalid_checkpoint",
+            "Groupe du questionnaire inconnu.",
+        ));
+    }
+    Ok(())
+}

@@ -14,12 +14,14 @@ import { validate } from "../survey/validation.ts";
 import { StudyPage } from "./StudyPage.tsx";
 import { ViewerActions, ViewerHeader } from "./ViewerControls.tsx";
 import { SurveyMessage } from "./SurveyMessage.tsx";
+import type { ViewerPersistence } from "../collection/types.ts";
 
 interface StudyViewerProps {
   study: SurveyStudy;
   inspection?: Inspection;
   report?: InspectionReport | undefined;
   debug?: boolean;
+  persistence?: ViewerPersistence;
 }
 
 function focusQuestion(id: string | undefined): void {
@@ -34,6 +36,7 @@ export function StudyViewer({
   inspection,
   report: sourceReport,
   debug = false,
+  persistence,
 }: StudyViewerProps) {
   const report = sourceReport ?? inspection?.report ?? { errors: 0, sections: [] };
   const runtime = useMemo(() => createRuntime(study), [study]);
@@ -44,12 +47,16 @@ export function StudyViewer({
   }
   const textProblems = useMemo(() => studyTextIssues(runtime), [runtime]);
   const notices = useMemo(() => presentationNotices(runtime), [runtime]);
-  const [answers, setAnswers] = useState(new Map<string, string>());
-  const [language, setLanguage] = useState(study.baseLanguage ?? study.languages[0] ?? "fr");
-  const [groupId, setGroupId] = useState<string | undefined>(study.groups[0]?.id);
-  const [started, setStarted] = useState(false);
+  const [answers, setAnswers] = useState(() => new Map(persistence?.answers));
+  const [language, setLanguage] = useState(
+    persistence?.language ?? study.baseLanguage ?? study.languages[0] ?? "fr",
+  );
+  const [groupId, setGroupId] = useState<string | undefined>(
+    persistence?.groupId ?? study.groups[0]?.id,
+  );
+  const [started, setStarted] = useState(persistence?.hasProgress ?? false);
   const [attempted, setAttempted] = useState(false);
-  const [complete, setComplete] = useState(false);
+  const [complete, setComplete] = useState(persistence?.submitted ?? false);
   const snapshot = useMemo(() => evaluateSnapshot(runtime, answers), [runtime, answers]);
   const compiledTexts = useMemo(() => compileRuntimeTexts(runtime, language), [runtime, language]);
   const currentGroup = snapshot.groups.find((group) => group.id === groupId) ?? snapshot.groups[0];
@@ -76,7 +83,12 @@ export function StudyViewer({
       issues.push(`Section ${section.name} : comportement non pris en charge par cet aperçu.`);
     }
   }
-  const readOnly = report.errors > 0 || runtime.issues.length > 0;
+  const invalidStructure = report.errors > 0 || runtime.issues.length > 0;
+  const readOnly =
+    invalidStructure ||
+    persistence?.readOnly === true ||
+    persistence?.submitted === true ||
+    persistence?.disabled === true;
   const cannotComplete = readOnly || issues.length > 0;
 
   function changeAnswers(changes: readonly (readonly [string, string])[]): void {
@@ -116,6 +128,12 @@ export function StudyViewer({
     setAttempted(false);
   }
   function handleNext(): void {
+    if (persistence?.readOnly === true) {
+      if (position < snapshot.groups.length - 1) setGroupId(snapshot.groups[position + 1]?.id);
+      else setComplete(true);
+      setAttempted(false);
+      return;
+    }
     setStarted(true);
     setAttempted(true);
     if (currentValidation.errors.size > 0) {
@@ -124,6 +142,17 @@ export function StudyViewer({
     }
     if (currentValidation.warnings.size > 0 && !attempted) return;
     if (position < snapshot.groups.length - 1) {
+      if (persistence !== undefined) {
+        persistence.onSave(
+          {
+            answers: snapshot.answers,
+            language,
+            groupId: snapshot.groups[position + 1]?.id ?? null,
+          },
+          false,
+        );
+        return;
+      }
       setGroupId(snapshot.groups[position + 1]?.id);
       setAttempted(false);
       return;
@@ -136,10 +165,23 @@ export function StudyViewer({
       setGroupId(firstGroup?.id);
       return;
     }
-    if (!cannotComplete) setComplete(true);
+    if (!cannotComplete) {
+      if (persistence === undefined) setComplete(true);
+      else
+        persistence.onSave(
+          { answers: snapshot.answers, language, groupId: currentGroup?.id ?? null },
+          true,
+        );
+    }
+  }
+  function handleSaveDraft(): void {
+    persistence?.onSave(
+      { answers: snapshot.answers, language, groupId: currentGroup?.id ?? null },
+      false,
+    );
   }
   function handleDownload(): void {
-    downloadAnswers(study, language, snapshot, complete);
+    downloadAnswers(study, language, snapshot, persistence?.submitted ?? complete);
   }
   function handleReset(): void {
     setAnswers(new Map());
@@ -171,7 +213,7 @@ export function StudyViewer({
       </details>
     );
   let readOnlyContent = null;
-  if (readOnly)
+  if (report.errors > 0 || runtime.issues.length > 0)
     readOnlyContent = (
       <p className="notice error">
         La structure contient des erreurs ou dépasse les limites de l’aperçu. La saisie est
@@ -180,15 +222,32 @@ export function StudyViewer({
     );
   let nextLabel = "Groupe suivant";
   if (position === snapshot.groups.length - 1) nextLabel = "Valider la saisie locale";
-  if (attempted && currentValidation.errors.size === 0 && currentValidation.warnings.size > 0)
+  if (position === snapshot.groups.length - 1 && persistence !== undefined)
+    nextLabel = "Envoyer mes réponses";
+  if (position === snapshot.groups.length - 1 && persistence?.readOnly === true)
+    nextLabel = "Terminer la consultation";
+  if (
+    !readOnly &&
+    attempted &&
+    currentValidation.errors.size === 0 &&
+    currentValidation.warnings.size > 0
+  )
     nextLabel = "Continuer sans les réponses recommandées";
   let pageContent = (
     <p className="notice">Aucune question pertinente à afficher pour les réponses actuelles.</p>
   );
+  let messageMode: "local" | "submitted" | "closed" = "local";
+  if (persistence?.submitted === true) messageMode = "submitted";
+  else if (persistence?.readOnly === true) messageMode = "closed";
+  let nextDisabled = invalidStructure || persistence?.disabled === true;
+  if (persistence?.readOnly !== true && position === snapshot.groups.length - 1 && cannotComplete)
+    nextDisabled = true;
   if (hasWelcome && !started)
     pageContent = <SurveyMessage message={welcome} completed={false} onContinue={handleStart} />;
   else if (complete)
-    pageContent = <SurveyMessage message={ending} completed={true} onContinue={handleEdit} />;
+    pageContent = (
+      <SurveyMessage message={ending} completed={true} mode={messageMode} onContinue={handleEdit} />
+    );
   else if (currentGroup !== undefined)
     pageContent = (
       <StudyPage
@@ -205,7 +264,7 @@ export function StudyViewer({
         onClear={handleClear}
         onLanguage={handleLanguageCode}
         previousDisabled={position <= 0 && !hasWelcome}
-        nextDisabled={readOnly || (position === snapshot.groups.length - 1 && cannotComplete)}
+        nextDisabled={nextDisabled}
         nextLabel={nextLabel}
         onPrevious={handlePrevious}
         onNext={handleNext}
@@ -213,6 +272,18 @@ export function StudyViewer({
     );
   let inspector = null;
   if (debug) inspector = <RuntimeInspector runtime={runtime} snapshot={snapshot} />;
+  let actions = <ViewerActions onDownload={handleDownload} onReset={handleReset} />;
+  if (persistence !== undefined)
+    actions = (
+      <div className="local-actions">
+        <button type="button" onClick={handleSaveDraft} disabled={readOnly}>
+          Enregistrer pour reprendre plus tard
+        </button>
+        <button type="button" className="secondary" onClick={handleDownload}>
+          Télécharger une copie JSON
+        </button>
+      </div>
+    );
   return (
     <section className="viewer panel" aria-labelledby="viewer-title">
       {inspector}
@@ -220,12 +291,14 @@ export function StudyViewer({
         language={language}
         languages={study.languages}
         onLanguage={handleLanguageCode}
+        durable={persistence !== undefined}
+        disabled={readOnly}
       />
       {readOnlyContent}
       {issueContent}
       {noticeContent}
       {pageContent}
-      <ViewerActions onDownload={handleDownload} onReset={handleReset} />
+      {actions}
     </section>
   );
 }

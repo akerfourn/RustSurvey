@@ -21,25 +21,26 @@ et de l’administration sont présents. Il permet de créer des questionnaires
 publics avec 28 types de questions, des paramètres et un aperçu.
 L’administration importe les LSS en SQL dans un format natif enrichi, conserve
 l’original privé et permet d’éditer les conditions de groupes/questions. Le
-parcours LSS conserve ses 28 types sans fichiers. Les réponses restent en
-mémoire dans le navigateur.
+parcours LSS conserve ses 28 types sans fichiers. Les réponses des aperçus
+restent en mémoire dans le navigateur. La [collecte native](collection.md)
+couvre maintenant 17 types sur des campagnes figées, avec validation Rust,
+réponses SQL, soumission et lien privé de reprise.
 
-F5/F6 restent différés pour la collecte, la reprise, les fichiers, les
-transferts de ressources LimeSurvey, les quotas globaux et les effets serveur.
-Les prochaines étapes d’édition devront étendre les propriétés modifiables des
-imports, compléter le moteur Rust d’exécution et préparer les campagnes figées.
-Les calculs/paramètres natifs sont éditables ; le réexport LSS des seules
-conditions conserve les autres octets et bloque les anciennes conditions
-contradictoires.
+F5 possède ainsi un premier profil natif. La suite doit étendre le moteur Rust
+aux autres types et règles, vérifier la collecte des imports, puis les
+transferts de ressources et de participations. Quotas, fichiers et autres
+fonctions F6 restent différés. Les prochaines étapes d’édition pourront aussi
+étendre les propriétés modifiables des imports. Les calculs/paramètres natifs
+sont éditables ; le réexport LSS des seules conditions conserve les autres
+octets et bloque les anciennes conditions contradictoires.
 
-La persistance des participations et leur migration restent des objectifs
-ultérieurs. Les futurs médias et pièces jointes suivront la
+La migration des participations reste un objectif ultérieur. Les futurs médias
+et pièces jointes suivront la
 [décision de stockage objet](decisions/0002-object-storage.md) : port commun,
 adaptateur S3 et adaptateur fichiers locaux, sans volume persistant requis pour
 le déploiement S3. Les adaptateurs SQL/fichiers locaux et une médiathèque
 d’images natives sont présents. L’historique restaurable, les traductions et
-l’import/export JSON complètent l’édition. La collecte des réponses et
-l’adaptateur S3 restent à faire.
+l’import/export JSON complètent l’édition. L’adaptateur S3 reste à faire.
 
 ## Étape 0 — Cadrage et squelette
 
@@ -83,9 +84,9 @@ les limites et ne transforme pas un import conservé en autorisation de collecte
 
 Un premier [viewer local](viewer.md) est disponible : upload LSS, informations
 de structure, rendu Preact et moteur partiel de pertinence/validation. Les
-réponses restent dans le navigateur, sans compte participant ni collecte
-serveur. Ce parcours ne remplit pas encore le critère de progression durable
-ci-dessous.
+réponses de cet aperçu restent dans le navigateur. La collecte native réalise un
+premier parcours durable indépendant, sans encore couvrir la migration des
+participations ni la certification du profil LimeSurvey ci-dessous.
 
 - Définitions et administration : premières tables et migrations testées sur les
   trois bases ; compléter ensuite campagnes et participations.

@@ -14,12 +14,13 @@ jour. Les états ci-dessous décrivent le moteur de formulaire. L’incrément
 d’[édition native](authoring.md) ajoute ensuite le stockage SQL des définitions
 et de l’administration, puis les sources LSS privées et les conditions éditables
 de groupes/questions dans le format v2. Le format v3 ajoute les images natives ;
-l’éditeur expose maintenant 28 types, paramètres et traductions, sans collecte
-de réponses.
+l’éditeur expose maintenant 28 types, paramètres et traductions. Le premier
+profil de [collecte native](collection.md) couvre 17 types, validation Rust,
+réponses SQL et reprise ; les imports restent des aperçus locaux.
 
-Les fonctions F5/F6 demandant un stockage des participations restent différées ;
-les propositions correspondantes ci-dessous décrivent la cible future. Les
-médias et fichiers suivent la
+F5 dispose ainsi d’un premier sous-ensemble natif. Les autres fonctions F5/F6,
+la collecte des imports et la certification restent différées ; les propositions
+ci-dessous décrivent la cible complète. Les médias et fichiers suivent la
 [décision de stockage objet](decisions/0002-object-storage.md). Le port, les
 adaptateurs SQL/mémoire/fichiers et les images natives sont présents ; S3 et
 téléversements participants restent à réaliser.
@@ -82,8 +83,8 @@ et un rendu ressemblant ne sont pas des preuves d’équivalence.
   sont pas interprétés. Le HTML est converti en texte.
 - La pertinence couvre groupes, questions et sous-questions ; les filtres de
   lignes issus de M/P et les équations simples entrent dans le graphe.
-- Les réponses sont des chaînes en mémoire ; il n’existe ni moteur de validation
-  Rust des réponses, ni collecte, ni reprise durable.
+- Les aperçus gardent les réponses en mémoire. Les campagnes natives du profil
+  initial possèdent validation Rust, collecte SQL et reprise privée.
 - Le réexport original conserve les octets du LSS. La modification d’un titre
   est disponible ; la génération complète d’un questionnaire modifié ne l’est
   pas.
@@ -340,8 +341,9 @@ Tout ce qui précède peut en grande partie être simulé localement. La collect
 réelle exige aussi un moteur Rust de validation et de transition : un résultat
 validé dans le navigateur n’est jamais une écriture de confiance.
 
-Les noms de tables de collecte ci-dessous sont **conceptuels**. Les premières
-migrations concernent seulement définitions et administration. Réutiliser le
+Le tableau ci-dessous décrit la cible complète. Les migrations créent déjà
+`runs`, `responses` et `operation_receipts` pour le profil natif initial ; les
+autres états restent conceptuels. Réutiliser le
 [modèle interne](domain-model.md) et la [stratégie SQL](database.md), plutôt
 qu’une table de réponses par étude.
 

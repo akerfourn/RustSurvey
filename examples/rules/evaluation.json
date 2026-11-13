@@ -1,0 +1,162 @@
+[
+  { "name": "arithmetic precedence", "expression": "2 + 3 * 4", "expected": 14 },
+  { "name": "parentheses and modulo", "expression": "(2 + 3) * 4 % 7", "expected": 6 },
+  { "name": "lexical answer codes stay distinct", "expression": "'01' == '1'", "expected": false },
+  {
+    "name": "numeric comparison with an answer",
+    "expression": "AGE >= 18 && CONSENT == 'Y'",
+    "values": { "AGE": "18", "CONSENT": "Y" },
+    "expected": true
+  },
+  {
+    "name": "numeric equality coerces a numeric string",
+    "expression": "1 == '01'",
+    "expected": true
+  },
+  { "name": "numeric equality rejects blank text", "expression": "0 == '  '", "expected": false },
+  { "name": "boolean equality uses truth", "expression": "false == '0'", "expected": true },
+  {
+    "name": "null remains distinct from an empty answer",
+    "expression": "null == ''",
+    "expected": false
+  },
+  {
+    "name": "textual operators",
+    "expression": "'b' gt 'a' and 2 le 3 and '01' ne '1'",
+    "expected": true
+  },
+  { "name": "lazy and", "expression": "false && 1 / 0", "expected": false },
+  { "name": "lazy or", "expression": "true || 1 / 0", "expected": true },
+  { "name": "lazy if", "expression": "if(true, 'ok', 1 / 0)", "expected": "ok" },
+  { "name": "two argument if", "expression": "if(false, 1 / 0)", "expected": "" },
+  { "name": "unary truth", "expression": "not '0' and !''", "expected": true },
+  { "name": "escaped strings", "expression": "join('a\\nb', '\\t')", "expected": "a\nb\t" },
+  { "name": "missing answer lookup", "expression": "is_empty(MISSING)", "expected": true },
+  { "name": "absolute value", "expression": "abs(-2.5)", "expected": 2.5 },
+  { "name": "arc cosine", "expression": "acos(1)", "expected": 0 },
+  { "name": "arc sine", "expression": "asin(0)", "expected": 0 },
+  { "name": "arc tangent", "expression": "atan(0)", "expected": 0 },
+  { "name": "two argument arc tangent", "expression": "atan2(0, 1)", "expected": 0 },
+  { "name": "ceiling", "expression": "ceil(-1.2)", "expected": -1 },
+  { "name": "cosine", "expression": "cos(0)", "expected": 1 },
+  { "name": "exponential", "expression": "exp(0)", "expected": 1 },
+  { "name": "floor", "expression": "floor(-1.2)", "expected": -2 },
+  { "name": "sine and pi", "expression": "sin(pi()/2)", "expected": 1 },
+  { "name": "square root and power", "expression": "sqrt(pow(3,2) + pow(4,2))", "expected": 5 },
+  { "name": "tangent", "expression": "tan(0)", "expected": 0 },
+  { "name": "logarithm", "expression": "log(1)", "expected": 0 },
+  { "name": "logarithm with a base", "expression": "log(8,2)", "expected": 3 },
+  { "name": "round negative halves away from zero", "expression": "round(-1.5)", "expected": -2 },
+  { "name": "round decimal precision", "expression": "round(12.345,2)", "expected": 12.35 },
+  { "name": "round negative precision", "expression": "round(123,-1)", "expected": 120 },
+  { "name": "empty is not zero", "expression": "is_empty('0')", "expected": false },
+  { "name": "null predicate", "expression": "is_null(null)", "expected": true },
+  { "name": "string predicate", "expression": "is_string('1')", "expected": true },
+  { "name": "numeric predicate", "expression": "is_numeric(' +1.25e2 ')", "expected": true },
+  {
+    "name": "numeric predicate rejects hex",
+    "expression": "is_numeric('0xff')",
+    "expected": false
+  },
+  {
+    "name": "numeric predicate rejects whitespace",
+    "expression": "is_numeric('  ')",
+    "expected": false
+  },
+  {
+    "name": "count ignores only empty and null",
+    "expression": "count('', null, '0', false)",
+    "expected": 2
+  },
+  { "name": "zero argument count", "expression": "count()", "expected": 0 },
+  { "name": "sum decimal answers", "expression": "sum('0', 2, '3.5', null, '')", "expected": 5.5 },
+  {
+    "name": "minimum retains the original value",
+    "expression": "min('10','02')",
+    "expected": "02"
+  },
+  { "name": "maximum compares text", "expression": "max('a','z')", "expected": "z" },
+  { "name": "Unicode code point length", "expression": "strlen('été 😀')", "expected": 5 },
+  { "name": "lowercase Unicode", "expression": "strtolower('ÉTÉ')", "expected": "été" },
+  { "name": "uppercase Unicode", "expression": "strtoupper('été')", "expected": "ÉTÉ" },
+  { "name": "trim Unicode whitespace", "expression": "trim(' hello ')", "expected": "hello" },
+  { "name": "left trim", "expression": "ltrim('  hello  ')", "expected": "hello  " },
+  { "name": "right trim", "expression": "rtrim('  hello  ')", "expected": "  hello" },
+  { "name": "Unicode substring", "expression": "substr('😀été',1,2)", "expected": "ét" },
+  { "name": "negative substring offset", "expression": "substr('abcde',-3)", "expected": "cde" },
+  { "name": "negative substring length", "expression": "substr('abcde',1,-1)", "expected": "bcd" },
+  { "name": "substring beyond the end", "expression": "substr('abc',100,2)", "expected": "" },
+  { "name": "ASCII reverse", "expression": "strrev('abc')", "expected": "cba" },
+  {
+    "name": "literal replacement",
+    "expression": "str_replace('x','ok','x x')",
+    "expected": "ok ok"
+  },
+  {
+    "name": "empty replacement search is inert",
+    "expression": "str_replace('','x','abc')",
+    "expected": "abc"
+  },
+  {
+    "name": "string comparison uses UTF16 order",
+    "expression": "strcmp('😀','\uE000')",
+    "expected": -1
+  },
+  { "name": "case insensitive comparison", "expression": "strcasecmp('ÉTÉ','été')", "expected": 0 },
+  {
+    "name": "position zero is a successful match",
+    "expression": "strpos('abc','a')",
+    "expected": 0
+  },
+  { "name": "missing position is false", "expression": "strpos('abc','z')", "expected": false },
+  { "name": "Unicode search offset", "expression": "strpos('😀été','é',2)", "expected": 3 },
+  { "name": "negative search offset", "expression": "strpos('abcabc','a',-3)", "expected": 3 },
+  { "name": "search offset outside text", "expression": "strpos('abc','a',4)", "expected": false },
+  { "name": "case insensitive position", "expression": "stripos('AbC','b')", "expected": 1 },
+  {
+    "name": "join scalar conversion",
+    "expression": "join(false, true, null, 0, '01')",
+    "expected": "1001"
+  },
+  {
+    "name": "join scientific notation",
+    "expression": "join(1e21, '/', 1e-7)",
+    "expected": "1e+21/1e-7"
+  },
+  { "name": "implode separator", "expression": "implode('|','A','B')", "expected": "A|B" },
+  {
+    "name": "list drops empty entries",
+    "expression": "list('', 'A', null, 'B')",
+    "expected": "A, B"
+  },
+  { "name": "repeat", "expression": "str_repeat('ab',3)", "expected": "ababab" },
+  {
+    "name": "unique ignores empty answers",
+    "expression": "unique('A','','B',null)",
+    "expected": true
+  },
+  { "name": "unique sees equal scalar strings", "expression": "unique(1,'1')", "expected": false },
+  { "name": "countif numeric comparison", "expression": "countif('01',1,'1','02')", "expected": 2 },
+  { "name": "conditional count", "expression": "countifop('>=',2,1,2,3,'',null)", "expected": 2 },
+  { "name": "conditional sum", "expression": "sumifop('>',1,1,2,3)", "expected": 5 },
+  { "name": "substring suffix", "expression": "strstr('abc','b')", "expected": "bc" },
+  { "name": "substring prefix", "expression": "strstr('abc','b',true)", "expected": "a" },
+  { "name": "missing substring", "expression": "strstr('abc','z')", "expected": false },
+  { "name": "division by zero", "expression": "1 / 0", "error": "Division par zéro" },
+  { "name": "nested non finite result", "expression": "is_empty(sqrt(-1))", "error": "non fini" },
+  { "name": "overflow before comparison", "expression": "1e308 * 1e308 > 2", "error": "non fini" },
+  { "name": "invalid numeric operand", "expression": "'abc' + 1", "error": "nombre" },
+  { "name": "unsafe function", "expression": "fetch('url')", "error": "prise en charge" },
+  { "name": "bounded round precision", "expression": "round(1,100)", "error": "Précision" },
+  { "name": "ASCII reverse restriction", "expression": "strrev('été')", "error": "ASCII" },
+  {
+    "name": "bounded repetition",
+    "expression": "str_repeat('x',100000000)",
+    "error": "trop grande"
+  },
+  {
+    "name": "bounded replacement before allocation",
+    "expression": "str_replace('x',str_repeat('a',65536),str_repeat('x',65536))",
+    "error": "Texte calculé trop long"
+  }
+]

@@ -111,6 +111,49 @@ async function json(path, method = "GET", body, status = 200) {
   }
   return (await request(path, options, status)).json();
 }
+async function collectionFixture() {
+  const fixture = JSON.parse(await readFile(join(root, "examples/rules/collection.json"), "utf8"));
+  const study = await json("/api/admin/studies", "POST", fixture.definition, 201);
+  const run = await json(
+    `/api/admin/studies/${study.id}/runs`,
+    "POST",
+    { expectedRevision: 1 },
+    201,
+  );
+  const id = "00000000-0000-4000-8000-000000000100";
+  const headers = {
+    Authorization: `Bearer ${"a".repeat(64)}`,
+    Cookie: "",
+    "Content-Type": "application/json",
+  };
+  await request(
+    `/api/runs/${run.id}/responses`,
+    { method: "POST", headers, body: JSON.stringify({ responseId: id, language: "fr" }) },
+    201,
+  );
+  const command = {
+    expectedVersion: 0,
+    operationId: "00000000-0000-4000-8000-000000000101",
+    answers: { GATE: "Y", AGE: "24", NOTE: "été", SCORE: "forged" },
+    checkpoint: { language: "en", groupId: "details" },
+    submit: false,
+  };
+  const options = { method: "PUT", headers, body: JSON.stringify(command) };
+  const acknowledgement = await (await request(`/api/responses/${id}`, options)).json();
+  return { id, headers, options, acknowledgement };
+}
+async function verifyCollection(fixture) {
+  const stored = await (
+    await request(`/api/responses/${fixture.id}`, { headers: fixture.headers })
+  ).json();
+  assert.equal(stored.version, 1);
+  assert.deepEqual(stored.answers, { GATE: "Y", AGE: "24", NOTE: "été", SCORE: "25" });
+  assert.deepEqual(stored.checkpoint, { language: "en", groupId: "details" });
+  assert.deepEqual(
+    await (await request(`/api/responses/${fixture.id}`, fixture.options)).json(),
+    fixture.acknowledgement,
+  );
+}
 try {
   await start("sql");
   assert.ok((await stat(join(temporary, ".data/rustsurvey.db"))).isFile());
@@ -121,6 +164,7 @@ try {
   });
   cookie = authentication.headers.getSetCookie()[0].split(";")[0];
   csrf = (await authentication.json()).csrfToken;
+  const collection = await collectionFixture();
   const definition = {
     schemaVersion: 3,
     title: "Local storage check",
@@ -162,6 +206,7 @@ try {
   });
   await stop();
   await start("file");
+  await verifyCollection(collection);
   assert.equal((await json("/api/admin/session")).authenticated, true);
   assert.deepEqual(
     Buffer.from(await (await request(`/api/studies/${study.id}/media/${media[0]}`)).arrayBuffer()),
@@ -227,8 +272,9 @@ try {
       image,
     );
   }
+  await verifyCollection(collection);
   console.log(
-    "HTTP réel : création .data, ancien média SQL, nouveau fichier local, plages, sessions et redémarrages vérifiés, y compris avec une ancienne base racine.",
+    "HTTP réel : stockage local, médias, sessions, collecte, reprise privée et réessai idempotent vérifiés après redémarrage, y compris avec une ancienne base racine.",
   );
 } finally {
   await stop();

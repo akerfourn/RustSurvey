@@ -1,6 +1,7 @@
 //! SQL-backed questionnaire authoring and a single administrator account.
 mod auth;
 mod auth_repository;
+mod collection;
 mod error;
 mod forms;
 mod history;
@@ -91,6 +92,7 @@ pub fn routes(state: WorkspaceState) -> Router {
         )
         .route_layer(axum::middleware::from_fn_with_state(state.clone(), protect));
     Router::new()
+        .merge(collection::routes(state.clone()))
         .route("/api/studies", get(forms::list))
         .route("/api/studies/{id}", get(forms::get))
         .route(

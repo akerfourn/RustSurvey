@@ -194,6 +194,26 @@ production restent à préparer ; `vite preview` n’est pas un déploiement.
 
 ## Vérifications et limites
 
+Contrôle de l’incrément de collecte effectué sous Windows le 13 novembre 2026,
+avec la chaîne stable installée : `npm run check:all` réussit avec 194 tests web
+et 146 tests Rust. Le test externe multi-bases reste ignoré en l’absence de
+moteur Docker démarré. Le test HTTP réel de stockage couvre aussi la collecte et
+la reprise après redémarrage. Aucune mesure comparative CPU/RAM ni validation
+visuelle de ce parcours n’est annoncée.
+
+Le profil de [collecte native](collection.md) ajoute validation des réponses
+Rust, campagnes figées, reprise, idempotence et migration 0004. Les corpus
+partagés couvrent 87 expressions et dix parcours. Les tests SQLite fichier
+ferment puis rouvrent la base pour vérifier réponses, checkpoint et reçus. Le
+test externe optionnel inclut le même parcours de collecte ; il faut le
+réexécuter sur PostgreSQL/MariaDB pour valider ce nouveau schéma.
+
+Sous Windows, `.gitattributes` impose LF aux fichiers texte, conformément à
+`.editorconfig`, afin d’éviter les faux écarts Prettier après checkout. La
+chaîne Rust stable installée est utilisable ; son répertoire `bin` doit être
+présent dans le `PATH` du terminal. Le contrôle visuel de cette nouvelle
+collecte reste à réaliser lorsque l’outil navigateur est accessible.
+
 Bilan complété avec le stockage et l’administration le 11 novembre 2026 :
 
 | Contrôle                        | Résultat                                  |

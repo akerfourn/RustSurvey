@@ -40,12 +40,15 @@ explicites ; leur code importé n’est pas exécuté automatiquement.
 La persistance actuelle couvre les définitions et les sessions d’un unique
 administrateur et les sources LSS, avec un éditeur natif et les premières
 conditions de groupes/questions. Les questionnaires sont publics sans compte
-participant. Les réponses restent locales ; collecte, reprise et fonctions de
-formulaire nécessitant un état durable sont différées. Leur présence dans un
-import continue à être diagnostiquée. Les médias et pièces jointes utiliseront
-un port de stockage objet, avec adaptateurs S3 et fichiers locaux, selon la
-[décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne doit pas
-dépendre d’un volume disque persistant attaché au serveur.
+participant. Les aperçus restent locaux. Une première
+[collecte native](collection.md) prend en charge 17 types avec validation Rust,
+révision figée, stockage SQL et reprise privée. Les imports et les autres
+fonctions de formulaire nécessitant un état durable restent différés. Leur
+présence dans un import continue à être diagnostiquée. Les médias et pièces
+jointes utiliseront un port de stockage objet, avec adaptateurs S3 et fichiers
+locaux, selon la [décision 0002](decisions/0002-object-storage.md). Le
+déploiement S3 ne doit pas dépendre d’un volume disque persistant attaché au
+serveur.
 
 La migration d’études en cours est une exigence acquise : conserver structure,
 réponses complètes et partielles, participants, droits de reprise et

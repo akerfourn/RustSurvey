@@ -1,9 +1,55 @@
+use super::{EvaluationBudget, Scalar};
 use std::collections::BTreeSet;
 
 #[derive(Clone, Debug)]
+pub(super) enum Node {
+    Literal(Scalar),
+    Variable(String),
+    Unary(String, Box<Node>),
+    Binary(String, Box<Node>, Box<Node>),
+    Call(String, Vec<Node>),
+}
+
+#[derive(Clone, Debug)]
+pub struct Expression {
+    root: Node,
+    pub variables: BTreeSet<String>,
+}
+
+impl Expression {
+    pub fn compile(source: &str) -> Result<Self, &'static str> {
+        let mut parser = Parser {
+            tokens: tokenize(source.trim_matches(is_whitespace))?,
+            position: 0,
+            variables: BTreeSet::new(),
+        };
+        let root = parser.binary(0, 0)?;
+        if !matches!(parser.peek(), Token::End) {
+            return Err("Fin d’expression inattendue.");
+        }
+        Ok(Self {
+            root,
+            variables: parser.variables,
+        })
+    }
+
+    pub fn evaluate(&self, lookup: impl Fn(&str) -> Scalar) -> Result<Scalar, &'static str> {
+        self.evaluate_with_budget(&lookup, &mut EvaluationBudget::default())
+    }
+
+    pub fn evaluate_with_budget(
+        &self,
+        lookup: &impl Fn(&str) -> Scalar,
+        budget: &mut EvaluationBudget,
+    ) -> Result<Scalar, &'static str> {
+        super::evaluate::evaluate(&self.root, lookup, budget)
+    }
+}
+
+#[derive(Clone, Debug)]
 enum Token {
-    Number,
-    String,
+    Number(f64),
+    String(String),
     Name(String),
     Operator(String),
     Symbol(char),
@@ -51,6 +97,7 @@ fn tokenize(source: &str) -> Result<Vec<Token>, &'static str> {
         if character == '\'' || character == '"' {
             index += 1;
             let mut closed = false;
+            let mut value = String::new();
             while index < chars.len() {
                 let next = chars[index];
                 index += 1;
@@ -64,13 +111,21 @@ fn tokenize(source: &str) -> Result<Vec<Token>, &'static str> {
                     {
                         return Err("Échappement de chaîne non pris en charge.");
                     }
+                    value.push(match chars[index] {
+                        'n' => '\n',
+                        'r' => '\r',
+                        't' => '\t',
+                        escaped => escaped,
+                    });
                     index += 1;
+                } else {
+                    value.push(next);
                 }
             }
             if !closed {
                 return Err("Chaîne d’expression non terminée.");
             }
-            tokens.push(Token::String);
+            tokens.push(Token::String(value));
         } else if character.is_ascii_digit()
             || (character == '.' && chars.get(index + 1).is_some_and(char::is_ascii_digit))
         {
@@ -98,10 +153,13 @@ fn tokenize(source: &str) -> Result<Vec<Token>, &'static str> {
                 }
             }
             let number: String = chars[start..index].iter().collect();
-            if !number.parse::<f64>().is_ok_and(f64::is_finite) {
+            let value = number
+                .parse::<f64>()
+                .map_err(|_| "Nombre non fini dans l’expression.")?;
+            if !value.is_finite() {
                 return Err("Nombre non fini dans l’expression.");
             }
-            tokens.push(Token::Number);
+            tokens.push(Token::Number(value));
         } else if character.is_ascii_alphabetic() || character == '_' {
             let start = index;
             index += 1;
@@ -166,11 +224,11 @@ impl Parser {
     fn peek(&self) -> &Token {
         self.tokens.get(self.position).unwrap_or(&Token::End)
     }
-    fn binary(&mut self, minimum: u8, depth: usize) -> Result<(), &'static str> {
+    fn binary(&mut self, minimum: u8, depth: usize) -> Result<Node, &'static str> {
         if depth > 32 {
             return Err("Expression trop imbriquée.");
         }
-        self.atom(depth + 1)?;
+        let mut left = self.atom(depth + 1)?;
         while let Token::Operator(operator) = self.peek() {
             let Some(level) = precedence(operator) else {
                 break;
@@ -178,49 +236,57 @@ impl Parser {
             if level < minimum {
                 break;
             }
+            let operator = operator.clone();
             self.take();
-            self.binary(level + 1, depth + 1)?;
+            let right = self.binary(level + 1, depth + 1)?;
+            left = Node::Binary(operator, Box::new(left), Box::new(right));
         }
-        Ok(())
+        Ok(left)
     }
-    fn atom(&mut self, depth: usize) -> Result<(), &'static str> {
+    fn atom(&mut self, depth: usize) -> Result<Node, &'static str> {
         if depth > 32 {
             return Err("Expression trop imbriquée.");
         }
         match self.take() {
-            Token::Number | Token::String => Ok(()),
+            Token::Number(value) => Ok(Node::Literal(Scalar::Number(value))),
+            Token::String(value) => Ok(Node::Literal(Scalar::String(value))),
             Token::Operator(operator) if ["!", "not", "-", "+"].contains(&operator.as_str()) => {
-                self.atom(depth + 1)
+                Ok(Node::Unary(operator, Box::new(self.atom(depth + 1)?)))
             }
             Token::Symbol('(') => {
-                self.binary(0, depth + 1)?;
+                let node = self.binary(0, depth + 1)?;
                 if !matches!(self.take(), Token::Symbol(')')) {
                     return Err("Parenthèse fermante manquante.");
                 }
-                Ok(())
+                Ok(node)
             }
             Token::Name(name) => {
                 let lower = name.to_ascii_lowercase();
                 if ["true", "false", "null"].contains(&lower.as_str()) {
-                    return Ok(());
+                    let value = match lower.as_str() {
+                        "true" => Scalar::Boolean(true),
+                        "false" => Scalar::Boolean(false),
+                        _ => Scalar::Null,
+                    };
+                    return Ok(Node::Literal(value));
                 }
                 if matches!(self.peek(), Token::Symbol('(')) {
                     return self.call(&lower, depth + 1);
                 }
-                self.variables.insert(name);
-                Ok(())
+                self.variables.insert(name.clone());
+                Ok(Node::Variable(name))
             }
             _ => Err("Valeur attendue dans l’expression."),
         }
     }
-    fn call(&mut self, name: &str, depth: usize) -> Result<(), &'static str> {
-        let (minimum, maximum) = arity(name).ok_or("Fonction non prise en charge.")?;
+    fn call(&mut self, name: &str, depth: usize) -> Result<Node, &'static str> {
+        let (minimum, maximum) =
+            super::functions::arity(name).ok_or("Fonction non prise en charge.")?;
         self.take();
-        let mut count = 0;
+        let mut arguments = Vec::new();
         if !matches!(self.peek(), Token::Symbol(')')) {
             loop {
-                self.binary(0, depth + 1)?;
-                count += 1;
+                arguments.push(self.binary(0, depth + 1)?);
                 if !matches!(self.peek(), Token::Symbol(',')) {
                     break;
                 }
@@ -230,40 +296,13 @@ impl Parser {
         if !matches!(self.take(), Token::Symbol(')')) {
             return Err("Parenthèse de fonction manquante.");
         }
-        if count < minimum || count > maximum {
+        if arguments.len() < minimum || arguments.len() > maximum {
             return Err("Nombre d’arguments incorrect.");
         }
-        Ok(())
-    }
-}
-fn arity(name: &str) -> Option<(usize, usize)> {
-    match name {
-        "abs" | "acos" | "asin" | "atan" | "ceil" | "cos" | "exp" | "floor" | "sin" | "sqrt"
-        | "tan" | "is_empty" | "is_null" | "is_string" | "is_numeric" | "strlen" | "strtolower"
-        | "strtoupper" | "trim" | "ltrim" | "rtrim" | "strrev" => Some((1, 1)),
-        "atan2" | "pow" | "strcmp" | "strcasecmp" | "str_repeat" => Some((2, 2)),
-        "pi" => Some((0, 0)),
-        "log" | "round" => Some((1, 2)),
-        "if" | "substr" | "strpos" | "stripos" | "strstr" => Some((2, 3)),
-        "str_replace" => Some((3, 3)),
-        "count" => Some((0, 512)),
-        "sum" | "min" | "max" | "join" | "implode" | "list" | "unique" => Some((1, 512)),
-        "countif" => Some((2, 512)),
-        "countifop" | "sumifop" => Some((3, 512)),
-        _ => None,
+        Ok(Node::Call(name.to_owned(), arguments))
     }
 }
 
 pub fn references(source: &str) -> Result<BTreeSet<String>, &'static str> {
-    let source = source.trim_matches(is_whitespace);
-    let mut parser = Parser {
-        tokens: tokenize(source)?,
-        position: 0,
-        variables: BTreeSet::new(),
-    };
-    parser.binary(0, 0)?;
-    if !matches!(parser.peek(), Token::End) {
-        return Err("Fin d’expression inattendue.");
-    }
-    Ok(parser.variables)
+    Ok(Expression::compile(source)?.variables)
 }

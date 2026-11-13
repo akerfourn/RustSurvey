@@ -1,5 +1,6 @@
 //! Native questionnaire definitions, independent of SQL, HTTP and LimeSurvey.
 use serde::{Deserialize, Serialize};
+pub mod collection;
 pub mod rules;
 mod validation;
 

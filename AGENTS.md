@@ -4,7 +4,7 @@
 
 Le développement couvre l’adaptateur LimeSurvey, son outil CLI et un premier
 viewer web avec saisie locale, stockage SQL et premier éditeur natif. Un compte
-administrateur protège les écritures ; les questionnaires restent publics.
+administrateur protège l’édition ; les questionnaires restent publics.
 L’administration importe les LSS en SQL et édite les conditions de groupes et
 questions. Les autres réglages importés restent protégés dans ce lot. Suivre les
 grandes lignes et livrer des incréments fonctionnels testés ; ne pas remplacer
@@ -29,8 +29,11 @@ enregistrées et bloque les anciennes conditions contradictoires. Le format nati
 v3 est commun aux créations et imports ; convertir explicitement les v1/v2 sans
 réécrire les révisions historiques. Lire le
 [périmètre de l’éditeur](docs/authoring.md) avant une modification de ces
-fonctions. Collecte et reprise des réponses restent à faire. Pour les futurs
-médias et fichiers, suivre la
+fonctions. La [collecte native](docs/collection.md) couvre désormais 17 types,
+une campagne figée, la validation Rust, les réponses SQL et la reprise privée.
+Les imports LimeSurvey, les autres types et les transferts restent à compléter.
+Lire ce périmètre avant de modifier la collecte. Pour les futurs médias et
+fichiers, suivre la
 [décision de stockage objet](docs/decisions/0002-object-storage.md) : port
 commun, adaptateurs SQL, fichiers locaux et mémoire pour les tests ; S3 reste à
 ajouter. Le [stockage local](docs/local-storage.md) décrit `.data/`, les
@@ -112,10 +115,10 @@ npm run check:rust
 
 L’adaptateur `.lss` possède des tests de lecture, de conservation, d’édition et
 de CLI. L’API d’inspection et le moteur TypeScript ont leurs propres tests. La
-saisie reste locale : aucune API de collecte n’accepte des réponses pour
-l’instant. Ajouter des tests de comportement pour les nouvelles fonctions et un
-test de régression pour chaque bogue corrigé. Éviter les tests qui ne font que
-recopier l’implémentation.
+saisie d’aperçu reste locale. La collecte native possède des API distinctes et
+deux corpus Rust/TypeScript. Ajouter des tests de comportement pour les
+nouvelles fonctions et un test de régression pour chaque bogue corrigé. Éviter
+les tests qui ne font que recopier l’implémentation.
 
 - Tests rapides, déterministes et isolés ; pas d’accès à des services distants.
 - SQLite en mémoire ou fichier temporaire pour les tests courants.

@@ -1,11 +1,16 @@
-//! Bounded syntax/reference validation. Evaluation remains in the client until collection exists.
+//! Bounded expression compilation, evaluation and definition validation.
+mod evaluate;
+mod functions;
 mod settings;
 mod syntax;
+mod text_functions;
+mod value;
 
 use crate::{Definition, Question, QuestionKind, ValidationIssue};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use syntax::references;
+pub use syntax::{Expression, references};
+pub use value::{EvaluationBudget, Scalar};
 
 pub fn fields(question: &Question) -> Vec<String> {
     use QuestionKind::*;
@@ -244,7 +249,7 @@ pub fn validate(definition: &Definition, previous: Option<&Definition>) -> Vec<V
     issues
 }
 
-fn is_constraint(name: &str) -> bool {
+pub(crate) fn is_constraint(name: &str) -> bool {
     matches!(
         name,
         "min_num_value_n"

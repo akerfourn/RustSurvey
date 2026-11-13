@@ -5,9 +5,15 @@ interface SurveyMessageProps {
   message: RenderedText;
   completed: boolean;
   onContinue: () => void;
+  mode?: "local" | "submitted" | "closed";
 }
 
-export function SurveyMessage({ message, completed, onContinue }: SurveyMessageProps) {
+export function SurveyMessage({
+  message,
+  completed,
+  onContinue,
+  mode = "local",
+}: SurveyMessageProps) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     heading.current?.focus();
@@ -23,6 +29,24 @@ export function SurveyMessage({ message, completed, onContinue }: SurveyMessageP
         Les réponses restent uniquement dans cet onglet. Vous pouvez les télécharger ci-dessous.
       </p>
     );
+    if (mode === "submitted") {
+      title = "Réponses envoyées";
+      buttonLabel = "Consulter mes réponses";
+      status = (
+        <p className="notice success" role="status">
+          Vos réponses ont été enregistrées et envoyées. Elles ne peuvent plus être modifiées.
+        </p>
+      );
+    } else if (mode === "closed") {
+      title = "Campagne fermée";
+      buttonLabel = "Consulter mes réponses";
+      status = (
+        <p className="notice" role="status">
+          Vos réponses enregistrées restent consultables. Cette campagne n’accepte plus de
+          modifications.
+        </p>
+      );
+    }
   }
   return (
     <section className="survey-message">

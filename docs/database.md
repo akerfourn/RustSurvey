@@ -83,6 +83,17 @@ plus quatre connexions.
 
 ## Schéma métier conçu
 
+La migration `m20261113_000004_collection` ajoute `runs`, `responses` et
+`operation_receipts`. Campagne et révision sont liées par clé étrangère
+composée. Les réponses stockent version, état, empreinte du secret et document
+réponses/checkpoint ; les reçus stockent empreinte de commande, accusé et
+expiration. Les textes utilisent `LONGTEXT` sur MariaDB et `TEXT` ailleurs. Voir
+les garanties et limites de la [collecte native](collection.md).
+
+SQLite couvre la mise à niveau avec données existantes et la reprise après
+réouverture. Le test externe optionnel inclut aussi la collecte ; son exécution
+PostgreSQL/MariaDB reste nécessaire pour valider ce nouveau schéma.
+
 Le [modèle interne](domain-model.md) définit un schéma commun aux études :
 identités, relations, états et versions en colonnes relationnelles ; définitions
 immuables et blocs de réponses en documents JSON typés et versionnés. Ces
@@ -101,8 +112,9 @@ document Unicode supérieur à 64 Kio sur les trois moteurs.
 Les changements de format des documents ont leur propre versionnement et leur
 stratégie de conversion. Ils ne se confondent ni avec les migrations SQL, ni
 avec le `DBVersion` LimeSurvey. Études, révisions, sources LSS privées
-administration et images natives sont implémentées. Campagnes, réponses,
-participants et transferts restent à réaliser.
+administration et images natives sont implémentées. Campagnes et réponses
+couvrent le profil natif initial ; participants et transferts restent à
+réaliser.
 
 ## Automatisation et déploiement
 

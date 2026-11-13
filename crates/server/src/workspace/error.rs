@@ -52,6 +52,10 @@ impl AppError {
         error.issues = issues;
         error
     }
+    pub(super) fn with_issues(mut self, issues: Vec<rustsurvey_domain::ValidationIssue>) -> Self {
+        self.issues = issues;
+        self
+    }
     pub fn internal() -> Self {
         Self::new(
             StatusCode::INTERNAL_SERVER_ERROR,

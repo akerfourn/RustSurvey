@@ -5,7 +5,9 @@
 Le modèle général ci-dessous prépare la migration d’études en cours et un
 backend sobre sur les trois bases. Le premier sous-ensemble implémenté couvre
 `studies`, `definition_revisions`, `import_sources`, les médias et
-l’administration, avec migrations SQL. Le
+l’administration, avec migrations SQL. Le premier profil de
+[collecte native](collection.md) ajoute `runs`, `responses` et
+`operation_receipts`, avec réponses et checkpoint dans un document borné. Le
 [domaine natif de l’éditeur](authoring.md) v3 est commun aux créations et
 imports : types, traductions, sous-questions, options et règles. La création
 visuelle propose 28 types ; les imports conservent le modèle de lecture complet
@@ -215,11 +217,12 @@ peuvent être chargées depuis un cache borné partagé entre requêtes. Une
 sauvegarde ne réécrit que les blocs affectés et le checkpoint. L’export lit les
 réponses par lots ; il ne charge pas une étude entière en mémoire.
 
-Les tables `studies` et `definition_revisions` sont présentes. Les suivantes
-restent à réaliser : `runs`, `responses`, `answer_blocks`, `response_access`,
-`participants`, `transfer_batches`, `operation_receipts` et les correspondances
-source. Checkpoint et métadonnées peuvent rester sur la ligne réponse ; une
-table par concept n’est pas imposée.
+Les tables `studies`, `definition_revisions`, `runs`, `responses` et
+`operation_receipts` sont présentes pour leur profil explicite. Les suivantes
+restent à réaliser : `answer_blocks`, `response_access`, `participants`,
+`transfer_batches` et les correspondances source. Le premier droit de reprise et
+le checkpoint sont stockés sur la ligne réponse ; une table par concept n’est
+pas imposée.
 
 Les identifiants d’objets internes sont des UUID sous forme textuelle canonique.
 Les versions et compteurs utilisent des entiers ; les instants natifs utilisent
