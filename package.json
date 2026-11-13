@@ -20,6 +20,7 @@
     "check:all": "npm run check && npm run check:rust",
     "check:rust": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets --all-features --locked -- -D warnings && cargo test --workspace --all-features --locked",
     "dev": "node web/scripts/dev.mjs",
+    "dev:backend": "cargo run -p rustsurvey-server --locked",
     "dev:web": "npm run dev --workspace web",
     "doctor": "node scripts/doctor.mjs",
     "format": "prettier --write .",

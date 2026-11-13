@@ -71,20 +71,21 @@ TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
 
 ## Commandes disponibles
 
-| Commande               | Effet                           |
-| ---------------------- | ------------------------------- |
-| `npm run dev`          | Backend Rust et client Vite     |
-| `npm run dev:web`      | Client Vite seul                |
-| `npm run build`        | TypeScript et build statique    |
-| `npm run lint`         | ESLint, aucun avertissement     |
-| `npm run typecheck`    | TypeScript sans génération      |
-| `npm test`             | Moteur client, sans navigateur  |
-| `npm run format`       | Formatage Prettier              |
-| `npm run format:check` | Contrôle Prettier               |
-| `npm run check`        | Formatage, lint, tests et build |
-| `npm run check:rust`   | Contrôles Rust, tous pilotes    |
-| `npm run check:all`    | Vérifications client et Rust    |
-| `npm run test:storage` | HTTP et stockage local jetables |
+| Commande               | Effet                                 |
+| ---------------------- | ------------------------------------- |
+| `npm run dev`          | Backend Rust et client Vite           |
+| `npm run dev:backend`  | Compile et lance le backend Rust seul |
+| `npm run dev:web`      | Client Vite seul                      |
+| `npm run build`        | TypeScript et build statique          |
+| `npm run lint`         | ESLint, aucun avertissement           |
+| `npm run typecheck`    | TypeScript sans génération            |
+| `npm test`             | Moteur client, sans navigateur        |
+| `npm run format`       | Formatage Prettier                    |
+| `npm run format:check` | Contrôle Prettier                     |
+| `npm run check`        | Formatage, lint, tests et build       |
+| `npm run check:rust`   | Contrôles Rust, tous pilotes          |
+| `npm run check:all`    | Vérifications client et Rust          |
+| `npm run test:storage` | HTTP et stockage local jetables       |
 
 Les tests Rust couvrent l’adaptateur LSS, sa CLI, la projection du viewer et
 l’API HTTP d’inspection, le domaine natif, les sessions et les sauvegardes SQL.
