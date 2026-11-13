@@ -25,9 +25,20 @@ doit être installé pour démarrer avec SQLite.
 
 ## Versions et dépendances
 
-`rust-toolchain.toml` fixe Rust 1.97.1 avec rustfmt et Clippy. `Cargo.lock` et
-`package-lock.json` fixent les résolutions de dépendances. Ne pas les mettre à
-jour automatiquement dans un changement sans rapport.
+`rust-toolchain.toml` sélectionne le canal `stable` avec rustfmt et Clippy, sans
+imposer une version exacte du compilateur. `rust-version = "1.97.1"` dans
+`Cargo.toml` déclare la version minimale prise en charge ; les versions stables
+plus récentes sont acceptées. Les plages comme `^1.97.1` ne sont pas admises
+dans ces réglages.
+
+Ce choix facilite le développement avec une chaîne stable déjà installée. Une
+mise à jour peut ajouter des avertissements Clippy et faire échouer le contrôle
+`-D warnings` ; relancer les vérifications après chaque mise à jour. Les builds
+ne garantissent pas un compilateur identique entre machines. Les versions du
+tableau ci-dessus décrivent uniquement l’inventaire historique.
+
+`Cargo.lock` et `package-lock.json` fixent les résolutions de dépendances. Ne
+pas les mettre à jour automatiquement dans un changement sans rapport.
 
 Node.js 24 fait partie des [branches LTS][node-releases] et reste la cible
 recommandée dans `.nvmrc`. Les versions acceptées sont déclarées dans
@@ -51,9 +62,9 @@ npm ci
 
 Le script de diagnostic affiche les versions et signale les outils absents. Il
 ne compare pas les versions aux contraintes et ne lance pas de conteneur. Les
-contraintes Node/npm sont appliquées lors de l’installation et la chaîne Rust
-est fixée par rustup. Le diagnostic du compilateur C est adapté à un
-environnement POSIX ; une prise en charge Windows reste à vérifier.
+contraintes Node/npm sont appliquées lors de l’installation et rustup
+sélectionne la chaîne Rust stable. Le diagnostic du compilateur C est adapté à
+un environnement POSIX ; une prise en charge Windows reste à vérifier.
 
 Aucun nouvel outil global n’est requis sur la machine inventoriée. Les outils
 TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.

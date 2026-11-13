@@ -113,10 +113,11 @@ Commencer par l’[index de documentation] et les [besoins du projet].
 
 ## Vérifier l’environnement
 
-Rust `1.97.1` avec rustfmt et Clippy, un compilateur C, Node.js et npm sont
-nécessaires. Node.js 24 LTS est recommandé ; la version 22.15.0 présente sur
-cette machine satisfait aussi les contraintes du squelette. Docker est optionnel
-et permet les tests PostgreSQL/MariaDB sur des bases jetables.
+Rust stable, au minimum `1.97.1`, avec rustfmt et Clippy, un compilateur C,
+Node.js et npm sont nécessaires. Node.js 24 LTS est recommandé ; la version
+22.15.0 présente sur cette machine satisfait aussi les contraintes du squelette.
+Docker est optionnel et permet les tests PostgreSQL/MariaDB sur des bases
+jetables.
 
 ```sh
 node scripts/doctor.mjs
