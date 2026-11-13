@@ -1,11 +1,12 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
-import { createServer } from "vite";
+import { cargoEnvironment } from "../../scripts/cargo-environment.mjs";
 
 const projectDirectory = fileURLToPath(new URL("../../", import.meta.url));
 const webDirectory = fileURLToPath(new URL("../", import.meta.url));
 const readyPrefix = "RUSTSURVEY_DEV_API_URL=";
+const backendOnly = process.argv[2] === "--backend-only";
 let backend;
 let frontend;
 let shutdownTask;
@@ -44,7 +45,7 @@ function launchBackend() {
   const child = spawn("cargo", ["run", "-p", "rustsurvey-server", "--locked"], {
     cwd: projectDirectory,
     detached: process.platform !== "win32",
-    env: { ...process.env, RUSTSURVEY_DEV_READY: "1" },
+    env: cargoEnvironment({ ...process.env, RUSTSURVEY_DEV_READY: "1" }),
     stdio: ["ignore", "pipe", "inherit"],
   });
   let resolveReady;
@@ -53,7 +54,17 @@ function launchBackend() {
     resolveReady = resolve;
     rejectReady = reject;
   });
-  child.once("error", rejectReady);
+  child.once("error", (error) => {
+    if (error.code === "ENOENT") {
+      rejectReady(
+        new Error(
+          "Cargo introuvable. Installez Rust avec rustup ou ajoutez son dossier bin au PATH.",
+        ),
+      );
+      return;
+    }
+    rejectReady(error);
+  });
   const closed = new Promise((resolve) => {
     child.once("close", (code) => {
       rejectReady(new Error(`Backend stopped (exit ${code ?? "signal"}).`));
@@ -98,12 +109,18 @@ async function main() {
     void shutdown(143);
   });
   try {
-    let target = process.env.API_PROXY_TARGET;
+    let target;
+    if (!backendOnly) target = process.env.API_PROXY_TARGET;
     if (target === undefined) {
       backend = launchBackend();
       target = await backend.ready;
     }
     if (stopping) return;
+    if (backendOnly) {
+      console.log(`\nRustSurvey API: ${target}`);
+      return;
+    }
+    const { createServer } = await import("vite");
     frontend = await createServer({
       root: webDirectory,
       server: { proxy: { "/api": target } },

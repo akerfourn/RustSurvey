@@ -8,8 +8,8 @@ embarqués dans le HTML LSS ni le type de téléversement participant `|`.
 
 Les 47 fonctions du profil local ont aussi un évaluateur Rust et un corpus
 commun de 87 cas. La [collecte native](collection.md) les utilise sur son profil
-de 17 types. Les statuts ci-dessous restent ceux des variantes du viewer, sans
-certification générale ni autorisation de collecte des imports.
+étendu à 28 types. Les statuts ci-dessous restent ceux des variantes du viewer,
+sans certification générale ni autorisation de collecte des imports.
 
 Complément de l’[analyse de couverture](form-coverage.md), relevé le 11
 novembre 2026. Référence LimeSurvey : `6.5.14+240624`, commit

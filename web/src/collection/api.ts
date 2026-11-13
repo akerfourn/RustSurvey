@@ -9,7 +9,13 @@ export interface Run {
   profile: string;
   isOpen: boolean;
   createdAt: number;
+  participationPolicy: ParticipationPolicy;
 }
+
+export type ParticipationPolicy =
+  | { mode: "open" }
+  | { mode: "browserOnce" }
+  | { mode: "invitation"; persistence: boolean; allowEditAfterSubmit: boolean };
 
 export interface Checkpoint {
   language: string;
@@ -19,6 +25,10 @@ export interface Checkpoint {
 export interface RunDefinition {
   run: Run;
   definition: Definition;
+}
+
+export interface RunEntry extends RunDefinition {
+  browserCompleted: boolean;
 }
 
 export interface Participation extends RunDefinition {
@@ -67,6 +77,22 @@ function checkpoint(value: unknown): Checkpoint {
   if (item.groupId !== null) groupId = text(item.groupId);
   return { language: text(item.language), groupId };
 }
+function policy(value: unknown): ParticipationPolicy {
+  const item = object(value);
+  if (item.mode === "open" || item.mode === "browserOnce") return { mode: item.mode };
+  if (
+    item.mode === "invitation" &&
+    typeof item.persistence === "boolean" &&
+    typeof item.allowEditAfterSubmit === "boolean" &&
+    (item.persistence || !item.allowEditAfterSubmit)
+  )
+    return {
+      mode: item.mode,
+      persistence: item.persistence,
+      allowEditAfterSubmit: item.allowEditAfterSubmit,
+    };
+  throw new Error("Politique de participation invalide.");
+}
 function run(value: unknown): Run {
   const item = object(value);
   if (typeof item.isOpen !== "boolean") throw new Error("État de campagne invalide.");
@@ -77,6 +103,7 @@ function run(value: unknown): Run {
     profile: text(item.profile),
     isOpen: item.isOpen,
     createdAt: integer(item.createdAt),
+    participationPolicy: policy(item.participationPolicy),
   };
 }
 function participation(value: unknown): Participation {
@@ -96,8 +123,10 @@ function participation(value: unknown): Participation {
     updatedAt: integer(item.updatedAt),
   };
 }
-function authorization(token: string): Record<string, string> {
-  return { Authorization: `Bearer ${token}` };
+function authorization(token: string, invitationToken?: string): Record<string, string> {
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
+  if (invitationToken !== undefined) headers["X-Participation-Token"] = invitationToken;
+  return headers;
 }
 async function collectionRequest(url: string, options: RequestInit = {}): Promise<unknown> {
   const timeout = AbortSignal.timeout(20_000);
@@ -113,11 +142,17 @@ async function collectionRequest(url: string, options: RequestInit = {}): Promis
   }
 }
 
-export async function getRun(id: string, signal?: AbortSignal): Promise<RunDefinition> {
+export async function getRun(id: string, signal?: AbortSignal): Promise<RunEntry> {
   const item = object(
     await collectionRequest(`/api/runs/${encodeURIComponent(id)}`, { signal: signal ?? null }),
   );
-  return { run: run(item.run), definition: decodeDefinition(item.definition) };
+  if (typeof item.browserCompleted !== "boolean")
+    throw new Error("État de participation invalide.");
+  return {
+    run: run(item.run),
+    definition: decodeDefinition(item.definition),
+    browserCompleted: item.browserCompleted,
+  };
 }
 export async function getParticipation(
   id: string,
@@ -137,12 +172,13 @@ export async function startParticipation(
   token: string,
   language: string,
   signal?: AbortSignal,
+  invitationToken?: string,
 ): Promise<Participation> {
   const options = write("POST", { responseId, language });
   return participation(
     await collectionRequest(`/api/runs/${encodeURIComponent(runId)}/responses`, {
       ...options,
-      headers: { ...options.headers, ...authorization(token) },
+      headers: { ...options.headers, ...authorization(token, invitationToken) },
       signal: signal ?? null,
     }),
   );
@@ -152,12 +188,13 @@ export async function saveParticipation(
   token: string,
   command: SaveCommand,
   signal?: AbortSignal,
+  invitationToken?: string,
 ): Promise<Acknowledgement> {
   const options = write("PUT", command);
   const item = object(
     await collectionRequest(`/api/responses/${encodeURIComponent(id)}`, {
       ...options,
-      headers: { ...options.headers, ...authorization(token) },
+      headers: { ...options.headers, ...authorization(token, invitationToken) },
       signal: signal ?? null,
     }),
   );
@@ -175,8 +212,13 @@ export async function saveParticipation(
     warnings,
   };
 }
-export function resumeFragment(id: string, token: string): string {
-  return `#/responses/${encodeURIComponent(id)}/${encodeURIComponent(token)}`;
+export function resumeFragment(id: string, token: string, invitationToken?: string): string {
+  let fragment = `#/responses/${encodeURIComponent(id)}/${encodeURIComponent(token)}`;
+  if (invitationToken !== undefined) fragment += `/invite/${encodeURIComponent(invitationToken)}`;
+  return fragment;
+}
+export function invitationFragment(runId: string, token: string): string {
+  return `#/runs/${encodeURIComponent(runId)}/invite/${encodeURIComponent(token)}`;
 }
 export function credentials(): { id: string; token: string } {
   const bytes = crypto.getRandomValues(new Uint8Array(32));
@@ -191,11 +233,16 @@ export async function listRuns(id: string, signal?: AbortSignal): Promise<Run[]>
   if (!Array.isArray(body.items)) throw new Error("Liste de campagnes invalide.");
   return body.items.map(run);
 }
-export async function createRun(id: string, revision: number, csrf: string): Promise<Run> {
+export async function createRun(
+  id: string,
+  revision: number,
+  csrf: string,
+  participationPolicy: ParticipationPolicy = { mode: "open" },
+): Promise<Run> {
   return run(
     await request(
       `/api/admin/studies/${encodeURIComponent(id)}/runs`,
-      write("POST", { expectedRevision: revision }, csrf),
+      write("POST", { expectedRevision: revision, participationPolicy }, csrf),
     ),
   );
 }

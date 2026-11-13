@@ -9,16 +9,7 @@ pub(super) fn evaluate(
     answers: &Answers,
     submit: bool,
 ) -> Result<Snapshot, Vec<ValidationIssue>> {
-    let mut bytes = 0_usize;
-    for (key, value) in answers {
-        if !runtime.fields.contains_key(key) {
-            return Err(vec![issue("answers", "Cellule de réponse inconnue.")]);
-        }
-        bytes = bytes.saturating_add(key.len()).saturating_add(value.len());
-        if value.encode_utf16().count() > 65_536 || bytes > MAX_ANSWER_BYTES {
-            return Err(vec![issue("answers", "Réponses trop volumineuses.")]);
-        }
-    }
+    check_answers(runtime, answers)?;
     let mut effective = answers.clone();
     let mut relevant = BTreeSet::new();
     let mut active = BTreeSet::new();
@@ -44,6 +35,7 @@ pub(super) fn evaluate(
             Err(message) => return Err(vec![issue(&question.source.id, message)]),
         }
     }
+    check_answers(runtime, &effective)?;
     let groups = runtime
         .definition
         .groups
@@ -81,6 +73,20 @@ pub(super) fn evaluate(
     Ok(snapshot)
 }
 
+fn check_answers(runtime: &Questionnaire, answers: &Answers) -> Result<(), Vec<ValidationIssue>> {
+    let mut bytes = 0_usize;
+    for (key, value) in answers {
+        if !runtime.fields.contains_key(key) {
+            return Err(vec![issue("answers", "Cellule de réponse inconnue.")]);
+        }
+        bytes = bytes.saturating_add(key.len()).saturating_add(value.len());
+        if value.encode_utf16().count() > 65_536 || bytes > MAX_ANSWER_BYTES {
+            return Err(vec![issue("answers", "Réponses trop volumineuses.")]);
+        }
+    }
+    Ok(())
+}
+
 pub(super) fn evaluate_rule(
     expression: &Expression,
     answers: &Answers,
@@ -115,10 +121,23 @@ fn apply(
         answers.insert(question.source.code.clone(), language.to_owned());
     }
     for cell in &question.cells {
-        let mut enabled = match &cell.relevance {
-            Some(expression) => evaluate_rule(expression, answers, budget)?.truth(),
-            None => true,
-        };
+        let mut enabled = true;
+        for expression in &cell.relevance {
+            if !evaluate_rule(expression, answers, budget)?.truth() {
+                enabled = false;
+            }
+        }
+        if let Some(row) = &cell.row {
+            for filter in &question.filters {
+                budget.charge(1)?;
+                let field = format!("{}_{row}", filter.code);
+                if filter.selections.contains(&field)
+                    && answers.get(&field).is_some_and(|value| value == "Y") == filter.exclude
+                {
+                    enabled = false;
+                }
+            }
+        }
         if cell.other
             && matches!(
                 question.source.kind,
@@ -128,6 +147,17 @@ fn apply(
             enabled &= answers
                 .get(&question.source.code)
                 .is_some_and(|value| value == "-oth-");
+        }
+        if cell.comment && question.source.kind == QuestionKind::MultipleChoiceComment {
+            let selection = cell.key.strip_suffix("comment").unwrap_or(&cell.key);
+            let selected = answers
+                .get(selection)
+                .is_some_and(|value| !value.is_empty());
+            match attribute(&question.source, "commented_checkbox") {
+                "" | "checked" => enabled &= selected,
+                "unchecked" => enabled &= !selected,
+                _ => {}
+            }
         }
         if enabled {
             active.insert(cell.key.clone());

@@ -16,7 +16,7 @@
     "build": "tsc --noEmit && vite build",
     "dev": "vite",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node --experimental-strip-types --test src/survey/arrays.test.ts src/survey/attributes.test.ts src/survey/engine.test.ts src/survey/expressions.test.ts src/survey/shared-evaluation.test.ts src/survey/shared-collection.test.ts src/collection/api.test.ts src/survey/native-controls.test.ts src/survey/extended-expressions.test.ts src/authoring/model.test.ts src/authoring/api.test.ts src/authoring/conditions.test.ts tests/private-files.test.mjs",
+    "test": "node --experimental-strip-types --test src/survey/arrays.test.ts src/survey/attributes.test.ts src/survey/engine.test.ts src/survey/expressions.test.ts src/survey/shared-evaluation.test.ts src/survey/shared-collection.test.ts src/survey/shared-forms.test.ts src/collection/api.test.ts src/collection/invitation-limits.test.ts src/survey/native-controls.test.ts src/survey/extended-expressions.test.ts src/authoring/model.test.ts src/authoring/api.test.ts src/authoring/conditions.test.ts tests/private-files.test.mjs",
     "typecheck": "tsc --noEmit"
   },
   "type": "module",

@@ -1,7 +1,10 @@
 use super::*;
 use crate::{QuestionKind, rules};
 
-pub(super) fn compile(definition: &Definition) -> Result<Questionnaire, Vec<ValidationIssue>> {
+pub(super) fn compile(
+    definition: &Definition,
+    extended: bool,
+) -> Result<Questionnaire, Vec<ValidationIssue>> {
     let mut issues = definition.validate();
     issues.extend(rules::validate(definition, None));
     if !issues.is_empty() {
@@ -33,7 +36,7 @@ pub(super) fn compile(definition: &Definition) -> Result<Questionnaire, Vec<Vali
         }
         for (index, question) in group.questions.iter().enumerate() {
             let path = format!("{path}.questions[{index}]");
-            match prepare(question, &group.id, &group.relevance, &path) {
+            match prepare(question, &group.id, &group.relevance, &path, extended) {
                 Ok(question) => questions.push(question),
                 Err(mut errors) => issues.append(&mut errors),
             }
@@ -63,6 +66,32 @@ pub(super) fn compile(definition: &Definition) -> Result<Questionnaire, Vec<Vali
             fields.insert(cell.key.clone(), index);
         }
     }
+    let selections: BTreeMap<_, Arc<BTreeSet<_>>> = questions
+        .iter()
+        .filter(|question| {
+            matches!(
+                question.source.kind,
+                QuestionKind::MultipleChoice | QuestionKind::MultipleChoiceComment
+            )
+        })
+        .map(|question| {
+            let fields = question
+                .cells
+                .iter()
+                .filter(|cell| cell.kind == CellKind::Multiple)
+                .map(|cell| cell.key.clone())
+                .collect();
+            (question.source.code.clone(), Arc::new(fields))
+        })
+        .collect();
+    for question in &mut questions {
+        for filter in &mut question.filters {
+            filter.selections = selections
+                .get(&filter.code)
+                .cloned()
+                .ok_or_else(|| vec![issue(&question.source.id, "Source de filtre inconnue.")])?;
+        }
+    }
     let order = order(&questions, &fields)?;
     Ok(Questionnaire {
         definition: definition.clone(),
@@ -86,15 +115,24 @@ fn prepare(
     group_id: &str,
     relevance: &str,
     path: &str,
+    extended: bool,
 ) -> Result<PreparedQuestion, Vec<ValidationIssue>> {
     let mut issues = Vec::new();
-    check_shape(question, path, &mut issues);
+    if extended {
+        forms::check_shape(question, path, &mut issues);
+    } else {
+        check_shape(question, path, &mut issues);
+    }
     check_question_texts(question, path, &mut issues);
-    let constraints = prepare_constraints(question, path, &mut issues)?;
+    let constraints = prepare_constraints(question, path, &mut issues, extended)?;
     if !issues.is_empty() {
         return Err(issues);
     }
-    let cells = prepare_cells(question, path)?;
+    let cells = if extended {
+        forms::cells(question, path)?
+    } else {
+        prepare_cells(question, path)?
+    };
     let equation = prepare_equation(question, path)?;
     Ok(PreparedQuestion {
         source: question.clone(),
@@ -106,6 +144,11 @@ fn prepare(
         constraints,
         equation,
         cells,
+        filters: if extended {
+            forms::filters(question)
+        } else {
+            Vec::new()
+        },
     })
 }
 
@@ -205,6 +248,7 @@ fn prepare_constraints(
     question: &Question,
     path: &str,
     issues: &mut Vec<ValidationIssue>,
+    extended: bool,
 ) -> Result<BTreeMap<String, Expression>, Vec<ValidationIssue>> {
     use QuestionKind::Equation;
     let mut constraints = BTreeMap::new();
@@ -267,6 +311,8 @@ fn prepare_constraints(
         .contains(&item.name.as_str())
         {
             check_text(&item.value, path, issues);
+        } else if extended && forms::accept_attribute(question, item, path, issues) {
+            continue;
         } else {
             issues.push(issue(
                 path,
@@ -301,31 +347,18 @@ fn prepare_cells(question: &Question, path: &str) -> Result<Vec<Cell>, Vec<Valid
         MultipleChoice | MultipleText | MultipleNumbers
     ) {
         for row in &question.subquestions {
-            cells.push(Cell {
-                key: format!("{}_{}", question.code, row.code),
-                kind,
-                comment: false,
-                other: false,
-                relevance: Some(expression(&row.relevance, path)?),
-            });
+            let mut cell = Cell::new(format!("{}_{}", question.code, row.code), kind);
+            cell.relevance
+                .push(Arc::new(expression(&row.relevance, path)?));
+            cells.push(cell);
         }
     } else if question.kind != Information {
-        cells.push(Cell {
-            key: question.code.clone(),
-            kind,
-            comment: false,
-            other: false,
-            relevance: None,
-        });
+        cells.push(Cell::new(question.code.clone(), kind));
     }
     if question.kind == SingleChoiceComment {
-        cells.push(Cell {
-            key: format!("{}_comment", question.code),
-            kind: CellKind::Text,
-            comment: true,
-            other: false,
-            relevance: None,
-        });
+        let mut cell = Cell::new(format!("{}_comment", question.code), CellKind::Text);
+        cell.comment = true;
+        cells.push(cell);
     }
     if question.other {
         let kind = if attribute(question, "other_numbers_only") == "1" {
@@ -333,13 +366,9 @@ fn prepare_cells(question: &Question, path: &str) -> Result<Vec<Cell>, Vec<Valid
         } else {
             CellKind::Text
         };
-        cells.push(Cell {
-            key: format!("{}_other", question.code),
-            kind,
-            comment: false,
-            other: true,
-            relevance: None,
-        });
+        let mut cell = Cell::new(format!("{}_other", question.code), kind);
+        cell.other = true;
+        cells.push(cell);
     }
     Ok(cells)
 }
@@ -368,7 +397,7 @@ fn prepare_equation(
     Ok(equation)
 }
 
-fn expression(source: &str, path: &str) -> Result<Expression, Vec<ValidationIssue>> {
+pub(super) fn expression(source: &str, path: &str) -> Result<Expression, Vec<ValidationIssue>> {
     let source = if source.trim().is_empty() {
         "1"
     } else {
@@ -392,7 +421,7 @@ fn order(
                 question
                     .cells
                     .iter()
-                    .filter_map(|cell| cell.relevance.as_ref()),
+                    .flat_map(|cell| cell.relevance.iter().map(Arc::as_ref)),
             );
         for expression in expressions {
             for name in &expression.variables {
@@ -403,6 +432,14 @@ fn order(
                     )]
                 })?;
                 required.insert(*index);
+            }
+        }
+        for filter in &question.filters {
+            if let Some(index) = questions
+                .iter()
+                .position(|source| source.source.code == filter.code)
+            {
+                required.insert(index);
             }
         }
         dependencies.push(required);

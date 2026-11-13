@@ -140,7 +140,91 @@ async function collectionFixture() {
   };
   const options = { method: "PUT", headers, body: JSON.stringify(command) };
   const acknowledgement = await (await request(`/api/responses/${id}`, options)).json();
-  return { id, headers, options, acknowledgement };
+  const invitedRun = await json(
+    `/api/admin/studies/${study.id}/runs`,
+    "POST",
+    {
+      expectedRevision: 1,
+      participationPolicy: { mode: "invitation", persistence: true, allowEditAfterSubmit: true },
+    },
+    201,
+  );
+  const invitationId = "00000000-0000-4000-8000-000000000300";
+  const invitedId = "00000000-0000-4000-8000-000000000301";
+  const token = "d".repeat(64);
+  await json(
+    `/api/admin/runs/${invitedRun.id}/invitations`,
+    "POST",
+    { id: invitationId, token, maxUses: 1 },
+    201,
+  );
+  const invitedHeaders = {
+    ...headers,
+    Authorization: `Bearer ${token}`,
+    "X-Participation-Token": token,
+  };
+  await request(
+    `/api/runs/${invitedRun.id}/responses`,
+    {
+      method: "POST",
+      headers: invitedHeaders,
+      body: JSON.stringify({ responseId: invitedId, language: "fr" }),
+    },
+    201,
+  );
+  const invitedOptions = {
+    method: "PUT",
+    headers: invitedHeaders,
+    body: JSON.stringify({ ...command, answers: { GATE: "N" }, submit: true }),
+  };
+  const invitedAcknowledgement = await (
+    await request(`/api/responses/${invitedId}`, invitedOptions)
+  ).json();
+  const invited = {
+    runId: invitedRun.id,
+    id: invitedId,
+    invitationId,
+    headers: invitedHeaders,
+    options: invitedOptions,
+    acknowledgement: invitedAcknowledgement,
+  };
+  const forms = await formsFixture(headers);
+  return { id, headers, options, acknowledgement, invited, forms };
+}
+async function formsFixture(headers) {
+  const corpus = JSON.parse(
+    await readFile(join(root, "examples/rules/collection-forms.json"), "utf8"),
+  );
+  const study = await json("/api/admin/studies", "POST", corpus.definition, 201);
+  const run = await json(
+    `/api/admin/studies/${study.id}/runs`,
+    "POST",
+    { expectedRevision: 1 },
+    201,
+  );
+  const id = "00000000-0000-4000-8000-000000000400";
+  await request(
+    `/api/runs/${run.id}/responses`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ responseId: id, language: "fr" }),
+    },
+    201,
+  );
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      expectedVersion: 0,
+      operationId: "00000000-0000-4000-8000-000000000401",
+      answers: corpus.baseline.answers,
+      checkpoint: { language: "fr", groupId: "forms" },
+      submit: true,
+    }),
+  };
+  const acknowledgement = await (await request(`/api/responses/${id}`, options)).json();
+  return { id, headers, options, acknowledgement, expected: corpus.baseline.expected };
 }
 async function verifyCollection(fixture) {
   const stored = await (
@@ -153,6 +237,40 @@ async function verifyCollection(fixture) {
     await (await request(`/api/responses/${fixture.id}`, fixture.options)).json(),
     fixture.acknowledgement,
   );
+  const forms = fixture.forms;
+  const complete = await (
+    await request(`/api/responses/${forms.id}`, { headers: forms.headers })
+  ).json();
+  assert.equal(complete.run.profile, "native-forms-v1");
+  assert.deepEqual(complete.answers, forms.expected);
+  assert.deepEqual(
+    await (await request(`/api/responses/${forms.id}`, forms.options)).json(),
+    forms.acknowledgement,
+  );
+  const invited = fixture.invited;
+  const resumed = await (
+    await request(
+      `/api/runs/${invited.runId}/responses`,
+      {
+        method: "POST",
+        headers: invited.headers,
+        body: JSON.stringify({
+          responseId: "00000000-0000-4000-8000-000000000302",
+          language: "fr",
+        }),
+      },
+      201,
+    )
+  ).json();
+  assert.equal(resumed.id, invited.id);
+  assert.equal(resumed.status, "submitted");
+  assert.deepEqual(resumed.answers, { GATE: "N" });
+  assert.deepEqual(
+    await (await request(`/api/responses/${invited.id}`, invited.options)).json(),
+    invited.acknowledgement,
+  );
+  const invitations = await json(`/api/admin/runs/${invited.runId}/invitations`);
+  assert.equal(invitations.items[0].uses, 1);
 }
 try {
   await start("sql");
@@ -274,7 +392,7 @@ try {
   }
   await verifyCollection(collection);
   console.log(
-    "HTTP réel : stockage local, médias, sessions, collecte, reprise privée et réessai idempotent vérifiés après redémarrage, y compris avec une ancienne base racine.",
+    "HTTP réel : stockage local, médias, sessions, collecte, invitations, reprise privée et réessai idempotent vérifiés après redémarrage, y compris avec une ancienne base racine.",
   );
 } finally {
   await stop();

@@ -1,5 +1,10 @@
 use super::*;
 
+#[path = "collection/forms.rs"]
+mod forms;
+#[path = "collection/participation.rs"]
+mod participation;
+
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 #[tokio::test]
@@ -75,6 +80,8 @@ pub(super) async fn roundtrip(fixture: &Fixture) {
         .status(),
         StatusCode::OK
     );
+    participation::roundtrip(fixture).await;
+    forms::roundtrip(fixture).await;
 }
 
 #[tokio::test]
@@ -191,7 +198,7 @@ async fn test_collection_migration_should_preserve_preexisting_definitions_and_s
     let fixture = fixture().await;
     let (cookie, csrf) = login(&fixture).await;
     let stored = create(&fixture, &cookie, &csrf, definition()).await;
-    Migrator::down(&fixture.database, Some(1)).await.unwrap();
+    Migrator::down(&fixture.database, Some(2)).await.unwrap();
     assert!(
         !SchemaManager::new(&fixture.database)
             .has_table("responses")
@@ -261,6 +268,13 @@ async fn participant(
 }
 
 async fn campaign(fixture: &Fixture) -> (String, String, String, String) {
+    campaign_with_policy(fixture, json!({"mode":"open"})).await
+}
+
+async fn campaign_with_policy(
+    fixture: &Fixture,
+    policy: Value,
+) -> (String, String, String, String) {
     let (cookie, csrf) = login(fixture).await;
     let study = create(fixture, &cookie, &csrf, collection_definition()).await;
     let study_id = study["id"].as_str().unwrap().to_owned();
@@ -268,7 +282,7 @@ async fn campaign(fixture: &Fixture) -> (String, String, String, String) {
         &fixture.app,
         "POST",
         &format!("/api/admin/studies/{study_id}/runs"),
-        Some(json!({"expectedRevision":1})),
+        Some(json!({"expectedRevision":1,"participationPolicy":policy})),
         Some(&cookie),
         Some(&csrf),
     )

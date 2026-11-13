@@ -1,6 +1,7 @@
 use super::{
-    AppError, Checkpoint, Document, WorkspaceState, access, closed, conflict,
+    AppError, Checkpoint, Document, Run, WorkspaceState, access, closed, conflict,
     handlers::{Start, Update},
+    participation,
     repository::{self, ResponseAccess, StoredResponse},
 };
 use axum::http::StatusCode;
@@ -13,18 +14,21 @@ use serde_json::{Value, json};
 const RECEIPT_SECONDS: i64 = 24 * 60 * 60;
 const MAX_RECEIPTS: usize = 1024;
 
-async fn gate(connection: &impl ConnectionTrait, run_id: &str) -> Result<(), AppError> {
+pub(super) async fn lock_run(
+    connection: &impl ConnectionTrait,
+    run_id: &str,
+    require_open: bool,
+) -> Result<(), AppError> {
     // A real update serializes closure with writes on all three SQL engines.
-    let result = connection
-        .execute(
-            &Query::update()
-                .table("runs")
-                .value("write_version", Expr::col("write_version").add(1_i64))
-                .and_where(Expr::col("id").eq(run_id))
-                .and_where(Expr::col("is_open").eq(true))
-                .to_owned(),
-        )
-        .await?;
+    let mut update = Query::update();
+    update
+        .table("runs")
+        .value("write_version", Expr::col("write_version").add(1_i64))
+        .and_where(Expr::col("id").eq(run_id));
+    if require_open {
+        update.and_where(Expr::col("is_open").eq(true));
+    }
+    let result = connection.execute(&update).await?;
     if result.rows_affected() != 1 {
         return Err(closed());
     }
@@ -53,19 +57,40 @@ fn same_start(
 
 pub(super) async fn start(
     state: &WorkspaceState,
-    run_id: &str,
+    run: &Run,
     input: &Start,
     hash: &str,
     group_id: Option<String>,
-) -> Result<(), AppError> {
+    invitation_hash: Option<&str>,
+    browser_completed: bool,
+) -> Result<String, AppError> {
+    let run_id = &run.id;
     let request_hash = start_hash(run_id, input)?;
     if let Some(stored) = repository::access(&state.database, &input.response_id).await? {
-        return same_start(&stored, run_id, hash, &request_hash);
+        same_start(&stored, run_id, hash, &request_hash)?;
+        return Ok(input.response_id.clone());
     }
     let transaction = state.database.begin().await?;
-    gate(&transaction, run_id).await?;
+    lock_run(&transaction, run_id, true).await?;
     if let Some(stored) = repository::access(&transaction, &input.response_id).await? {
-        return same_start(&stored, run_id, hash, &request_hash);
+        same_start(&stored, run_id, hash, &request_hash)?;
+        return Ok(input.response_id.clone());
+    }
+    let invitation = participation::admit_start(
+        &transaction,
+        run,
+        invitation_hash,
+        hash,
+        browser_completed,
+        state.runtime.now()?,
+    )
+    .await?;
+    if run.participation_policy.persists_response()
+        && let Some(id) = invitation
+            .as_ref()
+            .and_then(|invitation| invitation.response_id.as_ref())
+    {
+        return Ok(id.clone());
     }
     let document = Document {
         answers: Default::default(),
@@ -93,7 +118,7 @@ pub(super) async fn start(
                 ])
                 .values([
                     input.response_id.clone().into(),
-                    run_id.into(),
+                    run_id.clone().into(),
                     hash.into(),
                     request_hash.into(),
                     0_i64.into(),
@@ -104,8 +129,20 @@ pub(super) async fn start(
                 ])?,
         )
         .await?;
+    if run.participation_policy.persists_response() {
+        let invitation = invitation.ok_or_else(AppError::internal)?;
+        transaction
+            .execute(
+                &Query::update()
+                    .table("invitations")
+                    .value("response_id", input.response_id.clone())
+                    .and_where(Expr::col("id").eq(invitation.id))
+                    .to_owned(),
+            )
+            .await?;
+    }
     transaction.commit().await?;
-    Ok(())
+    Ok(input.response_id.clone())
 }
 
 pub(super) async fn receipt(
@@ -144,11 +181,13 @@ pub(super) async fn commit(
     input: &Update,
     document: Document,
     warnings: Vec<rustsurvey_domain::ValidationIssue>,
+    invitation_hash: Option<&str>,
+    browser_completed: bool,
 ) -> Result<Value, AppError> {
     let now = state.runtime.now()?;
     let request_hash = input.hash()?;
     let transaction = state.database.begin().await?;
-    gate(&transaction, &stored.run_id).await?;
+    lock_run(&transaction, &stored.run_id, true).await?;
     if let Some(result) = receipt(
         &transaction,
         &stored.id,
@@ -160,6 +199,22 @@ pub(super) async fn commit(
     {
         return Ok(result);
     }
+    let run = repository::run(&transaction, &stored.run_id).await?;
+    if stored.status != "draft" && !run.participation_policy.allows_edit() {
+        return Err(conflict());
+    }
+    if input.submit {
+        participation::check_browser(browser_completed)?;
+    }
+    participation::admit_write(
+        &transaction,
+        &run,
+        &stored.id,
+        invitation_hash,
+        input.submit,
+        now,
+    )
+    .await?;
     transaction
         .execute(
             &Query::delete()
@@ -200,7 +255,7 @@ pub(super) async fn commit(
                 .value("updated_at", now)
                 .and_where(Expr::col("id").eq(&stored.id))
                 .and_where(Expr::col("version").eq(input.expected_version))
-                .and_where(Expr::col("status").eq("draft"))
+                .and_where(Expr::col("status").eq(&stored.status))
                 .to_owned(),
         )
         .await?;

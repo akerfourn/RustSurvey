@@ -90,6 +90,12 @@ réponses/checkpoint ; les reçus stockent empreinte de commande, accusé et
 expiration. Les textes utilisent `LONGTEXT` sur MariaDB et `TEXT` ailleurs. Voir
 les garanties et limites de la [collecte native](collection.md).
 
+La migration `m20261113_000005_participation` ajoute une politique à `runs` et
+la table `invitations` : empreintes, compteurs, limites, validité et révocation.
+Le lien facultatif vers `responses` est réservé à la reprise liée explicitement
+choisie. Les campagnes existantes gardent le mode public. Aucun secret
+d’invitation n’est stocké en clair. Voir [les garanties](participation.md).
+
 SQLite couvre la mise à niveau avec données existantes et la reprise après
 réouverture. Le test externe optionnel inclut aussi la collecte ; son exécution
 PostgreSQL/MariaDB reste nécessaire pour valider ce nouveau schéma.

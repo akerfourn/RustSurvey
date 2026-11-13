@@ -230,3 +230,36 @@ fn test_collection_should_reject_unknown_fields_and_limit_answer_allocations() {
         assert!(issues[0].message.contains(message));
     }
 }
+
+#[test]
+fn test_computed_answers_should_obey_the_same_total_storage_limit_as_user_answers() {
+    let mut definition = corpus().definition;
+    definition.groups.truncate(1);
+    let template = definition.groups[0].questions[0].clone();
+    definition.groups[0].questions.clear();
+    let mut answers = Answers::new();
+    for index in 0..15 {
+        let mut question = template.clone();
+        question.id = format!("text{index}");
+        question.code = format!("TEXT{index}");
+        question.kind = rustsurvey_domain::QuestionKind::ShortText;
+        answers.insert(question.code.clone(), "x".repeat(65_536));
+        definition.groups[0].questions.push(question);
+    }
+    let mut equation = template;
+    equation.id = "equation".into();
+    equation.code = "CALC".into();
+    equation.kind = rustsurvey_domain::QuestionKind::Equation;
+    equation.attributes = vec![rustsurvey_domain::Attribute {
+        name: "equation".into(),
+        value: "str_repeat('é', 65536)".into(),
+        language: None,
+    }];
+    definition.groups[0].questions.push(equation);
+    let runtime = Questionnaire::compile(&definition).unwrap();
+    let issues = runtime
+        .evaluate(&answers, false)
+        .err()
+        .expect("computed UTF-8 output exceeds 1 MiB");
+    assert_eq!(issues[0].message, "Réponses trop volumineuses.");
+}

@@ -4,17 +4,29 @@
 
 Une campagne native fige une révision enregistrée du questionnaire. Elle accepte
 des participations sans compte, avec sauvegarde SQL, reprise privée et
-soumission définitive. L’éditeur et les liens `#/studies/...` restent des
-aperçus locaux ; seule une campagne `#/runs/...` collecte des réponses.
+soumission. Les [règles de participation](participation.md) permettent de
+limiter les envois par navigateur ou invitation et d’autoriser certaines
+corrections. L’éditeur et les liens `#/studies/...` restent des aperçus locaux ;
+seule une campagne `#/runs/...` collecte des réponses.
 
-Le profil `native-simple-v1` admet 17 types :
+Les nouvelles campagnes utilisent `native-forms-v1`, avec les 28 types natifs
+sans fichiers :
 
-| Famille | Types                    |
-| ------- | ------------------------ |
-| Textes  | S, T, U                  |
-| Saisies | N, D, Q, K sans curseurs |
-| Choix   | L, !, 5, Y, G, M, O      |
-| Autres  | I, X, *                  |
+| Famille  | Types                         |
+| -------- | ----------------------------- |
+| Textes   | S, T, U, Q                    |
+| Saisies  | N, D, K avec ou sans curseurs |
+| Choix    | L, !, 5, Y, G, M, O, P        |
+| Tableaux | A, B, C, E, F, H, 1, :, ;     |
+| Autres   | R, I, X, *                    |
+
+Le profil couvre aussi les filtres M/P, conditions des deux axes, matrices de
+cases et leurs bornes/pas. Le thème natif `core` utilisé par l’éditeur est
+admis.
+
+Les campagnes déjà enregistrées avec `native-simple-v1` conservent leurs 17
+types et leur interpréteur. Le serveur sélectionne explicitement le profil
+enregistré ; il ne convertit pas les campagnes ou révisions historiques.
 
 Le profil couvre pertinence de groupe/question/sous-question, obligatoire strict
 ou recommandé, option autre, commentaires O, codes lexicaux, équations, langues
@@ -22,21 +34,22 @@ et contraintes numériques, de longueur et de validation. Les expressions
 utilisent les 47 fonctions du moteur local. Rust réévalue les règles et remplace
 les résultats calculés fournis par le navigateur.
 
-Les tableaux, classements, commentaires P, curseurs, filtres, expressions dans
-les textes, regex, aléatoire, thèmes, médias, fichiers et quotas bloquent
-l’ouverture. Les attributs inconnus actifs, même de valeur `0`, sont refusés.
-Une valeur vide reste sans effet. Les axes et échelles sont contrôlés.
+Les expressions dans les textes, regex, aléatoire, thèmes personnalisés, médias,
+fichiers et quotas bloquent l’ouverture. Les attributs inconnus actifs, même de
+valeur `0`, sont refusés. Une valeur vide reste sans effet. Les axes et échelles
+sont contrôlés.
 
 Les imports LimeSurvey ne peuvent pas ouvrir de campagne dans cet incrément.
 Leur collecte demandera un profil vérifié, les paramètres effectifs et les
-correspondances des réponses. Ni les 17 types ni le corpus commun ne certifient
+correspondances des réponses. Ni les 28 types ni le corpus commun ne certifient
 l’équivalence avec LimeSurvey 6.5.14.
 
 ## Essayer le parcours
 
 1. Dans l’administration, créer un questionnaire natif du profil disponible.
-2. Enregistrer puis ouvrir **Collecter des réponses** et sélectionner **Ouvrir
-   une campagne sur la version enregistrée**.
+2. Enregistrer puis ouvrir **Collecter des réponses**, choisir l’accès public ou
+   sur invitation et sélectionner **Ouvrir une campagne sur la version
+   enregistrée**.
 3. Ouvrir le lien public de participation et commencer le questionnaire.
 4. Conserver le lien privé de reprise affiché. Chaque passage au groupe suivant
    sauvegarde la progression ; le bouton d’enregistrement permet aussi de
@@ -44,7 +57,8 @@ l’équivalence avec LimeSurvey 6.5.14.
 5. Recharger le lien privé, ou l’ouvrir dans un autre navigateur, pour retrouver
    les réponses, la langue et le groupe enregistrés.
 6. Envoyer les réponses sur la dernière page. Une réponse soumise reste
-   consultable mais ne peut plus être modifiée.
+   consultable. Sa modification exige une invitation avec reprise et correction
+   explicitement autorisées lors de l’ouverture de la campagne.
 7. Dans l’administration, consulter les participations de la campagne et
    télécharger leurs réponses JSON. Les brouillons sont aussi accessibles.
 
@@ -68,12 +82,15 @@ Le lien privé place le secret dans le fragment `#/responses/...`, qui n’est p
 envoyé au serveur HTTP. Le navigateur et les favoris peuvent conserver ce lien :
 son détenteur peut lire la participation. Aucun secret n’est ajouté à
 `localStorage`. Perdre le lien empêche de retrouver soi-même la participation ;
-il n’existe pas encore de récupération ou révocation de ce droit. HTTPS reste
-requis hors du développement local.
+il n’existe pas encore de récupération. La révocation d’une invitation avec
+reprise bloque aussi ce droit lié ; le droit distinct de lire une réponse
+indépendante n’est pas révoqué dans cet incrément. HTTPS reste requis hors du
+développement local.
 
-Les écritures exigent aussi l’en-tête de client habituel. Aucun CORS ouvert,
-cookie participant ou association avec une identité invitée n’est ajouté. Cela
-ne constitue pas une certification de l’anonymat d’une étude migrée.
+Les écritures exigent aussi l’en-tête de client habituel. Les invitations et le
+cookie facultatif sont décrits dans [leur périmètre](participation.md). Aucun
+CORS ouvert n’est ajouté. Cela ne constitue pas une certification de l’anonymat
+d’une étude migrée.
 
 ## Validation et garanties SQL
 
@@ -111,7 +128,7 @@ participation ni aucune session participant par processus n’est nécessaire.
 
 - Corps HTTP : 2 Mio, ou 4 Kio pour créer une participation ; chaînes de réponse
   : 65 536 unités UTF-16 par cellule.
-- Somme des clés et valeurs de réponse : 1 Mio avant stockage.
+- Somme des clés et valeurs de réponse : 1 Mio, calculs serveur compris.
 - Limites structurelles de l’éditeur : 500 questions et 20 000 cellules.
 - Expressions : 4096 unités UTF-16, 512 jetons et profondeur de parseur 32.
 - Budget partagé d’un million d’unités par évaluation du questionnaire.
@@ -149,17 +166,19 @@ utilisent `Cache-Control: no-store`.
 Le corpus `examples/rules/evaluation.json` compare 87 cas entre Rust et
 TypeScript. `collection.json` compare calculs, visibilité, effacement des
 réponses, codes, avertissements et erreurs sur dix parcours synthétiques. Ce
-sont des comparaisons internes, pas des fixtures certifiées LimeSurvey.
+corpus est complété par `collection-forms.json` : 21 parcours sur les 28 types,
+filtres, axes, curseurs, classements et commentaires. Ce sont des comparaisons
+internes, pas des fixtures certifiées LimeSurvey.
 
 Les tests HTTP couvrent accès privés, révision figée, doublons, concurrence,
 soumission, fermeture, migration, limites et reprise SQLite fichier. Le test
 `npm run test:storage` vérifie aussi les réponses et reçus avec un vrai serveur
 arrêté puis redémarré, y compris après reprise d’une ancienne base racine. Le
 test multi-bases optionnel inclut le parcours de collecte ; PostgreSQL et
-MariaDB doivent être exécutés sur des bases jetables pour valider la
-migration 0004.
+MariaDB doivent être exécutés sur des bases jetables pour valider la migrations
+0004 et 0005, les invitations et les 28 types.
 
-Restent notamment : étendre le moteur aux 28 types du viewer, vérifier les
-imports, `.lsa`, participants, transferts de reprises, blocs de réponses,
-révocation, suppression/rétention, quotas, fichiers, exploitation et mesures
-CPU/RAM comparées à LimeSurvey.
+Restent notamment : vérifier les imports, `.lsa`, participants nominatifs,
+transferts de reprises, blocs de réponses, révocation des droits indépendants,
+suppression/rétention, quotas, fichiers, exploitation et mesures CPU/RAM
+comparées à LimeSurvey.

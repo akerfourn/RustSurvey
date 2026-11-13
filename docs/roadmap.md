@@ -23,16 +23,19 @@ L’administration importe les LSS en SQL dans un format natif enrichi, conserve
 l’original privé et permet d’éditer les conditions de groupes/questions. Le
 parcours LSS conserve ses 28 types sans fichiers. Les réponses des aperçus
 restent en mémoire dans le navigateur. La [collecte native](collection.md)
-couvre maintenant 17 types sur des campagnes figées, avec validation Rust,
-réponses SQL, soumission et lien privé de reprise.
+couvre maintenant 28 types sur des campagnes figées, avec validation Rust,
+réponses SQL, soumission et lien privé de reprise. Les
+[règles de participation](participation.md) permettent maintenant de limiter les
+envois par navigateur ou invitation, de reprendre et de corriger une réponse
+selon la politique de campagne.
 
-F5 possède ainsi un premier profil natif. La suite doit étendre le moteur Rust
-aux autres types et règles, vérifier la collecte des imports, puis les
-transferts de ressources et de participations. Quotas, fichiers et autres
-fonctions F6 restent différés. Les prochaines étapes d’édition pourront aussi
-étendre les propriétés modifiables des imports. Les calculs/paramètres natifs
-sont éditables ; le réexport LSS des seules conditions conserve les autres
-octets et bloque les anciennes conditions contradictoires.
+F5 possède ainsi un profil natif étendu. La suite doit compléter les variantes
+et règles restantes, vérifier la collecte des imports, puis les transferts de
+ressources et de participations. Quotas, fichiers et autres fonctions F6 restent
+différés. Les prochaines étapes d’édition pourront aussi étendre les propriétés
+modifiables des imports. Les calculs/paramètres natifs sont éditables ; le
+réexport LSS des seules conditions conserve les autres octets et bloque les
+anciennes conditions contradictoires.
 
 La migration des participations reste un objectif ultérieur. Les futurs médias
 et pièces jointes suivront la

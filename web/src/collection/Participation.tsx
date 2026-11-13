@@ -12,7 +12,15 @@ import {
 } from "./api.ts";
 import type { ViewerDraft } from "./types.ts";
 
-export function Participation({ id, token }: { id: string; token: string }) {
+export function Participation({
+  id,
+  token,
+  invitationToken,
+}: {
+  id: string;
+  token: string;
+  invitationToken?: string | undefined;
+}) {
   const [stored, setStored] = useState<StoredParticipation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
@@ -20,6 +28,7 @@ export function Participation({ id, token }: { id: string; token: string }) {
   const [busy, setBusy] = useState(false);
   const [reload, setReload] = useState(0);
   const [notice, setNotice] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
   const writing = useRef<AbortController | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -28,6 +37,7 @@ export function Participation({ id, token }: { id: string; token: string }) {
     setError(null);
     setIssues([]);
     setBusy(false);
+    setEditing(false);
     writing.current = null;
     async function load(): Promise<void> {
       try {
@@ -42,7 +52,7 @@ export function Participation({ id, token }: { id: string; token: string }) {
       controller.abort();
       writing.current?.abort();
     };
-  }, [id, token, reload]);
+  }, [id, token, invitationToken, reload]);
   const study = useMemo(() => {
     if (stored === null) return null;
     return toViewer(stored.definition, stored.run.studyId);
@@ -55,7 +65,13 @@ export function Participation({ id, token }: { id: string; token: string }) {
     setError(null);
     setIssues([]);
     try {
-      const result = await saveParticipation(id, token, command, controller.signal);
+      const result = await saveParticipation(
+        id,
+        token,
+        command,
+        controller.signal,
+        invitationToken,
+      );
       if (result.id !== id || result.version !== command.expectedVersion + 1)
         throw new Error("Accusé d’enregistrement incohérent. Rechargez la participation.");
       if (controller.signal.aborted) return;
@@ -70,6 +86,7 @@ export function Participation({ id, token }: { id: string; token: string }) {
       setPending(null);
       setNotice("Le dernier enregistrement a été confirmé par le serveur.");
       setIssues(result.warnings);
+      if (command.submit) setEditing(false);
     } catch (cause) {
       if (controller.signal.aborted) return;
       setError(message(cause));
@@ -97,6 +114,10 @@ export function Participation({ id, token }: { id: string; token: string }) {
   }
   function handleRetry(): void {
     if (pending !== null) void attempt(pending);
+  }
+  function handleEdit(): void {
+    setEditing(true);
+    setNotice("Les modifications remplaceront cette réponse lors du prochain enregistrement.");
   }
   function handleReload(): void {
     if (
@@ -130,10 +151,21 @@ export function Participation({ id, token }: { id: string; token: string }) {
       </button>
     );
   let stateNotice = null;
-  if (stored?.status === "submitted")
-    stateNotice = (
-      <p className="notice">Vos réponses ont été envoyées. Elles ne peuvent plus être modifiées.</p>
+  let editButton = null;
+  if (
+    stored?.status === "submitted" &&
+    stored.run.isOpen &&
+    stored.run.participationPolicy.mode === "invitation" &&
+    stored.run.participationPolicy.allowEditAfterSubmit &&
+    !editing
+  )
+    editButton = (
+      <button type="button" onClick={handleEdit} disabled={busy || pending !== null}>
+        Modifier cette réponse
+      </button>
     );
+  if (stored?.status === "submitted")
+    stateNotice = <p className="notice">Vos réponses ont été envoyées.</p>;
   else if (stored?.run.isOpen === false)
     stateNotice = (
       <p className="notice">
@@ -141,25 +173,27 @@ export function Participation({ id, token }: { id: string; token: string }) {
       </p>
     );
   let content = <p role="status">Chargement de votre participation…</p>;
+  let groupId = stored?.checkpoint.groupId ?? null;
+  if (editing && stored?.status === "submitted") groupId = null;
   if (stored !== null && study !== null)
     content = (
-      <ViewerBoundary key={`${id}:${stored.version}:${reload}`}>
+      <ViewerBoundary key={`${id}:${stored.version}:${reload}:${editing}`}>
         <StudyViewer
           study={study}
           persistence={{
             answers: new Map(Object.entries(stored.answers)),
             language: stored.checkpoint.language,
-            groupId: stored.checkpoint.groupId,
-            submitted: stored.status === "submitted",
+            groupId,
+            submitted: stored.status === "submitted" && !editing,
             hasProgress: stored.version > 0 || !stored.run.isOpen,
-            readOnly: stored.status === "submitted" || !stored.run.isOpen,
+            readOnly: (stored.status === "submitted" && !editing) || !stored.run.isOpen,
             disabled: busy || pending !== null,
             onSave: handleSave,
           }}
         />
       </ViewerBoundary>
     );
-  const resume = `${window.location.origin}${window.location.pathname}${resumeFragment(id, token)}`;
+  const resume = `${window.location.origin}${window.location.pathname}${resumeFragment(id, token, invitationToken)}`;
   const issueItems = issues.map((issue, index) => (
     <li key={`${index}:${issue.path}`}>{issue.message}</li>
   ));
@@ -174,8 +208,8 @@ export function Participation({ id, token }: { id: string; token: string }) {
           <input type="url" readOnly value={resume} />
         </label>
         <p>
-          Ce lien donne accès à vos réponses. Partagez uniquement le lien public de la campagne pour
-          inviter d’autres personnes.
+          Ce lien donne accès à vos réponses. Gardez-le privé ; il peut aussi contenir votre droit
+          d’invitation.
         </p>
         {stateNotice}
         {noticeContent}
@@ -183,6 +217,7 @@ export function Participation({ id, token }: { id: string; token: string }) {
         <ul>{issueItems}</ul>
         <div className="button-row">
           {retry}
+          {editButton}
           <button type="button" className="secondary" onClick={handleReload} disabled={busy}>
             Recharger la réponse enregistrée
           </button>

@@ -2,6 +2,10 @@
 
 ## Décision
 
+Cette décision décrit `native-simple-v1`, conservé pour les campagnes
+existantes. Les [règles de participation](0007-participation.md) et le
+[profil de 28 types](0008-collection-forms.md) la complètent.
+
 Livrer un profil de collecte explicite avant d’annoncer une exécution générale
 des études importées. Réutiliser le modèle natif v3, le parseur Rust existant,
 SeaQuery et les migrations. Aucune dépendance n’est ajoutée.

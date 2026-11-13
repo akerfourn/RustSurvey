@@ -7,7 +7,9 @@ backend sobre sur les trois bases. Le premier sous-ensemble implémenté couvre
 `studies`, `definition_revisions`, `import_sources`, les médias et
 l’administration, avec migrations SQL. Le premier profil de
 [collecte native](collection.md) ajoute `runs`, `responses` et
-`operation_receipts`, avec réponses et checkpoint dans un document borné. Le
+`operation_receipts`, avec réponses et checkpoint dans un document borné. Les
+[invitations natives](participation.md) ajoutent une politique de campagne, des
+compteurs et un lien vers la réponse seulement pour la reprise liée. Le
 [domaine natif de l’éditeur](authoring.md) v3 est commun aux créations et
 imports : types, traductions, sous-questions, options et règles. La création
 visuelle propose 28 types ; les imports conservent le modèle de lecture complet

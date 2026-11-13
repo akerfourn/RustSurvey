@@ -49,8 +49,19 @@ pub(super) fn validate(
             numbers.push(number);
         }
     }
-    if question.source.kind == QuestionKind::MultipleChoice {
-        unanswered = values.is_empty();
+    let answer_count =
+        super::shape::answer_count(question, &cells, &snapshot.answers, values.len());
+    unanswered = super::shape::is_unanswered(
+        question,
+        &cells,
+        &snapshot.answers,
+        unanswered,
+        values.is_empty(),
+    );
+    if question.source.kind == QuestionKind::Ranking
+        && let Err(message) = super::shape::validate_ranking(&cells, &snapshot.answers, &values)
+    {
+        errors.push(issue(&question.source.id, message));
     }
     if submit && unanswered {
         match question.source.mandatory {
@@ -90,9 +101,9 @@ pub(super) fn validate(
         let result =
             snapshot::evaluate_rule(expression, &snapshot.answers, budget).and_then(|result| {
                 if name == "maximum_chars" {
-                    check_constraint(name, &result, &text_values, &numbers)
+                    check_constraint(name, &result, &text_values, &numbers, answer_count)
                 } else {
-                    check_constraint(name, &result, &values, &numbers)
+                    check_constraint(name, &result, &values, &numbers, answer_count)
                 }
             });
         if let Err(message) = result {
@@ -115,12 +126,23 @@ fn validate_value(
             if attribute(&question.source, "num_value_int_only") == "1" && number.fract() != 0.0 {
                 return Err("Un nombre entier est attendu.");
             }
+            forms::validate_number(question, number)?;
         }
         CellKind::Date if !is_date(value) => return Err("Une date valide est attendue."),
         CellKind::Multiple if value != "Y" => return Err("Choix de réponse inconnu."),
+        CellKind::Checkbox if !["0", "1"].contains(&value) => {
+            return Err("Choix de réponse inconnu.");
+        }
         CellKind::Choice => {
             let allowed = match question.source.kind {
-                QuestionKind::RatingFive => ["1", "2", "3", "4", "5"].contains(&value),
+                QuestionKind::RatingFive | QuestionKind::ArrayFive => {
+                    ["1", "2", "3", "4", "5"].contains(&value)
+                }
+                QuestionKind::ArrayTen => {
+                    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"].contains(&value)
+                }
+                QuestionKind::ArrayYesNo => ["Y", "U", "N"].contains(&value),
+                QuestionKind::ArrayIncrease => ["I", "S", "D"].contains(&value),
                 QuestionKind::YesNo => ["Y", "N"].contains(&value),
                 QuestionKind::Gender => ["F", "M"].contains(&value),
                 QuestionKind::Language => {
@@ -135,7 +157,7 @@ fn validate_value(
                         .source
                         .choices
                         .iter()
-                        .any(|choice| choice.scale == 0 && choice.code == value)
+                        .any(|choice| choice.scale == cell.scale && choice.code == value)
                         || (question.source.other && value == "-oth-")
                 }
             };
@@ -153,6 +175,7 @@ fn check_constraint(
     result: &Scalar,
     values: &[&str],
     numbers: &[f64],
+    answer_count: usize,
 ) -> Result<(), &'static str> {
     if name == "em_validation_q" {
         if !result.truth() {
@@ -162,8 +185,8 @@ fn check_constraint(
     }
     let limit = result.numeric()?;
     let invalid = match name {
-        "min_answers" => (values.len() as f64) < limit,
-        "max_answers" => values.len() as f64 > limit,
+        "min_answers" => (answer_count as f64) < limit,
+        "max_answers" => answer_count as f64 > limit,
         "maximum_chars" => values
             .iter()
             .any(|value| value.chars().count() as f64 > limit),

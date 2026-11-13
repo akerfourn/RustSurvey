@@ -16,11 +16,11 @@
   "private": true,
   "scripts": {
     "build": "npm run build --workspace web",
-    "check": "npm run format:check && npm run lint && npm test && npm run build",
+    "check": "npm run format:check && npm run lint && npm run test:dev && npm test && npm run build",
     "check:all": "npm run check && npm run check:rust",
     "check:rust": "cargo fmt --all -- --check && cargo clippy --workspace --all-targets --all-features --locked -- -D warnings && cargo test --workspace --all-features --locked",
     "dev": "node web/scripts/dev.mjs",
-    "dev:backend": "cargo run -p rustsurvey-server --locked",
+    "dev:backend": "node web/scripts/dev.mjs --backend-only",
     "dev:web": "npm run dev --workspace web",
     "doctor": "node scripts/doctor.mjs",
     "format": "prettier --write .",
@@ -28,6 +28,7 @@
     "lint": "eslint . --max-warnings 0",
     "test": "npm test --workspace web",
     "test:databases": "node scripts/test-databases.mjs",
+    "test:dev": "node --test scripts/cargo-environment.test.mjs scripts/doctor-tools.test.mjs",
     "test:storage": "cargo build -p rustsurvey-server --locked && node scripts/test-local-storage.mjs",
     "typecheck": "npm run typecheck --workspace web"
   },

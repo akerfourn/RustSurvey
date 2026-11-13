@@ -4,8 +4,9 @@
 
 Un unique administrateur crée et modifie des questionnaires natifs. Le catalogue
 et les définitions sont publics, sans compte participant ni jeton d’accès. Toute
-sauvegarde devient immédiatement visible. Il n’existe pas encore d’étape de
-publication, de campagne ou de suppression de questionnaire.
+sauvegarde devient immédiatement visible dans les aperçus. Les campagnes de
+collecte figent séparément une révision avec leur propre politique d’accès. Il
+n’existe pas encore de suppression de questionnaire.
 
 L’éditeur propose les 28 types sans fichiers rendus par le viewer : textes,
 nombres, dates, choix, commentaires, tableaux, doubles échelles, matrices,

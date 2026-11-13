@@ -1,8 +1,9 @@
 import { useEffect, useState } from "preact/hooks";
 import { ApiError, message } from "../authoring/api.ts";
 import type { ValidationIssue } from "../authoring/model.ts";
-import { createRun, listRuns, type Run } from "./api.ts";
+import { createRun, listRuns, type ParticipationPolicy, type Run } from "./api.ts";
 import { RunCard } from "./RunCard.tsx";
+import { PolicyControl } from "./PolicyControl.tsx";
 
 interface RunManagerProps {
   studyId: string;
@@ -17,6 +18,7 @@ export function RunManager({ studyId, revision, csrf, disabled, onExpired }: Run
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
+  const [policy, setPolicy] = useState<ParticipationPolicy>({ mode: "open" });
   useEffect(() => {
     const controller = new AbortController();
     async function load(): Promise<void> {
@@ -36,7 +38,7 @@ export function RunManager({ studyId, revision, csrf, disabled, onExpired }: Run
     setError(null);
     setIssues([]);
     try {
-      const run = await createRun(studyId, revision, csrf);
+      const run = await createRun(studyId, revision, csrf, policy);
       setRuns((previous) => [run, ...previous].slice(0, 50));
     } catch (cause) {
       setError(message(cause));
@@ -80,9 +82,11 @@ export function RunManager({ studyId, revision, csrf, disabled, onExpired }: Run
         de l’éditeur ne changent pas les participations en cours.
       </p>
       <p>
-        Premier profil disponible : questions simples, choix, saisies multiples et calculs. Les
-        tableaux, fichiers, médias et règles avancées bloquent l’ouverture avec un diagnostic.
+        Les 28 types natifs sans fichiers sont disponibles, avec tableaux, classements, filtres et
+        calculs. Les médias, quotas et règles non pris en charge bloquent l’ouverture avec un
+        diagnostic.
       </p>
+      <PolicyControl disabled={disabled || busy} onChange={setPolicy} />
       <button type="button" onClick={handleCreate} disabled={disabled || busy}>
         Ouvrir une campagne sur la version enregistrée
       </button>

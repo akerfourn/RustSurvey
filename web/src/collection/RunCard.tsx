@@ -1,6 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { ApiError, message } from "../authoring/api.ts";
 import { closeRun, listResponses, type ResponseSummary, type Run } from "./api.ts";
+import { Invitations } from "./Invitations.tsx";
+import { policyLabel } from "./PolicyControl.tsx";
 
 interface RunCardProps {
   run: Run;
@@ -96,6 +98,12 @@ export function RunCard({ run, csrf, onChange, onExpired }: RunCardProps) {
     );
   });
   let responses = null;
+  let invitations = null;
+  let participationLink = "Ouvrir le lien public de participation";
+  if (run.participationPolicy.mode === "invitation") {
+    participationLink = "Ouvrir l’accueil de participation (invitation requise)";
+    if (expanded) invitations = <Invitations run={run} csrf={csrf} onExpired={onExpired} />;
+  }
   if (expanded)
     responses = (
       <div>
@@ -119,9 +127,10 @@ export function RunCard({ run, csrf, onChange, onExpired }: RunCardProps) {
       <h3>
         {status} · version {run.revision} · {new Date(run.createdAt * 1000).toLocaleString()}
       </h3>
+      <p>{policyLabel(run.participationPolicy)}</p>
       <p>
         <a href={`#/runs/${run.id}`} target="_blank" rel="noreferrer">
-          Ouvrir le lien public de participation
+          {participationLink}
         </a>
       </p>
       <div className="button-row">
@@ -132,6 +141,7 @@ export function RunCard({ run, csrf, onChange, onExpired }: RunCardProps) {
       </div>
       {errorContent}
       {responses}
+      {invitations}
     </article>
   );
 }

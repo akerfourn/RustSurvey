@@ -1,14 +1,18 @@
-//! Stateless execution for the explicitly supported native collection profile.
+//! Stateless execution for versioned native collection profiles.
+mod forms;
 mod profile;
+mod shape;
 mod snapshot;
 mod validation;
 
 use crate::{Definition, Question, ValidationIssue, rules::Expression};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::Arc;
 
 pub type Answers = BTreeMap<String, String>;
 pub const PROFILE: &str = "native-simple-v1";
+pub const FORMS_PROFILE: &str = "native-forms-v1";
 pub const MAX_ANSWER_BYTES: usize = 1024 * 1024;
 
 #[derive(Serialize)]
@@ -27,6 +31,7 @@ enum CellKind {
     Date,
     Choice,
     Multiple,
+    Checkbox,
 }
 
 struct Cell {
@@ -34,7 +39,29 @@ struct Cell {
     kind: CellKind,
     comment: bool,
     other: bool,
-    relevance: Option<Expression>,
+    relevance: Vec<Arc<Expression>>,
+    row: Option<String>,
+    scale: u32,
+}
+
+impl Cell {
+    fn new(key: String, kind: CellKind) -> Self {
+        Self {
+            key,
+            kind,
+            comment: false,
+            other: false,
+            relevance: Vec::new(),
+            row: None,
+            scale: 0,
+        }
+    }
+}
+
+struct Filter {
+    code: String,
+    exclude: bool,
+    selections: Arc<BTreeSet<String>>,
 }
 
 struct PreparedQuestion {
@@ -44,6 +71,7 @@ struct PreparedQuestion {
     constraints: BTreeMap<String, Expression>,
     equation: Option<Expression>,
     cells: Vec<Cell>,
+    filters: Vec<Filter>,
 }
 
 pub struct Questionnaire {
@@ -55,7 +83,22 @@ pub struct Questionnaire {
 
 impl Questionnaire {
     pub fn compile(definition: &Definition) -> Result<Self, Vec<ValidationIssue>> {
-        profile::compile(definition)
+        profile::compile(definition, false)
+    }
+
+    pub fn compile_forms(definition: &Definition) -> Result<Self, Vec<ValidationIssue>> {
+        profile::compile(definition, true)
+    }
+
+    pub fn compile_profile(
+        definition: &Definition,
+        profile: &str,
+    ) -> Result<Self, Vec<ValidationIssue>> {
+        match profile {
+            PROFILE => Self::compile(definition),
+            FORMS_PROFILE => Self::compile_forms(definition),
+            _ => Err(vec![issue("profile", "Profil de collecte inconnu.")]),
+        }
     }
 
     pub fn evaluate(

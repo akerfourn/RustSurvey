@@ -63,8 +63,10 @@ npm ci
 Le script de diagnostic affiche les versions et signale les outils absents. Il
 ne compare pas les versions aux contraintes et ne lance pas de conteneur. Les
 contraintes Node/npm sont appliquées lors de l’installation et rustup
-sélectionne la chaîne Rust stable. Le diagnostic du compilateur C est adapté à
-un environnement POSIX ; une prise en charge Windows reste à vérifier.
+sélectionne la chaîne Rust stable. Sous Windows, le diagnostic lance npm via
+`cmd`, retrouve rustup et recherche MSVC avec `vswhere` lorsqu’il n’est pas dans
+le PATH du terminal. Il ne remplace pas une compilation : `npm run check:rust`
+vérifie aussi l’utilisation du compilateur et du SDK par SQLite embarqué.
 
 Aucun nouvel outil global n’est requis sur la machine inventoriée. Les outils
 TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
@@ -106,6 +108,14 @@ Cette commande lance le backend, attend son signal de disponibilité puis démar
 Vite avec la bonne cible de proxy. Ctrl+C arrête les deux services. Le lanceur
 utilise les bibliothèques standard Node et l’API Vite existante ; aucune
 dépendance supplémentaire n’est nécessaire.
+
+`npm run dev:backend` utilise le même lanceur pour compiler et démarrer
+uniquement Rust, sans charger Vite. Les deux commandes conservent la priorité du
+`PATH` reçu, puis ajoutent les dossiers `bin` de `CARGO_HOME` si défini et de
+l’installation rustup habituelle (`~/.cargo/bin`). Cela permet de démarrer
+depuis une application dont le `PATH` ne contient pas Cargo, notamment sous
+Windows. Ce complément concerne les processus enfants, sans modifier les
+réglages système. Rust doit déjà être installé.
 
 - Client : adresse affichée par Vite, <http://127.0.0.1:5173> par défaut.
 - API de disponibilité : adresse affichée sous `RustSurvey API`, puis

@@ -15,8 +15,10 @@ d’[édition native](authoring.md) ajoute ensuite le stockage SQL des définiti
 et de l’administration, puis les sources LSS privées et les conditions éditables
 de groupes/questions dans le format v2. Le format v3 ajoute les images natives ;
 l’éditeur expose maintenant 28 types, paramètres et traductions. Le premier
-profil de [collecte native](collection.md) couvre 17 types, validation Rust,
-réponses SQL et reprise ; les imports restent des aperçus locaux.
+profil de [collecte native](collection.md), étendu à 28 types, couvre validation
+Rust, réponses SQL et reprise. Il inclut filtres, curseurs et conditions des
+axes ; les imports restent des aperçus locaux. Les
+[règles de participation](participation.md) ajoutent cookies et invitations.
 
 F5 dispose ainsi d’un premier sous-ensemble natif. Les autres fonctions F5/F6,
 la collecte des imports et la certification restent différées ; les propositions

@@ -1,12 +1,14 @@
 use super::super::{auth, history};
-use super::{AppError, Checkpoint, Document, WorkspaceState, access, repository, writes};
+use super::{
+    AppError, Checkpoint, Document, Run, WorkspaceState, access, participation, repository, writes,
+};
 use axum::{
     Json,
     extract::{Path, Query, State},
     http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
 };
-use rustsurvey_domain::collection::{Answers, PROFILE};
+use rustsurvey_domain::collection::{Answers, FORMS_PROFILE, PROFILE};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -58,10 +60,11 @@ pub(super) async fn start(
 ) -> Result<(StatusCode, Json<Value>), AppError> {
     access::client(&headers)?;
     let hash = access::token_hash(&headers)?;
+    let invitation_hash = access::invitation_hash(&headers)?;
     let Json(input) = body.map_err(AppError::json)?;
     access::id(&input.response_id)?;
     let run = repository::run(&state.database, &id).await?;
-    if run.profile != PROFILE {
+    if !matches!(run.profile.as_str(), PROFILE | FORMS_PROFILE) {
         return Err(AppError::internal());
     }
     let revision = history::load(&state, &run.study_id, run.revision).await?;
@@ -77,10 +80,19 @@ pub(super) async fn start(
         .groups
         .first()
         .map(|group| group.id.clone());
-    writes::start(&state, &id, &input, &hash, group_id).await?;
+    let response_id = writes::start(
+        &state,
+        &run,
+        &input,
+        &hash,
+        group_id,
+        invitation_hash.as_deref(),
+        participation::browser_completed(&run, &headers),
+    )
+    .await?;
     Ok((
         StatusCode::CREATED,
-        Json(state_document(&state, &input.response_id, &hash).await?),
+        Json(state_document(&state, &response_id, &hash).await?),
     ))
 }
 
@@ -98,9 +110,10 @@ pub(super) async fn save(
     Path(id): Path<String>,
     headers: HeaderMap,
     body: Result<Json<Update>, axum::extract::rejection::JsonRejection>,
-) -> Result<Json<Value>, AppError> {
+) -> Result<Response, AppError> {
     access::client(&headers)?;
     let hash = access::token_hash(&headers)?;
+    let invitation_hash = access::invitation_hash(&headers)?;
     let Json(input) = body.map_err(AppError::json)?;
     access::id(&input.operation_id)?;
     if !(0..1_000_000_000).contains(&input.expected_version) {
@@ -117,16 +130,20 @@ pub(super) async fn save(
     )
     .await?
     {
-        return Ok(Json(result));
+        let run = repository::run(&state.database, &stored.run_id).await?;
+        return acknowledgement(result, &run, state.secure_cookie);
     }
-    if stored.version != input.expected_version || stored.status != "draft" {
+    if stored.version != input.expected_version {
         return Err(super::conflict());
     }
     let run = repository::run(&state.database, &stored.run_id).await?;
+    if stored.status != "draft" && !run.participation_policy.allows_edit() {
+        return Err(super::conflict());
+    }
     if !run.is_open {
         return Err(super::closed());
     }
-    if run.profile != PROFILE {
+    if !matches!(run.profile.as_str(), PROFILE | FORMS_PROFILE) {
         return Err(AppError::internal());
     }
     let revision = history::load(&state, &run.study_id, run.revision).await?;
@@ -136,6 +153,7 @@ pub(super) async fn save(
         revision.definition,
         input.answers.clone(),
         input.submit,
+        run.profile.clone(),
     )
     .await?;
     let mut checkpoint = input.checkpoint.clone();
@@ -150,9 +168,26 @@ pub(super) async fn save(
         answers: snapshot.answers,
         checkpoint,
     };
-    Ok(Json(
-        writes::commit(&state, &stored, &input, document, snapshot.warnings).await?,
-    ))
+    let result = writes::commit(
+        &state,
+        &stored,
+        &input,
+        document,
+        snapshot.warnings,
+        invitation_hash.as_deref(),
+        participation::browser_completed(&run, &headers),
+    )
+    .await?;
+    acknowledgement(result, &run, state.secure_cookie)
+}
+
+fn acknowledgement(result: Value, run: &Run, secure: bool) -> Result<Response, AppError> {
+    let submitted = result["status"] == "submitted";
+    let mut response = Json(result).into_response();
+    if submitted && let Some(cookie) = participation::completion_cookie(run, secure)? {
+        response.headers_mut().append(header::SET_COOKIE, cookie);
+    }
+    Ok(response)
 }
 
 pub(super) async fn list(

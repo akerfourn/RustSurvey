@@ -46,14 +46,17 @@ une saisie locale sans compte :
 
 Dans ces aperçus, les réponses restent locales. Une première
 [collecte native durable](docs/collection.md) est disponible séparément :
-campagne sur une révision figée, 17 types, validation Rust, sauvegarde SQL, lien
-privé de reprise et soumission. Les imports LimeSurvey et les archives `.lsa`
-restent hors de ce profil. Les conditions des études importées sont éditables ;
-leurs autres réglages sont conservés et protégés. Deux téléchargements
-distinguent le LSS original inchangé du LSS contenant les conditions de la
-révision enregistrée. Les anciennes sections de conditions peuvent bloquer ce
-second export. Le moteur d’aperçu couvre un sous-ensemble explicite ; il ne
-certifie pas encore le comportement complet d’une étude LimeSurvey. Voir le
+campagne sur une révision figée, 28 types, validation Rust, sauvegarde SQL, lien
+privé de reprise et soumission. Les
+[règles de participation](docs/participation.md) ajoutent cookie facultatif,
+invitations limitées ou réutilisables et corrections autorisées d’une même
+réponse. Les imports LimeSurvey et les archives `.lsa` restent hors de ce
+profil. Les conditions des études importées sont éditables ; leurs autres
+réglages sont conservés et protégés. Deux téléchargements distinguent le LSS
+original inchangé du LSS contenant les conditions de la révision enregistrée.
+Les anciennes sections de conditions peuvent bloquer ce second export. Le moteur
+d’aperçu couvre un sous-ensemble explicite ; il ne certifie pas encore le
+comportement complet d’une étude LimeSurvey. Voir le
 [périmètre du viewer](docs/viewer.md).
 
 La cible couvre l’ensemble des formulaires natifs de la version de référence.

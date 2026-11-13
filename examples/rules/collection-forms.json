@@ -1,0 +1,1403 @@
+{
+  "definition": {
+    "schemaVersion": 3,
+    "languages": [],
+    "translations": [],
+    "showWelcome": null,
+    "title": "Collecte native - 28 types",
+    "language": "fr",
+    "welcome": "",
+    "end": "Merci pour votre participation.",
+    "groups": [
+      {
+        "id": "forms",
+        "title": "Nouveau groupe",
+        "description": "",
+        "questions": [
+          {
+            "id": "forms2",
+            "code": "S",
+            "title": "S",
+            "help": "",
+            "kind": "short_text",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms3",
+            "code": "T",
+            "title": "T",
+            "help": "",
+            "kind": "long_text",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms4",
+            "code": "N",
+            "title": "N",
+            "help": "",
+            "kind": "number",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms5",
+            "code": "D",
+            "title": "D",
+            "help": "",
+            "kind": "date",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms6",
+            "code": "L",
+            "title": "L",
+            "help": "",
+            "kind": "single_choice",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms7",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms8",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms9",
+            "code": "M",
+            "title": "M",
+            "help": "",
+            "kind": "multiple_choice",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms10",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms11",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "YN == 'Y'",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms12",
+            "code": "YN",
+            "title": "YN",
+            "help": "",
+            "kind": "yes_no",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms13",
+            "code": "INFO",
+            "title": "INFO",
+            "help": "",
+            "kind": "information",
+            "mandatory": "no",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms14",
+            "code": "U",
+            "title": "U",
+            "help": "",
+            "kind": "huge_text",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms15",
+            "code": "DDL",
+            "title": "DDL",
+            "help": "",
+            "kind": "dropdown",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms16",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms17",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms18",
+            "code": "FIVE",
+            "title": "FIVE",
+            "help": "",
+            "kind": "rating_five",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms19",
+            "code": "GEN",
+            "title": "GEN",
+            "help": "",
+            "kind": "gender",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms20",
+            "code": "O",
+            "title": "O",
+            "help": "",
+            "kind": "single_choice_comment",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms21",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms22",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms23",
+            "code": "P",
+            "title": "P",
+            "help": "",
+            "kind": "multiple_choice_comment",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms24",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms25",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": true,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms26",
+            "code": "Q",
+            "title": "Q",
+            "help": "",
+            "kind": "multiple_text",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms27",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms28",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms29",
+            "code": "K",
+            "title": "K",
+            "help": "",
+            "kind": "multiple_numbers",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms30",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms31",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [
+              {
+                "name": "slider_layout",
+                "value": "1",
+                "language": null
+              },
+              {
+                "name": "slider_min",
+                "value": "0",
+                "language": null
+              },
+              {
+                "name": "slider_max",
+                "value": "10",
+                "language": null
+              },
+              {
+                "name": "slider_accuracy",
+                "value": "1",
+                "language": null
+              }
+            ],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms32",
+            "code": "A",
+            "title": "A",
+            "help": "",
+            "kind": "array_five",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms33",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms34",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms35",
+            "code": "B",
+            "title": "B",
+            "help": "",
+            "kind": "array_ten",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms36",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms37",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms38",
+            "code": "C",
+            "title": "C",
+            "help": "",
+            "kind": "array_yes_no",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms39",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms40",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms41",
+            "code": "E",
+            "title": "E",
+            "help": "",
+            "kind": "array_increase",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms42",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms43",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms44",
+            "code": "F",
+            "title": "F",
+            "help": "",
+            "kind": "array_choice",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms45",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms46",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [
+              {
+                "id": "forms47",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms48",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms49",
+            "code": "H",
+            "title": "H",
+            "help": "",
+            "kind": "array_column",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms50",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms51",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [
+              {
+                "id": "forms52",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms53",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms54",
+            "code": "DUAL",
+            "title": "DUAL",
+            "help": "",
+            "kind": "dual_scale",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms55",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms56",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms59",
+                "code": "10",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 1,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms60",
+                "code": "20",
+                "label": "Second choix",
+                "help": "",
+                "scale": 1,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [
+              {
+                "id": "forms57",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms58",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms61",
+            "code": "NUM",
+            "title": "NUM",
+            "help": "",
+            "kind": "number_matrix",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms62",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms63",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms64",
+                "code": "B1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 1,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms65",
+                "code": "B2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 1,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms66",
+            "code": "TXT",
+            "title": "TXT",
+            "help": "",
+            "kind": "text_matrix",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [
+              {
+                "id": "forms67",
+                "code": "A1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms68",
+                "code": "A2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms69",
+                "code": "B1",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 1,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms70",
+                "code": "B2",
+                "label": "Second choix",
+                "help": "",
+                "scale": 1,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms71",
+            "code": "R",
+            "title": "R",
+            "help": "",
+            "kind": "ranking",
+            "mandatory": "strict",
+            "choices": [
+              {
+                "id": "forms72",
+                "code": "01",
+                "label": "Premier choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              },
+              {
+                "id": "forms73",
+                "code": "02",
+                "label": "Second choix",
+                "help": "",
+                "scale": 0,
+                "relevance": "1",
+                "translations": [],
+                "source": null
+              }
+            ],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms74",
+            "code": "LANG",
+            "title": "LANG",
+            "help": "",
+            "kind": "language",
+            "mandatory": "strict",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          },
+          {
+            "id": "forms75",
+            "code": "CALC",
+            "title": "CALC",
+            "help": "",
+            "kind": "equation",
+            "mandatory": "no",
+            "choices": [],
+            "subquestions": [],
+            "relevance": "1",
+            "translations": [],
+            "attributes": [
+              {
+                "name": "equation",
+                "value": "sum(K_A1, K_A2)",
+                "language": null
+              }
+            ],
+            "other": false,
+            "validation": "",
+            "randomizationGroup": "",
+            "theme": "core",
+            "source": null,
+            "media": []
+          }
+        ],
+        "relevance": "1",
+        "translations": [],
+        "randomizationGroup": "",
+        "source": null
+      }
+    ]
+  },
+  "baseline": {
+    "answers": {
+      "S": "été",
+      "T": "été",
+      "N": "0",
+      "D": "2024-02-29",
+      "L": "01",
+      "M_A1": "Y",
+      "YN": "Y",
+      "U": "été",
+      "DDL": "01",
+      "FIVE": "5",
+      "GEN": "F",
+      "O": "01",
+      "O_comment": "précision",
+      "P_A1": "Y",
+      "P_A1comment": "commentaire",
+      "P_A2comment": "inactive",
+      "P_other": "autre",
+      "P_othercomment": "précision",
+      "Q_A1": "texte",
+      "Q_A2": "texte",
+      "K_A1": "3",
+      "K_A2": "7",
+      "A_A1": "5",
+      "A_A2": "5",
+      "B_A1": "10",
+      "B_A2": "10",
+      "C_A1": "Y",
+      "C_A2": "U",
+      "E_A1": "I",
+      "E_A2": "S",
+      "F_A1": "01",
+      "F_A2": "02",
+      "H_A1": "01",
+      "H_A2": "02",
+      "DUAL_A1_0": "01",
+      "DUAL_A1_1": "10",
+      "DUAL_A2_0": "01",
+      "DUAL_A2_1": "10",
+      "NUM_A1_B1": "1",
+      "NUM_A1_B2": "2",
+      "NUM_A2_B1": "3",
+      "NUM_A2_B2": "4",
+      "TXT_A1_B1": "texte",
+      "TXT_A1_B2": "texte",
+      "TXT_A2_B1": "texte",
+      "TXT_A2_B2": "texte",
+      "R_1": "01",
+      "R_2": "02",
+      "LANG": "fr",
+      "CALC": "forged"
+    },
+    "expected": {
+      "S": "été",
+      "T": "été",
+      "N": "0",
+      "D": "2024-02-29",
+      "L": "01",
+      "M_A1": "Y",
+      "YN": "Y",
+      "U": "été",
+      "DDL": "01",
+      "FIVE": "5",
+      "GEN": "F",
+      "O": "01",
+      "O_comment": "précision",
+      "P_A1": "Y",
+      "P_A1comment": "commentaire",
+      "P_other": "autre",
+      "P_othercomment": "précision",
+      "Q_A1": "texte",
+      "Q_A2": "texte",
+      "K_A1": "3",
+      "K_A2": "7",
+      "A_A1": "5",
+      "A_A2": "5",
+      "B_A1": "10",
+      "B_A2": "10",
+      "C_A1": "Y",
+      "C_A2": "U",
+      "E_A1": "I",
+      "E_A2": "S",
+      "F_A1": "01",
+      "F_A2": "02",
+      "H_A1": "01",
+      "H_A2": "02",
+      "DUAL_A1_0": "01",
+      "DUAL_A1_1": "10",
+      "DUAL_A2_0": "01",
+      "DUAL_A2_1": "10",
+      "NUM_A1_B1": "1",
+      "NUM_A1_B2": "2",
+      "NUM_A2_B1": "3",
+      "NUM_A2_B2": "4",
+      "TXT_A1_B1": "texte",
+      "TXT_A1_B2": "texte",
+      "TXT_A2_B1": "texte",
+      "TXT_A2_B2": "texte",
+      "R_1": "01",
+      "R_2": "02",
+      "LANG": "fr",
+      "CALC": "10"
+    }
+  },
+  "cases": [
+    {
+      "name": "all 28 types with lexical codes and computed value",
+      "submit": true
+    },
+    {
+      "name": "empty draft permits mandatory omissions",
+      "answers": {},
+      "submit": false,
+      "expected": {
+        "LANG": "fr",
+        "CALC": "0"
+      },
+      "base": false
+    },
+    {
+      "name": "choice arrays preserve leading zeroes",
+      "answers": {
+        "F_A1": "1"
+      },
+      "submit": true,
+      "error": "Choix de réponse inconnu"
+    },
+    {
+      "name": "dual scale has distinct domains",
+      "answers": {
+        "DUAL_A1_1": "01"
+      },
+      "submit": true,
+      "error": "Choix de réponse inconnu"
+    },
+    {
+      "name": "matrix list enforces its range",
+      "answers": {
+        "NUM_A1_B1": "0"
+      },
+      "submit": true,
+      "error": "bornes"
+    },
+    {
+      "name": "slider enforces its step",
+      "answers": {
+        "K_A1": "3.5"
+      },
+      "submit": true,
+      "error": "bornes"
+    },
+    {
+      "name": "ranking rejects repeated options",
+      "answers": {
+        "R_2": "01"
+      },
+      "submit": true,
+      "error": "Chaque choix"
+    },
+    {
+      "name": "ranking rejects gaps",
+      "answers": {
+        "R_1": ""
+      },
+      "submit": true,
+      "error": "position vide"
+    },
+    {
+      "name": "arrays require all active rows",
+      "answers": {
+        "A_A2": ""
+      },
+      "submit": true,
+      "error": "obligatoire"
+    },
+    {
+      "name": "inclusive filter clears unselected rows",
+      "submit": true,
+      "attributes": {
+        "F": {
+          "array_filter": "M"
+        }
+      },
+      "removeExpected": ["F_A2"]
+    },
+    {
+      "name": "exclusive filter clears selected rows",
+      "submit": true,
+      "attributes": {
+        "F": {
+          "array_filter_exclude": "M"
+        }
+      },
+      "removeExpected": ["F_A1"]
+    },
+    {
+      "name": "hidden filter source clears all matching rows",
+      "answers": {
+        "YN": "N"
+      },
+      "submit": true,
+      "attributes": {
+        "F": {
+          "array_filter": "M"
+        }
+      },
+      "expected": {
+        "YN": "N"
+      },
+      "removeExpected": ["M_A1", "F_A1", "F_A2"]
+    },
+    {
+      "name": "dual filter clears both scales of a row",
+      "submit": true,
+      "attributes": {
+        "DUAL": {
+          "array_filter": "M"
+        }
+      },
+      "removeExpected": ["DUAL_A2_0", "DUAL_A2_1"]
+    },
+    {
+      "name": "column and row relevance clear matrix cells",
+      "submit": true,
+      "removeExpected": ["TXT_A1_B1", "TXT_A2_B1", "TXT_A2_B2"],
+      "subquestionRelevance": {
+        "TXT": {
+          "A2": "0",
+          "B1": "0"
+        }
+      }
+    },
+    {
+      "name": "unchecked comment mode keeps only unselected comments",
+      "submit": true,
+      "attributes": {
+        "P": {
+          "commented_checkbox": "unchecked"
+        }
+      },
+      "expected": {
+        "P_A2comment": "inactive"
+      },
+      "removeExpected": ["P_A1comment", "P_othercomment"]
+    },
+    {
+      "name": "always comment mode preserves all comments",
+      "submit": true,
+      "attributes": {
+        "P": {
+          "commented_checkbox": "allways"
+        }
+      },
+      "expected": {
+        "P_A2comment": "inactive"
+      }
+    },
+    {
+      "name": "free matrix inputs have no implicit range",
+      "answers": {
+        "NUM_A1_B1": "-100",
+        "NUM_A1_B2": "0",
+        "NUM_A2_B1": "0.5",
+        "NUM_A2_B2": "1"
+      },
+      "submit": true,
+      "attributes": {
+        "NUM": {
+          "input_boxes": "1",
+          "multiflexible_step": "100"
+        }
+      },
+      "expected": {
+        "NUM_A1_B1": "-100",
+        "NUM_A1_B2": "0",
+        "NUM_A2_B1": "0.5",
+        "NUM_A2_B2": "1"
+      }
+    },
+    {
+      "name": "checkbox matrix counts checked cells",
+      "answers": {
+        "NUM_A1_B2": "0",
+        "NUM_A2_B1": "0",
+        "NUM_A2_B2": "1"
+      },
+      "submit": true,
+      "attributes": {
+        "NUM": {
+          "multiflexible_checkbox": "1",
+          "min_answers": "2"
+        }
+      },
+      "expected": {
+        "NUM_A1_B2": "0",
+        "NUM_A2_B1": "0",
+        "NUM_A2_B2": "1"
+      }
+    },
+    {
+      "name": "checkbox mandatory requires a check on every row",
+      "answers": {
+        "NUM_A1_B2": "0",
+        "NUM_A2_B1": "0",
+        "NUM_A2_B2": "0"
+      },
+      "submit": true,
+      "attributes": {
+        "NUM": {
+          "multiflexible_checkbox": "1"
+        }
+      },
+      "error": "obligatoire"
+    },
+    {
+      "name": "checkbox rejects alternate boolean encodings",
+      "answers": {
+        "NUM_A1_B1": "Y"
+      },
+      "submit": true,
+      "attributes": {
+        "NUM": {
+          "multiflexible_checkbox": "1"
+        }
+      },
+      "error": "Choix de réponse inconnu"
+    },
+    {
+      "name": "dual scale maximum counts completed rows",
+      "submit": true,
+      "attributes": {
+        "DUAL": {
+          "max_answers": "1"
+        }
+      },
+      "error": "réponse"
+    }
+  ]
+}

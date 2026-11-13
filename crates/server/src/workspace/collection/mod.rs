@@ -1,5 +1,7 @@
 mod access;
 mod handlers;
+mod invitations;
+mod participation;
 mod repository;
 mod runs;
 mod writes;
@@ -14,6 +16,7 @@ use axum::{
 use rustsurvey_domain::{
     Definition,
     collection::{Answers, Questionnaire, Snapshot},
+    participation::ParticipationPolicy,
 };
 use serde::{Deserialize, Serialize};
 
@@ -40,12 +43,21 @@ pub(super) struct Run {
     pub profile: String,
     pub is_open: bool,
     pub created_at: i64,
+    pub participation_policy: ParticipationPolicy,
 }
 
 pub(super) fn routes(state: WorkspaceState) -> Router<WorkspaceState> {
     let writes = Router::new()
         .route("/api/admin/studies/{id}/runs", post(runs::create))
         .route("/api/admin/runs/{id}/close", post(runs::close))
+        .route(
+            "/api/admin/runs/{id}/invitations",
+            post(invitations::create).layer(DefaultBodyLimit::max(4096)),
+        )
+        .route(
+            "/api/admin/runs/{run_id}/invitations/{id}/revoke",
+            post(invitations::revoke),
+        )
         .route_layer(axum::middleware::from_fn_with_state(
             state.clone(),
             super::protect,
@@ -65,6 +77,7 @@ pub(super) fn routes(state: WorkspaceState) -> Router<WorkspaceState> {
         .merge(participant_writes)
         .route("/api/admin/studies/{id}/runs", get(runs::list))
         .route("/api/admin/runs/{id}/responses", get(handlers::list))
+        .route("/api/admin/runs/{id}/invitations", get(invitations::list))
         .route(
             "/api/admin/runs/{run_id}/responses/{id}/response.json",
             get(handlers::export),
@@ -123,6 +136,7 @@ async fn evaluate(
     definition: Definition,
     answers: Answers,
     submit: bool,
+    profile: String,
 ) -> Result<Snapshot, AppError> {
     let permit = state.imports.clone().try_acquire_owned().map_err(|_| {
         AppError::new(
@@ -133,7 +147,7 @@ async fn evaluate(
     })?;
     tokio::task::spawn_blocking(move || {
         let _permit = permit;
-        let runtime = Questionnaire::compile(&definition).map_err(invalid)?;
+        let runtime = Questionnaire::compile_profile(&definition, &profile).map_err(invalid)?;
         runtime.evaluate(&answers, submit).map_err(invalid)
     })
     .await

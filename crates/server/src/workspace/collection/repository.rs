@@ -72,6 +72,10 @@ fn run_row(row: &QueryResult) -> Result<Run, AppError> {
         profile: row.try_get("", "profile")?,
         is_open: row.try_get("", "is_open")?,
         created_at: row.try_get("", "created_at")?,
+        participation_policy: serde_json::from_str(
+            &row.try_get::<String>("", "participation_policy")?,
+        )
+        .map_err(|_| AppError::internal())?,
     })
 }
 
@@ -87,6 +91,7 @@ pub(super) async fn run(connection: &impl ConnectionTrait, id: &str) -> Result<R
                     "profile",
                     "is_open",
                     "created_at",
+                    "participation_policy",
                 ])
                 .from("runs")
                 .and_where(Expr::col("id").eq(id))
@@ -109,6 +114,7 @@ pub(super) async fn runs(state: &WorkspaceState, id: &str) -> Result<Vec<Run>, A
                     "profile",
                     "is_open",
                     "created_at",
+                    "participation_policy",
                 ])
                 .from("runs")
                 .and_where(Expr::col("study_id").eq(id))
@@ -159,6 +165,7 @@ pub(super) async fn authorized(
     if !access::same_hash(&response.access_hash, hash) {
         return Err(missing());
     }
+    super::participation::authorize_response(&state.database, id, state.runtime.now()?).await?;
     find(&state.database, id).await?.ok_or_else(missing)
 }
 

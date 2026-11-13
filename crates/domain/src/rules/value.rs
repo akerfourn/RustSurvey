@@ -28,7 +28,7 @@ impl EvaluationBudget {
         Self { remaining: units }
     }
 
-    pub(super) fn charge(&mut self, units: usize) -> Result<(), &'static str> {
+    pub(crate) fn charge(&mut self, units: usize) -> Result<(), &'static str> {
         self.remaining = self
             .remaining
             .checked_sub(units)

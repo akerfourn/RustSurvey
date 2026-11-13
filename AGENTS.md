@@ -29,11 +29,12 @@ enregistrées et bloque les anciennes conditions contradictoires. Le format nati
 v3 est commun aux créations et imports ; convertir explicitement les v1/v2 sans
 réécrire les révisions historiques. Lire le
 [périmètre de l’éditeur](docs/authoring.md) avant une modification de ces
-fonctions. La [collecte native](docs/collection.md) couvre désormais 17 types,
+fonctions. La [collecte native](docs/collection.md) couvre désormais 28 types,
 une campagne figée, la validation Rust, les réponses SQL et la reprise privée.
-Les imports LimeSurvey, les autres types et les transferts restent à compléter.
-Lire ce périmètre avant de modifier la collecte. Pour les futurs médias et
-fichiers, suivre la
+Les [règles de participation](docs/participation.md) couvrent cookies,
+invitations, limites d’usage et corrections autorisées. Les imports LimeSurvey,
+les fichiers et les transferts restent à compléter. Lire ce périmètre avant de
+modifier la collecte. Pour les futurs médias et fichiers, suivre la
 [décision de stockage objet](docs/decisions/0002-object-storage.md) : port
 commun, adaptateurs SQL, fichiers locaux et mémoire pour les tests ; S3 reste à
 ajouter. Le [stockage local](docs/local-storage.md) décrit `.data/`, les
@@ -69,8 +70,8 @@ le métier ni servir directement les répertoires privés.
 - Ne pas ajouter Redis, une file de tâches, un runtime Node en production ou un
   autre service sans besoin démontré et décision documentée.
 - Éviter l’état de session non borné en mémoire et les sessions attachées à un
-  processus. Le modèle de reprise est documenté ; sa mise en œuvre et ses tests
-  restent à réaliser.
+  processus. La reprise native est documentée et testée ; la continuité des
+  reprises migrées reste à réaliser.
 - Justifier les dépendances ajoutées et leurs options dans la décision technique
   concernée ; désactiver les fonctions inutilisées lorsque possible.
 - Versionner les lockfiles. Ne pas les régénérer sans raison liée au changement.

@@ -14,13 +14,31 @@ pub(super) fn token_hash(headers: &HeaderMap) -> Result<String, AppError> {
         .and_then(|header| header.to_str().ok())
         .and_then(|header| header.strip_prefix("Bearer "))
         .ok_or_else(missing)?;
-    if authorization.next().is_some()
-        || token.len() != 64
-        || !token.bytes().all(|byte| byte.is_ascii_hexdigit())
-    {
+    if authorization.next().is_some() {
+        return Err(missing());
+    }
+    secret_hash(token)
+}
+
+pub(super) fn secret_hash(token: &str) -> Result<String, AppError> {
+    if token.len() != 64 || !token.bytes().all(|byte| byte.is_ascii_hexdigit()) {
         return Err(missing());
     }
     Ok(digest(token.as_bytes()))
+}
+
+pub(super) fn invitation_hash(headers: &HeaderMap) -> Result<Option<String>, AppError> {
+    let mut values = headers.get_all("X-Participation-Token").iter();
+    let Some(value) = values.next() else {
+        return Ok(None);
+    };
+    if values.next().is_some() {
+        return Err(super::participation::denied());
+    }
+    let token = value.to_str().map_err(|_| super::participation::denied())?;
+    secret_hash(token)
+        .map(Some)
+        .map_err(|_| super::participation::denied())
 }
 
 pub(super) fn same_hash(left: &str, right: &str) -> bool {

@@ -22,7 +22,7 @@ export interface RuntimeQuestion {
   relevance: Expression[];
   constraints: Map<string, Expression>;
   subquestionRules: Map<string, Expression>;
-  filters: { sourceId: string; code: string; exclude: boolean }[];
+  filters: { sourceId: string; code: string; exclude: boolean; selections: ReadonlySet<string> }[];
   equation: Expression | null;
   issues: string[];
 }
@@ -281,7 +281,7 @@ export function evaluateSnapshot(runtime: SurveyRuntime, answers: Answers): Snap
           if (row.scale === 0)
             for (const filter of question.filters) {
               const field = `${filter.code}_${row.code}`;
-              if (!runtime.fields.has(field)) continue;
+              if (!filter.selections.has(field)) continue;
               const selected = effective.get(field) === "Y";
               if (selected === filter.exclude) filtered = true;
             }

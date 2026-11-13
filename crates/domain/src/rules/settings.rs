@@ -123,7 +123,11 @@ pub(super) fn validate(
         if question.kind == QuestionKind::NumberMatrix {
             invalid_step = step.is_some_and(|step| step < 1e-10);
         }
-        if min.zip(max).is_some_and(|(min, max)| max < min) || invalid_step {
+        let invalid_span = min
+            .zip(max)
+            .zip(step)
+            .is_some_and(|((min, max), step)| !((max - min) / step).is_finite());
+        if min.zip(max).is_some_and(|(min, max)| max < min) || invalid_step || invalid_span {
             issues.push(ValidationIssue {
                 path: format!("{path}.attributes"),
                 message:

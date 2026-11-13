@@ -6,6 +6,7 @@ mod m20261111_000001_authoring;
 mod m20261111_000002_import_sources;
 mod m20261113_000003_media;
 mod m20261113_000004_collection;
+mod m20261113_000005_participation;
 
 pub struct Migrator;
 
@@ -17,6 +18,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20261111_000002_import_sources::Migration),
             Box::new(m20261113_000003_media::Migration),
             Box::new(m20261113_000004_collection::Migration),
+            Box::new(m20261113_000005_participation::Migration),
         ]
     }
 }

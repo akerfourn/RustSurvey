@@ -121,6 +121,11 @@ export function prepareRules(
             sourceId: source.id,
             code,
             exclude: item.name === "array_filter_exclude",
+            selections: new Set(
+              study.subquestions
+                .filter((row) => row.parentId === source.id && row.scale === 0)
+                .map((row) => `${code}_${row.code}`),
+            ),
           });
       }
     } else if (TEXT_ATTRIBUTES.has(item.name) || isPassiveAttribute(item.name)) {
@@ -133,7 +138,12 @@ export function prepareRules(
     const min = Number(attribute(question.source, "slider_min") || "0");
     const max = Number(attribute(question.source, "slider_max") || "100");
     const step = Number(attribute(question.source, "slider_accuracy") || "1");
-    if (![min, max, step].every(Number.isFinite) || max < min || step <= 0)
+    if (
+      ![min, max, step].every(Number.isFinite) ||
+      max < min ||
+      step <= 0 ||
+      !Number.isFinite((max - min) / step)
+    )
       question.issues.push("Intervalle de curseur invalide.");
   }
   if (question.source.sourceType === "*") {
