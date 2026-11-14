@@ -6,8 +6,9 @@ interface Props {
   revision: number | null;
   label: string;
   onExpired: () => void;
+  native?: boolean;
 }
-export function LssDownload({ id, revision, label, onExpired }: Props) {
+export function LssDownload({ id, revision, label, onExpired, native = false }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const request = useRef<AbortController | null>(null);
@@ -19,13 +20,14 @@ export function LssDownload({ id, revision, label, onExpired }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const blob = await downloadLss(id, revision, controller.signal);
+      const blob = await downloadLss(id, revision, controller.signal, native);
       if (controller.signal.aborted) return;
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
       link.download = `original-${id}.lss`;
       if (revision !== null) link.download = `modified-${id}-r${revision}.lss`;
+      if (native) link.download = `survey-${id}-r${revision}.lss`;
       document.body.append(link);
       link.click();
       link.remove();

@@ -243,15 +243,26 @@ export async function downloadLss(
   id: string,
   revision: number | null,
   signal: AbortSignal,
+  native = false,
 ): Promise<Blob> {
   let path = `/api/admin/studies/${encodeURIComponent(id)}/original.lss`;
   if (revision !== null)
     path = `/api/admin/studies/${encodeURIComponent(id)}/revisions/${revision}/modified.lss`;
+  if (native && revision !== null)
+    path = `/api/admin/studies/${encodeURIComponent(id)}/revisions/${revision}/definition.lss`;
   const response = await fetch(path, { credentials: "same-origin", cache: "no-store", signal });
   if (!response.ok) {
     let reason: string;
     try {
-      reason = text(object(object(await response.json()).error).message);
+      const error = object(object(await response.json()).error);
+      reason = text(error.message);
+      if (Array.isArray(error.issues)) {
+        const details = error.issues.slice(0, 10).map((issue) => {
+          const item = object(issue);
+          return `${text(item.path)} : ${text(item.message)}`;
+        });
+        if (details.length > 0) reason += ` ${details.join(" ")}`;
+      }
     } catch {
       reason = "Le serveur a refusé le téléchargement du LSS.";
     }

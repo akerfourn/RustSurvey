@@ -30,9 +30,19 @@ importable ou archivé ne prouve pas que ses règles et reprises sont exécutabl
 [`crates/limesurvey`](../crates/limesurvey/README.md) : lecture bornée, modèle
 source du schéma 623, diagnostics, export original et édition d’un titre. Un
 [viewer avec moteur local partiel](viewer.md) permet la saisie dans le
-navigateur. La persistance métier, les archives et le moteur de validation
-serveur restent à implémenter ; l’échange avec une instance 6.5.14 reste à
-certifier.
+navigateur. La collecte native possède maintenant validation Rust, réponses SQL,
+reprise et invitations. Un [profil importé](import-execution.md) ouvre des
+campagnes neuves qualifiées. Les archives et la continuité des anciennes
+participations restent à implémenter ; cette continuité est différée à la
+demande du porteur du projet.
+
+L'export LSS des créations natives est disponible depuis leur historique et le
+CLI. Un [aller-retour réel dans LimeSurvey 6.5.14](limesurvey-reference.md)
+vérifie la structure et les cellules des 28 types sans fichiers en deux langues.
+Il vérifie aussi l'import de deux réponses VV dans deux études dont les
+identifiants diffèrent. L'[échange des réponses](response-exchange.md) distingue
+ces garanties des transferts complets et des limites du LSR amont. Ce corpus ne
+certifie pas tous les réglages ni l'exécution des formulaires.
 
 La parité des formulaires natifs est la cible, au-delà des seuls exports déjà
 essayés. L’[audit de couverture](form-coverage.md) et le

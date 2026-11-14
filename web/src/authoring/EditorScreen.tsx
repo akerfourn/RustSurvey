@@ -32,7 +32,10 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
   const [preview, setPreview] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const writing = editor.saving || restoring;
-  const study = useMemo(() => toViewer(editor.definition, id), [editor.definition, id]);
+  const study = useMemo(
+    () => toViewer(editor.definition, id, editor.source !== null),
+    [editor.definition, id, editor.source],
+  );
   function handleSave(): void {
     void editor.save();
   }
@@ -116,14 +119,16 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
     );
   let history = null;
   let collection = null;
-  if (id !== null && editor.ready && editor.source === null && session.csrfToken !== null)
+  if (id !== null && editor.ready && session.csrfToken !== null)
     collection = (
       <RunManager
+        key={id}
         studyId={id}
         revision={editor.revision}
         csrf={session.csrfToken}
         disabled={editor.dirty || writing}
         onExpired={handleExpired}
+        imported={editor.source !== null}
       />
     );
   if (id !== null && editor.ready)
@@ -184,6 +189,7 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
       <ImportDetails
         id={id}
         source={editor.source}
+        csrf={session.csrfToken}
         revision={editor.revision}
         onExpired={handleExpired}
       />

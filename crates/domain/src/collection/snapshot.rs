@@ -4,25 +4,57 @@ use crate::{
     rules::{EvaluationBudget, Scalar},
 };
 
+struct DefaultContext<'a> {
+    language: &'a str,
+    questions: Option<&'a BTreeSet<String>>,
+    initialized: BTreeSet<String>,
+}
+
 pub(super) fn evaluate(
     runtime: &Questionnaire,
     answers: &Answers,
     submit: bool,
+) -> Result<Snapshot, Vec<ValidationIssue>> {
+    evaluate_context(
+        runtime,
+        answers,
+        submit,
+        &runtime.definition.language,
+        None,
+        true,
+        &mut EvaluationBudget::default(),
+    )
+}
+
+pub(super) fn evaluate_context(
+    runtime: &Questionnaire,
+    answers: &Answers,
+    submit: bool,
+    language: &str,
+    initialize: Option<&BTreeSet<String>>,
+    validate: bool,
+    budget: &mut EvaluationBudget,
 ) -> Result<Snapshot, Vec<ValidationIssue>> {
     check_answers(runtime, answers)?;
     let mut effective = answers.clone();
     let mut relevant = BTreeSet::new();
     let mut active = BTreeSet::new();
     let mut visible_groups = BTreeSet::new();
-    let mut budget = EvaluationBudget::default();
+    let mut selections = super::filters::SelectionCache::new();
+    let mut defaults = DefaultContext {
+        language,
+        questions: initialize,
+        initialized: BTreeSet::new(),
+    };
     for index in &runtime.order {
         let question = &runtime.questions[*index];
         let result = apply(
             question,
             &mut effective,
             &mut active,
-            &mut budget,
-            &runtime.definition.language,
+            budget,
+            &mut selections,
+            &mut defaults,
         );
         match result {
             Ok(true) => {
@@ -43,12 +75,19 @@ pub(super) fn evaluate(
         .filter(|group| visible_groups.contains(&group.id))
         .map(|group| group.id.clone())
         .collect();
+    defaults
+        .initialized
+        .retain(|key| effective.contains_key(key));
     let mut snapshot = Snapshot {
         answers: effective,
         relevant,
         groups,
         warnings: Vec::new(),
+        initialized: defaults.initialized,
     };
+    if !validate {
+        return Ok(snapshot);
+    }
     let mut errors = Vec::new();
     for question in &runtime.questions {
         if snapshot.relevant.contains(&question.source.id) {
@@ -58,7 +97,7 @@ pub(super) fn evaluate(
                 &mut snapshot,
                 submit,
                 &runtime.definition,
-                &mut budget,
+                budget,
                 &mut errors,
             );
         }
@@ -103,7 +142,8 @@ fn apply(
     answers: &mut Answers,
     active: &mut BTreeSet<String>,
     budget: &mut EvaluationBudget,
-    language: &str,
+    selections: &mut super::filters::SelectionCache,
+    defaults: &mut DefaultContext<'_>,
 ) -> Result<bool, &'static str> {
     for expression in &question.relevance {
         if !evaluate_rule(expression, answers, budget)?.truth() {
@@ -113,30 +153,36 @@ fn apply(
             return Ok(false);
         }
     }
+    if defaults
+        .questions
+        .is_some_and(|ids| ids.contains(&question.source.id))
+    {
+        defaults.initialized.extend(
+            question
+                .defaults
+                .apply(answers, defaults.language, budget)?,
+        );
+    }
     if question.source.kind == QuestionKind::Language
         && answers
             .get(&question.source.code)
             .is_none_or(String::is_empty)
     {
-        answers.insert(question.source.code.clone(), language.to_owned());
+        answers.insert(question.source.code.clone(), defaults.language.to_owned());
     }
-    for cell in &question.cells {
+    let rank_count = super::filters::apply_choices(question, answers, selections, budget)?;
+    for (index, cell) in question.cells.iter().enumerate() {
         let mut enabled = true;
+        if rank_count.is_some_and(|count| index >= count) {
+            enabled = false;
+        }
         for expression in &cell.relevance {
             if !evaluate_rule(expression, answers, budget)?.truth() {
                 enabled = false;
             }
         }
         if let Some(row) = &cell.row {
-            for filter in &question.filters {
-                budget.charge(1)?;
-                let field = format!("{}_{row}", filter.code);
-                if filter.selections.contains(&field)
-                    && answers.get(&field).is_some_and(|value| value == "Y") == filter.exclude
-                {
-                    enabled = false;
-                }
-            }
+            enabled &= super::filters::allows(&question.filters, row, answers, selections, budget)?;
         }
         if cell.other
             && matches!(
@@ -148,23 +194,15 @@ fn apply(
                 .get(&question.source.code)
                 .is_some_and(|value| value == "-oth-");
         }
-        if cell.comment && question.source.kind == QuestionKind::MultipleChoiceComment {
-            let selection = cell.key.strip_suffix("comment").unwrap_or(&cell.key);
-            let selected = answers
-                .get(selection)
-                .is_some_and(|value| !value.is_empty());
-            match attribute(&question.source, "commented_checkbox") {
-                "" | "checked" => enabled &= selected,
-                "unchecked" => enabled &= !selected,
-                _ => {}
-            }
-        }
         if enabled {
             active.insert(cell.key.clone());
         } else {
             answers.remove(&cell.key);
         }
     }
+    super::exclusive::preserve_existing_selection(question, answers, active, &defaults.initialized);
+    super::exclusive::apply(question, answers, active)?;
+    super::exclusive::comments(question, answers, active);
     if let Some(expression) = &question.equation {
         let value = evaluate_rule(expression, answers, budget)?;
         let text = match value {

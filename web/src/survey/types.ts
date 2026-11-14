@@ -37,6 +37,7 @@ export interface SurveyGroup {
 }
 
 export interface SurveyQuestion {
+  defaults?: import("./defaults.ts").QuestionDefaults | null;
   id: string;
   groupId: string;
   code: string;
@@ -75,11 +76,12 @@ export interface SurveyChoice {
 }
 
 export interface SurveyStudy {
+  origin?: "native" | "limesurvey";
   surveyId: string | null;
   baseLanguage: string | null;
   languages: string[];
   titles: LocalizedTitle[];
-  showWelcome: boolean;
+  showWelcome: boolean | null;
   messages: SurveyMessages[];
   groups: SurveyGroup[];
   questions: SurveyQuestion[];
@@ -102,6 +104,14 @@ export interface Diagnostic {
 }
 
 export interface InspectionReport {
+  defaultProjection?: {
+    profile: "source-defaults-v1";
+    status: "complete" | "partial";
+    projectedValues: number;
+    sourceValues: number;
+    issueCount: number;
+    issues: { path: string; message: string }[];
+  };
   sourceSchema: number;
   targetSchema: number;
   errors: number;

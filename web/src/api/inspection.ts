@@ -150,11 +150,12 @@ function choice(value: unknown): SurveyChoice {
 function study(value: unknown): SurveyStudy {
   const item = record(value);
   return {
+    origin: "limesurvey",
     surveyId: nullable(item.surveyId),
     baseLanguage: nullable(item.baseLanguage),
     languages: array(item.languages, string),
     titles: array(item.titles, title),
-    showWelcome: boolean(item.showWelcome),
+    showWelcome: item.showWelcome === null ? null : boolean(item.showWelcome),
     messages: array(item.messages, surveyMessages),
     groups: array(item.groups, group),
     questions: array(item.questions, question),
@@ -195,7 +196,28 @@ export function decodeInspection(value: unknown): Inspection {
 
 export function decodeReport(value: unknown): InspectionReport {
   const report = record(value);
+  let defaultProjection: InspectionReport["defaultProjection"];
+  if (report.defaultProjection !== undefined) {
+    const projection = record(report.defaultProjection);
+    if (
+      projection.profile !== "source-defaults-v1" ||
+      (projection.status !== "complete" && projection.status !== "partial")
+    )
+      throw new Error("Profil de projection des défauts inconnu.");
+    defaultProjection = {
+      profile: projection.profile,
+      status: projection.status,
+      projectedValues: number(projection.projectedValues),
+      sourceValues: number(projection.sourceValues),
+      issueCount: number(projection.issueCount),
+      issues: array(projection.issues, (value) => {
+        const issue = record(value);
+        return { path: string(issue.path), message: string(issue.message) };
+      }),
+    };
+  }
   return {
+    ...(defaultProjection === undefined ? {} : { defaultProjection }),
     sourceSchema: number(report.sourceSchema),
     targetSchema: number(report.targetSchema),
     errors: number(report.errors),

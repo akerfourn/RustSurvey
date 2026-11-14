@@ -4,6 +4,8 @@ import { test } from "node:test";
 import { ApiError } from "../authoring/api.ts";
 import {
   getParticipation,
+  createRun,
+  createImportedRun,
   invitationFragment,
   resumeFragment,
   saveParticipation,
@@ -38,6 +40,127 @@ const stored = {
   createdAt: 100,
   updatedAt: 100,
 };
+
+test("test_imported_campaign_should_send_the_explicit_context_and_facts_without_native_policy_overrides", async () => {
+  const original = globalThis.fetch;
+  const navigation = { format: "group", showProgress: true } as const;
+  const facts = {
+    schemaVersion: 1,
+    surveyId: "701",
+    hasParticipantsTable: false,
+    deleteNonValues: true,
+    showNoAnswer: true,
+    effectiveTheme: "vanilla",
+    activePlugins: 0,
+    timeZone: "UTC",
+    timeAdjust: "0",
+  } as const;
+  const controller = new AbortController();
+  let body: unknown;
+  globalThis.fetch = async (_input, options = {}) => {
+    body = JSON.parse(String(options.body));
+    assert.equal(new Headers(options.headers).get("x-csrf-token"), "synthetic-csrf");
+    assert.equal(options.signal, controller.signal);
+    return Response.json({ ...run, profile: "native-pages-v1", navigation });
+  };
+  try {
+    const result = await createImportedRun(
+      id,
+      1,
+      "synthetic-csrf",
+      runId,
+      facts,
+      controller.signal,
+    );
+    assert.deepEqual(result.navigation, navigation);
+    assert.deepEqual(body, { expectedRevision: 1, sourceExecution: { contextId: runId, facts } });
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("test_native_page_campaign_should_send_frozen_settings_and_decode_the_exact_question_cursor", async () => {
+  const original = globalThis.fetch;
+  const navigation = { format: "question", showProgress: false } as const;
+  const pageRun = { ...run, profile: "native-pages-v1", navigation };
+  const page = { language: "en", groupId: "details", pageId: "q:age" };
+  let body: unknown;
+  globalThis.fetch = async (_input, options = {}) => {
+    if (options.method === "POST") {
+      body = JSON.parse(String(options.body));
+      return Response.json(pageRun);
+    }
+    return Response.json({ ...stored, run: pageRun, checkpoint: page });
+  };
+  try {
+    assert.deepEqual(
+      (await createRun(id, 1, "synthetic-csrf", { mode: "open" }, navigation)).navigation,
+      navigation,
+    );
+    assert.deepEqual(body, {
+      expectedRevision: 1,
+      participationPolicy: { mode: "open" },
+      navigation,
+    });
+    const resumed = await getParticipation(id, token);
+    assert.deepEqual(resumed.checkpoint, page);
+    assert.deepEqual(resumed.run.navigation, navigation);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("test_campaign_decoder_should_refuse_unknown_profiles_or_mismatched_navigation_without_fallbacks", async () => {
+  const original = globalThis.fetch;
+  try {
+    for (const override of [
+      { profile: "native-pages-v1", navigation: null },
+      { profile: "native-defaults-v1", navigation: null },
+      { profile: "future-profile", navigation: null },
+      { profile: "native-forms-v1", navigation: { format: "all", showProgress: true } },
+      { profile: "native-pages-v1", navigation: { format: "unknown", showProgress: true } },
+      {
+        profile: "native-pages-v1",
+        navigation: { format: "all", showProgress: true, allowPrevious: false },
+      },
+    ]) {
+      globalThis.fetch = async () => Response.json({ ...stored, run: { ...run, ...override } });
+      await assert.rejects(
+        getParticipation(id, token),
+        /Présentation de campagne invalide|Profil de campagne incompatible/,
+      );
+    }
+    globalThis.fetch = async () => Response.json(stored);
+    const legacy = await getParticipation(id, token);
+    assert.equal(legacy.run.navigation, null);
+    assert.deepEqual(legacy.checkpoint, checkpoint);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("test_default_campaign_should_decode_its_pinned_profile_and_initialized_answers", async () => {
+  const original = globalThis.fetch;
+  globalThis.fetch = async () =>
+    Response.json({
+      ...stored,
+      run: {
+        ...run,
+        profile: "native-defaults-v1",
+        navigation: { format: "question", showProgress: true },
+      },
+      answers: { GATE: "Y" },
+      checkpoint: { ...checkpoint, pageId: "q:gate" },
+    });
+  try {
+    const result = await getParticipation(id, token);
+    assert.equal(result.run.profile, "native-defaults-v1");
+    assert.deepEqual(result.answers, { GATE: "Y" });
+    assert.equal(result.checkpoint.pageId, "q:gate");
+  } finally {
+    globalThis.fetch = original;
+  }
+});
 
 test("test_start_and_resume_should_keep_the_secret_in_authorization_and_out_of_http_urls_and_bodies", async () => {
   const original = globalThis.fetch;

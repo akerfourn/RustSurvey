@@ -112,7 +112,7 @@ pub(super) fn validate(
     }
 }
 
-fn validate_value(
+pub(super) fn validate_value(
     question: &PreparedQuestion,
     cell: &Cell,
     value: &str,

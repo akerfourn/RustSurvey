@@ -1,6 +1,8 @@
 import { ApiError, object, request, write } from "../authoring/api.ts";
 import { decodeDefinition } from "../authoring/definition-codec.ts";
 import type { Definition, ValidationIssue } from "../authoring/model.ts";
+import { decodeNavigation, type NavigationSettings } from "../survey/navigation.ts";
+import type { SourceRuntimeFacts } from "./source-runtime.ts";
 
 export interface Run {
   id: string;
@@ -10,6 +12,7 @@ export interface Run {
   isOpen: boolean;
   createdAt: number;
   participationPolicy: ParticipationPolicy;
+  navigation: NavigationSettings | null;
 }
 
 export type ParticipationPolicy =
@@ -20,6 +23,7 @@ export type ParticipationPolicy =
 export interface Checkpoint {
   language: string;
   groupId: string | null;
+  pageId?: string;
 }
 
 export interface RunDefinition {
@@ -75,7 +79,9 @@ function checkpoint(value: unknown): Checkpoint {
   const item = object(value);
   let groupId: string | null = null;
   if (item.groupId !== null) groupId = text(item.groupId);
-  return { language: text(item.language), groupId };
+  const result: Checkpoint = { language: text(item.language), groupId };
+  if (item.pageId !== undefined) result.pageId = text(item.pageId);
+  return result;
 }
 function policy(value: unknown): ParticipationPolicy {
   const item = object(value);
@@ -96,14 +102,26 @@ function policy(value: unknown): ParticipationPolicy {
 function run(value: unknown): Run {
   const item = object(value);
   if (typeof item.isOpen !== "boolean") throw new Error("État de campagne invalide.");
+  const profile = text(item.profile);
+  let navigation: NavigationSettings | null = null;
+  if (item.navigation !== null && item.navigation !== undefined)
+    navigation = decodeNavigation(item.navigation);
+  const legacy = ["native-simple-v1", "native-forms-v1"].includes(profile);
+  if (
+    (legacy && navigation !== null) ||
+    (!legacy &&
+      (!["native-pages-v1", "native-defaults-v1"].includes(profile) || navigation === null))
+  )
+    throw new Error("Profil de campagne incompatible avec sa présentation.");
   return {
     id: text(item.id),
     studyId: text(item.studyId),
     revision: integer(item.revision),
-    profile: text(item.profile),
+    profile,
     isOpen: item.isOpen,
     createdAt: integer(item.createdAt),
     participationPolicy: policy(item.participationPolicy),
+    navigation,
   };
 }
 function participation(value: unknown): Participation {
@@ -238,17 +256,34 @@ export async function createRun(
   revision: number,
   csrf: string,
   participationPolicy: ParticipationPolicy = { mode: "open" },
+  navigation?: NavigationSettings,
 ): Promise<Run> {
   return run(
     await request(
       `/api/admin/studies/${encodeURIComponent(id)}/runs`,
-      write("POST", { expectedRevision: revision, participationPolicy }, csrf),
+      write("POST", { expectedRevision: revision, participationPolicy, navigation }, csrf),
     ),
   );
 }
 export async function closeRun(id: string, csrf: string): Promise<Run> {
   return run(
     await request(`/api/admin/runs/${encodeURIComponent(id)}/close`, write("POST", {}, csrf)),
+  );
+}
+
+export async function createImportedRun(
+  id: string,
+  revision: number,
+  csrf: string,
+  contextId: string,
+  facts: SourceRuntimeFacts,
+  signal?: AbortSignal,
+): Promise<Run> {
+  return run(
+    await request(`/api/admin/studies/${encodeURIComponent(id)}/runs`, {
+      ...write("POST", { expectedRevision: revision, sourceExecution: { contextId, facts } }, csrf),
+      signal: signal ?? null,
+    }),
   );
 }
 

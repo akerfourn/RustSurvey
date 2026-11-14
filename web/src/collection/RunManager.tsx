@@ -4,6 +4,9 @@ import type { ValidationIssue } from "../authoring/model.ts";
 import { createRun, listRuns, type ParticipationPolicy, type Run } from "./api.ts";
 import { RunCard } from "./RunCard.tsx";
 import { PolicyControl } from "./PolicyControl.tsx";
+import { NavigationControl } from "./NavigationControl.tsx";
+import type { NavigationSettings } from "../survey/navigation.ts";
+import { ImportedRunCreation } from "./ImportedRunCreation.tsx";
 
 interface RunManagerProps {
   studyId: string;
@@ -11,14 +14,26 @@ interface RunManagerProps {
   csrf: string;
   disabled: boolean;
   onExpired: () => void;
+  imported?: boolean;
 }
 
-export function RunManager({ studyId, revision, csrf, disabled, onExpired }: RunManagerProps) {
+export function RunManager({
+  studyId,
+  revision,
+  csrf,
+  disabled,
+  onExpired,
+  imported = false,
+}: RunManagerProps) {
   const [runs, setRuns] = useState<Run[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
   const [policy, setPolicy] = useState<ParticipationPolicy>({ mode: "open" });
+  const [navigation, setNavigation] = useState<NavigationSettings>({
+    format: "group",
+    showProgress: true,
+  });
   useEffect(() => {
     const controller = new AbortController();
     async function load(): Promise<void> {
@@ -38,7 +53,7 @@ export function RunManager({ studyId, revision, csrf, disabled, onExpired }: Run
     setError(null);
     setIssues([]);
     try {
-      const run = await createRun(studyId, revision, csrf, policy);
+      const run = await createRun(studyId, revision, csrf, policy, navigation);
       setRuns((previous) => [run, ...previous].slice(0, 50));
     } catch (cause) {
       setError(message(cause));
@@ -61,6 +76,34 @@ export function RunManager({ studyId, revision, csrf, disabled, onExpired }: Run
       }),
     );
   }
+  function handleCreated(run: Run): void {
+    setRuns((previous) => [run, ...previous.filter((item) => item.id !== run.id)].slice(0, 50));
+  }
+  let creationControls = (
+    <>
+      <PolicyControl disabled={disabled || busy} onChange={setPolicy} />
+      <NavigationControl
+        settings={navigation}
+        disabled={disabled || busy}
+        onChange={setNavigation}
+      />
+      <button type="button" onClick={handleCreate} disabled={disabled || busy}>
+        Ouvrir une campagne sur la version enregistrée
+      </button>
+    </>
+  );
+  if (imported)
+    creationControls = (
+      <ImportedRunCreation
+        key={`${studyId}:${revision}`}
+        studyId={studyId}
+        revision={revision}
+        csrf={csrf}
+        disabled={disabled}
+        onCreated={handleCreated}
+        onExpired={onExpired}
+      />
+    );
   let errorContent = null;
   if (error !== null)
     errorContent = (
@@ -86,10 +129,7 @@ export function RunManager({ studyId, revision, csrf, disabled, onExpired }: Run
         calculs. Les médias, quotas et règles non pris en charge bloquent l’ouverture avec un
         diagnostic.
       </p>
-      <PolicyControl disabled={disabled || busy} onChange={setPolicy} />
-      <button type="button" onClick={handleCreate} disabled={disabled || busy}>
-        Ouvrir une campagne sur la version enregistrée
-      </button>
+      {creationControls}
       {errorContent}
       <ul>{issueItems}</ul>
       {cards}

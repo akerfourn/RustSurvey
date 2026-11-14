@@ -3,7 +3,28 @@ import { attribute, isCheckboxMatrix } from "./attributes.ts";
 import { isChoiceArray, isMatrix, choiceCodes, isBaseTheme } from "./question-kinds.ts";
 import { matrixOptions, matrixInputBounds } from "./matrix-options.ts";
 import { prepareRules, variableName } from "./runtime-rules.ts";
+import {
+  applyChoiceFilters,
+  filterAllows,
+  prepareFilters,
+  type ArrayFilter,
+  type SelectionCache,
+} from "./filters.ts";
+import {
+  applyComments,
+  applyExclusive,
+  parseExclusive,
+  preserveExistingExclusiveSelection,
+  type ExclusiveOptions,
+} from "./exclusive.ts";
 import { createCells, MAX_QUESTION_CELLS, MAX_SURVEY_CELLS, type ResponseCell } from "./cells.ts";
+import {
+  prepareDefaults,
+  applyDefaults,
+  checkInactiveDefaultReferences,
+  type RuntimeDefaults,
+} from "./runtime-defaults.ts";
+import type { DefaultBudget } from "./default-template.ts";
 import type {
   Answers,
   SurveyChoice,
@@ -22,9 +43,11 @@ export interface RuntimeQuestion {
   relevance: Expression[];
   constraints: Map<string, Expression>;
   subquestionRules: Map<string, Expression>;
-  filters: { sourceId: string; code: string; exclude: boolean; selections: ReadonlySet<string> }[];
+  filters: ArrayFilter[];
   equation: Expression | null;
   issues: string[];
+  exclusive: ExclusiveOptions;
+  defaults: RuntimeDefaults | null;
 }
 
 export interface SurveyRuntime {
@@ -37,11 +60,14 @@ export interface SurveyRuntime {
 }
 
 export interface Snapshot {
+  initialized: Set<string>;
   answers: Map<string, string>;
   visible: Set<string>;
   relevant: Set<string>;
   activeFields: Set<string>;
   visibleSubquestions: Set<string>;
+  visibleOther: Set<string>;
+  activeChoices: Map<string, ReadonlySet<string>>;
   groups: SurveyGroup[];
   issues: string[];
 }
@@ -146,6 +172,12 @@ function prepareQuestion(study: SurveyStudy, question: SurveyQuestion): RuntimeQ
       issues.push(errorMessage(error));
     }
   }
+  let exclusive: ExclusiveOptions = { fields: new Set(), automatic: false };
+  try {
+    exclusive = parseExclusive(question, subquestions);
+  } catch (error) {
+    issues.push(errorMessage(error));
+  }
   return {
     source: question,
     subquestions,
@@ -158,6 +190,8 @@ function prepareQuestion(study: SurveyStudy, question: SurveyQuestion): RuntimeQ
     filters: [],
     equation: null,
     issues,
+    exclusive,
+    defaults: null,
   };
 }
 
@@ -177,6 +211,12 @@ function sortDependencies(
         const owner = fields.get(variableName(variable));
         if (owner !== undefined) dependencies.add(owner);
       }
+    }
+    for (const name of question.defaults?.variables ?? []) {
+      const owner = fields.get(variableName(name));
+      if (owner === undefined)
+        question.issues.push("Variable inconnue dans une valeur par défaut.");
+      else if (owner !== id) dependencies.add(owner);
     }
     degrees.set(id, dependencies.size);
     for (const dependency of dependencies) {
@@ -229,6 +269,11 @@ export function createRuntime(study: SurveyStudy): SurveyRuntime {
     }
   }
   for (const question of questions.values()) {
+    try {
+      question.defaults = prepareDefaults(study, question);
+    } catch (error) {
+      question.issues.push(errorMessage(error));
+    }
     prepareRules(
       question,
       groups.find((group) => group.id === question.source.groupId),
@@ -236,6 +281,8 @@ export function createRuntime(study: SurveyStudy): SurveyRuntime {
       study,
     );
   }
+  prepareFilters(questions);
+  checkInactiveDefaultReferences(questions, fields);
   const order = sortDependencies(questions, fields);
   return { study, groups, questions, fields, order, issues };
 }
@@ -244,7 +291,17 @@ export function answerLookup(answers: Answers): Lookup {
   return (name) => answers.get(variableName(name)) ?? "";
 }
 
-export function evaluateSnapshot(runtime: SurveyRuntime, answers: Answers): Snapshot {
+export interface EvaluationContext {
+  language?: string;
+  initialize?: ReadonlySet<string> | undefined;
+  budget?: DefaultBudget;
+}
+
+export function evaluateSnapshot(
+  runtime: SurveyRuntime,
+  answers: Answers,
+  context: EvaluationContext = {},
+): Snapshot {
   const effective = new Map<string, string>();
   for (const [field, value] of answers) {
     if (runtime.fields.has(field)) effective.set(field, value);
@@ -253,7 +310,14 @@ export function evaluateSnapshot(runtime: SurveyRuntime, answers: Answers): Snap
   const relevant = new Set<string>();
   const activeFields = new Set<string>();
   const visibleSubquestions = new Set<string>();
+  const visibleOther = new Set<string>();
+  const activeChoices = new Map<string, ReadonlySet<string>>();
+  const selections: SelectionCache = new Map();
   const issues = [...runtime.issues];
+  const initialized = new Set<string>();
+  const language =
+    context.language ?? runtime.study.baseLanguage ?? runtime.study.languages[0] ?? "fr";
+  const budget = context.budget ?? { remaining: 1_000_000 };
   for (const id of runtime.order) {
     const question = runtime.questions.get(id);
     if (question === undefined) continue;
@@ -262,48 +326,58 @@ export function evaluateSnapshot(runtime: SurveyRuntime, answers: Answers): Snap
         truth(expression.evaluate(answerLookup(effective))),
       );
       if (isRelevant && question.issues.length === 0) {
+        if (context.initialize?.has(id) === true && question.defaults !== null)
+          applyDefaults(question.defaults, effective, language, initialized, budget);
         relevant.add(id);
         if (attribute(question.source, "hidden") !== "1") visible.add(id);
         if (
           question.source.sourceType === "I" &&
           (effective.get(question.source.code) ?? "") === ""
         ) {
-          effective.set(
-            question.source.code,
-            runtime.study.baseLanguage ?? runtime.study.languages[0] ?? "",
-          );
+          effective.set(question.source.code, language);
         }
+        const allowedChoices = applyChoiceFilters(question, effective, selections);
+        if (allowedChoices !== null) activeChoices.set(id, allowedChoices);
         const activeRows = new Set<string>();
         for (const row of question.subquestions) {
           const rule = question.subquestionRules.get(row.id);
           const enabled = rule === undefined || truth(rule.evaluate(answerLookup(effective)));
           let filtered = false;
           if (row.scale === 0)
-            for (const filter of question.filters) {
-              const field = `${filter.code}_${row.code}`;
-              if (!filter.selections.has(field)) continue;
-              const selected = effective.get(field) === "Y";
-              if (selected === filter.exclude) filtered = true;
-            }
+            filtered = !filterAllows(question.filters, row.code, effective, selections);
           if (enabled && !filtered) activeRows.add(row.id);
           if (enabled && (!filtered || attribute(question.source, "array_filter_style") === "1"))
             visibleSubquestions.add(row.id);
         }
-        for (const cell of question.cells) {
+        let otherActive = true;
+        if (["M", "P"].includes(question.source.sourceType))
+          otherActive = filterAllows(question.filters, "other", effective, selections);
+        if (question.source.sourceType === "L" && allowedChoices !== null)
+          otherActive = allowedChoices.has("-oth-");
+        if (
+          question.source.other &&
+          (otherActive || attribute(question.source, "array_filter_style") === "1")
+        )
+          visibleOther.add(id);
+        for (const [index, cell] of question.cells.entries()) {
           let active =
             (cell.rowId === null || activeRows.has(cell.rowId)) &&
             (cell.columnId === null || activeRows.has(cell.columnId));
+          if (question.source.sourceType === "R" && allowedChoices !== null)
+            active = active && index < allowedChoices.size;
+          if (
+            ["M", "P"].includes(question.source.sourceType) &&
+            (cell.role === "other" || cell.key === `${question.source.code}_othercomment`)
+          )
+            active = active && otherActive;
           if (cell.role === "other" && ["L", "!"].includes(question.source.sourceType))
             active = active && effective.get(question.source.code) === "-oth-";
-          if (cell.role === "comment" && question.source.sourceType === "P") {
-            const selection = cell.key.replace(/comment$/, "");
-            const mode = attribute(question.source, "commented_checkbox") || "checked";
-            if (mode === "checked") active = active && (effective.get(selection) ?? "") !== "";
-            if (mode === "unchecked") active = active && (effective.get(selection) ?? "") === "";
-          }
           if (active) activeFields.add(cell.key);
           else effective.delete(cell.key);
         }
+        preserveExistingExclusiveSelection(question, effective, activeFields, initialized);
+        applyExclusive(question, effective, activeFields);
+        applyComments(question, effective, activeFields);
         if (question.equation !== null) {
           effective.set(
             question.source.code,
@@ -326,14 +400,20 @@ export function evaluateSnapshot(runtime: SurveyRuntime, answers: Answers): Snap
       (question) => question.source.groupId === group.id && visible.has(question.source.id),
     ),
   );
+  for (const key of initialized) {
+    if (!effective.has(key)) initialized.delete(key);
+  }
   return {
     answers: effective,
     visible,
     relevant,
     activeFields,
     visibleSubquestions,
+    visibleOther,
+    activeChoices,
     groups,
     issues,
+    initialized,
   };
 }
 

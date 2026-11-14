@@ -10,11 +10,18 @@ l’administration, avec migrations SQL. Le premier profil de
 `operation_receipts`, avec réponses et checkpoint dans un document borné. Les
 [invitations natives](participation.md) ajoutent une politique de campagne, des
 compteurs et un lien vers la réponse seulement pour la reprise liée. Le
-[domaine natif de l’éditeur](authoring.md) v3 est commun aux créations et
+[domaine natif de l’éditeur](authoring.md) v4 est commun aux créations et
 imports : types, traductions, sous-questions, options et règles. La création
 visuelle propose 28 types ; les imports conservent le modèle de lecture complet
 et permettent l’édition des conditions de groupes/questions. Les autres concepts
 de ce document restent des décisions de conception.
+
+`source_settings_contexts` ajoute des contextes privés et immuables, liés à une
+révision et à l'empreinte du LSS original. Le profil de résolution et son
+résultat sont figés. Un bilan sélectionne un identifiant explicite ; le dépôt
+d'un autre contexte ne change ni définition ni campagne. Ce premier contexte
+couvre 30 options de groupes, sans prouver encore l'exécution ou la continuité.
+Voir les [garanties et limites](source-settings.md).
 
 Le modèle découle de l’[analyse du code 6.5.14](limesurvey-source-audit.md). Un
 export utilisateur enrichira les cas de validation ; il n’est pas un prérequis
@@ -60,6 +67,20 @@ chargement d’un fichier plus récent.
 `Run` est une campagne de collecte liée à une révision de définition. Elle porte
 ouverture, fermeture, dates d’accès et politique de participation. Sa vie
 opérationnelle est distincte de l’historique des réponses.
+
+Les campagnes natives `native-pages-v1` figent aussi `navigation` : format
+groupe/question/tout et progression. Leur checkpoint possède une identité de
+page indépendante des cellules. Les anciens profils gardent leur curseur par
+groupe et une navigation nulle. Voir la
+[décision 0012](decisions/0012-native-navigation.md).
+
+Une campagne importée qualifiée possède aussi un `execution_document` privé,
+limité à 8 Mio : définition dérivée, profils, paramètres et empreintes du LSS et
+du contexte explicitement choisi. Les révisions restent immuables. Les listes et
+transactions de réponses lisent seulement les métadonnées ; le décodage de la
+définition utilise les places de préparation bornées. Voir la
+[décision 0014](decisions/0014-import-execution-snapshots.md). Cette campagne
+collecte des participations neuves ; le transfert des anciennes est différé.
 
 La première conception fixe une révision par campagne. Une copie de travail ou
 un import reste en préparation ; l’ouverture est une transition explicite
@@ -138,6 +159,18 @@ présente lorsque la source les distingue. Les nombres et codes conservent leur
 représentation lexicale : pas de passage automatique par un flottant, pas de
 suppression de zéros initiaux. Les dates brutes et leur contexte temporel sont
 conservés avant toute interprétation UTC.
+
+Les coordonnées natives et leurs `FieldBinding` LSS sont maintenant calculées et
+testées contre la version cible. Elles reposent sur les identifiants de
+questions et d'axes du format natif, avec rôle et échelle distincts. Leur
+persistance dans un manifeste de transfert et la publication des réponses en
+participations restent à réaliser. La conversion réversible des cellules est
+disponible par ligne. Les correspondances des imports utilisent maintenant les
+identités source archivées. La [préparation LSR](response-imports.md) conserve
+schéma de colonnes et lignes lexicales dans `response_imports` et
+`response_import_records`, séparément des réponses natives. L'export VV couvre
+les campagnes natives fermées. Voir
+l'[échange des réponses](response-exchange.md).
 
 La fidélité du stockage ne fixe pas arbitrairement l’arithmétique du moteur :
 comparaisons, conversions et calculs doivent suivre le profil LimeSurvey retenu
@@ -222,9 +255,10 @@ réponses par lots ; il ne charge pas une étude entière en mémoire.
 Les tables `studies`, `definition_revisions`, `runs`, `responses` et
 `operation_receipts` sont présentes pour leur profil explicite. Les suivantes
 restent à réaliser : `answer_blocks`, `response_access`, `participants`,
-`transfer_batches` et les correspondances source. Le premier droit de reprise et
-le checkpoint sont stockés sur la ligne réponse ; une table par concept n’est
-pas imposée.
+`transfer_batches` et les correspondances qualifiées par installation. Les
+préparations de réponses LSR n'incarnent pas encore le transfert complet. Le
+premier droit de reprise et le checkpoint sont stockés sur la ligne réponse ;
+une table par concept n’est pas imposée.
 
 Les identifiants d’objets internes sont des UUID sous forme textuelle canonique.
 Les versions et compteurs utilisent des entiers ; les instants natifs utilisent

@@ -26,6 +26,16 @@ const SIMPLE_KINDS: readonly QuestionKind[] = [
   "information",
 ];
 
+test("imported welcome inheritance should remain unknown while native defaults stay local", () => {
+  const definition = createDefinition(ids());
+  definition.welcome = "Synthetic welcome";
+  definition.showWelcome = null;
+  assert.equal(toViewer(definition).showWelcome, true);
+  assert.equal(toViewer(definition, "imported", true).showWelcome, null);
+  definition.showWelcome = false;
+  assert.equal(toViewer(definition, "imported", true).showWelcome, false);
+});
+
 function ids(): () => string {
   let serial = 0;
   return () => `node-${++serial}`;

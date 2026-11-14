@@ -1,5 +1,5 @@
 use super::{
-    AppError, Checkpoint, Document, Run, WorkspaceState, access, closed, conflict,
+    AppError, Document, Run, WorkspaceState, access, closed, conflict,
     handlers::{Start, Update},
     participation,
     repository::{self, ResponseAccess, StoredResponse},
@@ -60,7 +60,7 @@ pub(super) async fn start(
     run: &Run,
     input: &Start,
     hash: &str,
-    group_id: Option<String>,
+    document: Document,
     invitation_hash: Option<&str>,
     browser_completed: bool,
 ) -> Result<String, AppError> {
@@ -92,13 +92,6 @@ pub(super) async fn start(
     {
         return Ok(id.clone());
     }
-    let document = Document {
-        answers: Default::default(),
-        checkpoint: Checkpoint {
-            language: input.language.clone(),
-            group_id,
-        },
-    };
     let document = serde_json::to_string(&document).map_err(|_| AppError::internal())?;
     let now = state.runtime.now()?;
     transaction
@@ -113,6 +106,7 @@ pub(super) async fn start(
                     "version",
                     "status",
                     "document",
+                    "initial_language",
                     "created_at",
                     "updated_at",
                 ])
@@ -124,6 +118,7 @@ pub(super) async fn start(
                     0_i64.into(),
                     "draft".into(),
                     document.into(),
+                    input.language.clone().into(),
                     now.into(),
                     now.into(),
                 ])?,

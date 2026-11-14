@@ -1011,8 +1011,8 @@
           },
           {
             "id": "forms74",
-            "code": "LANG",
-            "title": "LANG",
+            "code": "LANGUAGE",
+            "title": "LANGUAGE",
             "help": "",
             "kind": "language",
             "mandatory": "strict",
@@ -1111,7 +1111,7 @@
       "TXT_A2_B2": "texte",
       "R_1": "01",
       "R_2": "02",
-      "LANG": "fr",
+      "LANGUAGE": "fr",
       "CALC": "forged"
     },
     "expected": {
@@ -1162,7 +1162,7 @@
       "TXT_A2_B2": "texte",
       "R_1": "01",
       "R_2": "02",
-      "LANG": "fr",
+      "LANGUAGE": "fr",
       "CALC": "10"
     }
   },
@@ -1176,7 +1176,7 @@
       "answers": {},
       "submit": false,
       "expected": {
-        "LANG": "fr",
+        "LANGUAGE": "fr",
         "CALC": "0"
       },
       "base": false

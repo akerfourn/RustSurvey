@@ -1,16 +1,42 @@
 //! Bounded LimeSurvey XML inspection and lossless preservation of original files.
 
+mod default_projection;
 mod error;
+mod execution;
+mod import_execution;
 mod model;
+mod native;
 mod report;
+mod response_projection;
+mod responses;
+mod settings;
+mod source_bindings;
 mod structure;
+mod vv;
 mod xml;
+mod xml_write;
 
+pub use response_projection::{PreservedSourceValue, ProjectedResponse, ResponseProjector};
+pub use responses::{ResponseRow, ResponseTable};
+pub use settings::{
+    GROUP_SETTINGS_PROFILE, GroupSettingsReport, MAX_SETTINGS_CONTEXT_BYTES, ResolvedSetting,
+    SettingOrigin, SettingValue, SettingsContext, SettingsGroup,
+};
+pub use source_bindings::{SourceBindings, source_bindings};
+pub use vv::VvEncoder;
+
+pub use default_projection::project_question_defaults;
 pub use error::Error;
+pub use execution::ProjectionGaps;
+pub use import_execution::{ExecutableImport, IMPORT_EXECUTION_PROFILE, SourceRuntimeFacts};
 pub use model::{
-    AnswerOption, Group, LocalizedGroup, LocalizedQuestion, LocalizedSurveyMessages, LocalizedText,
-    LocalizedTitle, Mandatory, Question, QuestionAttribute, QuestionFamily, SourceId,
-    SourceMetadata, Subquestion, SurveySource,
+    AnswerOption, DefaultValue, Group, LocalizedDefaultValue, LocalizedGroup, LocalizedQuestion,
+    LocalizedSurveyMessages, LocalizedText, LocalizedTitle, Mandatory, Question, QuestionAttribute,
+    QuestionFamily, SourceId, SourceMetadata, Subquestion, SurveySource,
+};
+pub use native::{
+    FieldBinding, NativeExport, NativeExportError, export_native, export_native_with_navigation,
+    native_bindings,
 };
 pub use report::{Capability, Diagnostic, DiagnosticCode, Report, SectionSummary, Severity};
 
@@ -80,6 +106,20 @@ impl LssDocument {
 
     pub fn report(&self) -> &Report {
         &self.report
+    }
+
+    /// Inventory source data not carried by the current executable definition.
+    /// An empty inventory is not proof of execution or participation continuity.
+    pub fn projection_gaps(&self) -> ProjectionGaps {
+        execution::inspect(&self.xml, &self.report, self.limits.max_diagnostics)
+    }
+
+    /// Resolve the selected group options, using only supplied source context.
+    pub fn group_settings(
+        &self,
+        context: Option<&SettingsContext>,
+    ) -> Result<GroupSettingsReport, &'static str> {
+        settings::inspect(self, context)
     }
 
     /// Read common header metadata without claiming validation of historical schemas.

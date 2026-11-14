@@ -7,6 +7,13 @@ responsable des autorisations, de la validation et de la persistance.
 
 ## État du projet
 
+Le cycle actuel vise une **version pilote** sur les fonctions déjà couvertes.
+`npm run package:pilot` prépare un paquet natif avec client web, exemples et
+guide, puis vérifie ses parcours HTTP sur des données temporaires. Son exécution
+ne demande ni Rust ni Node. Voir le [démarrage du pilote](docs/pilot.md). La
+parité complète et la migration des anciennes participations restent des
+chantiers ultérieurs.
+
 **Éditeur de questionnaires avec stockage SQL.** Un compte administrateur permet
 de créer et modifier des questionnaires. Ils sont publics dès leur
 enregistrement :
@@ -14,15 +21,27 @@ enregistrement :
 - groupes et questions réordonnables, textes, codes et choix de réponse ;
 - 28 types sans fichiers : textes, nombres, choix, tableaux, classement et
   calculs ;
-- axes, doubles échelles, filtres, validations et réglages de présentation ;
+- axes, doubles échelles, filtres en cascade, validations et présentation ;
+- lignes exclusives et sélection automatique pour les choix multiples ;
+- valeurs par défaut localisées sur 21 types, appliquées à l'entrée des pages ;
 - langues et traductions des textes, sous-questions et choix ;
 - caractère facultatif, recommandé ou obligatoire ; aperçu avec le viewer ;
 - import LSS depuis l’administration, conservé en SQL avec son original ;
+- préparation privée des réponses LSR, avec correspondances et chargement
+  reprenable après interruption ;
+- bilan des prérequis de collecte d'une étude importée, par révision ;
+- résolution de 30 options héritées LimeSurvey, avec leur provenance ;
+- contextes source privés par révision, sélection explicite et extraction depuis
+  LimeSurvey par une commande de lecture ;
+- nouvelles campagnes sur des imports qualifiés, avec paramètres source figés ;
 - conditions de groupes/questions : constructeur ET/OU et mode expression ;
 - catalogue des variables et inspection locale des valeurs dans l’aperçu ;
 - définitions natives validées côté Rust et versions immuables en SQL ;
 - sauvegarde protégée contre l’écrasement entre deux onglets ;
 - historique consultable et restaurable, import/export JSON des définitions ;
+- export LSS des créations natives, avec refus des données non représentables ;
+- export VV des réponses des campagnes natives fermées, avec lecture progressive
+  ;
 - médiathèque PNG/JPEG, objets SQL privés et images associées aux questions ;
 - réexport des conditions modifiées dans le LSS, avec blocages explicites ;
 - sessions administrateur en SQL, mot de passe Argon2id et protection CSRF ;
@@ -47,31 +66,47 @@ une saisie locale sans compte :
 Dans ces aperçus, les réponses restent locales. Une première
 [collecte native durable](docs/collection.md) est disponible séparément :
 campagne sur une révision figée, 28 types, validation Rust, sauvegarde SQL, lien
-privé de reprise et soumission. Les
-[règles de participation](docs/participation.md) ajoutent cookie facultatif,
-invitations limitées ou réutilisables et corrections autorisées d’une même
-réponse. Les imports LimeSurvey et les archives `.lsa` restent hors de ce
-profil. Les conditions des études importées sont éditables ; leurs autres
-réglages sont conservés et protégés. Deux téléchargements distinguent le LSS
-original inchangé du LSS contenant les conditions de la révision enregistrée.
-Les anciennes sections de conditions peuvent bloquer ce second export. Le moteur
-d’aperçu couvre un sous-ensemble explicite ; il ne certifie pas encore le
-comportement complet d’une étude LimeSurvey. Voir le
-[périmètre du viewer](docs/viewer.md).
+privé de reprise et soumission. La présentation est configurable par groupe, par
+question ou sur une seule page, avec progression facultative et reprise sur la
+page enregistrée. Les [règles de participation](docs/participation.md) ajoutent
+cookie facultatif, invitations limitées ou réutilisables et corrections
+autorisées d'une même réponse. Un [profil importé](docs/import-execution.md)
+distinct ouvre des campagnes neuves après qualification des réglages source. La
+reprise des anciennes participations et les archives `.lsa` restent à réaliser.
+Les conditions des études importées sont éditables ; leurs autres réglages sont
+conservés et protégés. Deux téléchargements distinguent le LSS original inchangé
+du LSS contenant les conditions de la révision enregistrée. Les anciennes
+sections de conditions peuvent bloquer ce second export. Le moteur d’aperçu
+couvre un sous-ensemble explicite ; il ne certifie pas encore le comportement
+complet d’une étude LimeSurvey. Voir le [périmètre du viewer](docs/viewer.md).
 
-La cible couvre l’ensemble des formulaires natifs de la version de référence.
-L’[audit de couverture](docs/form-coverage.md) détaille les types, rendus et
-règles manquants, avec un plan pour les fonctions demandant du stockage. Le
-[catalogue](docs/form-catalog.md) recense les options et fonctions à suivre.
-L’absence de blocage sur une étude n’équivaut pas à une compatibilité complète.
+Les [réponses LSR importées](docs/response-imports.md) sont conservées dans une
+préparation privée distincte des participations natives. Le
+[bilan des prérequis](docs/imported-collection.md) distingue questions prises en
+charge, correspondances des cellules et réglages source restant à interpréter.
+Il reste un inventaire conservateur. L'ouverture d'une campagne neuve utilise
+séparément le profil importé ; la reprise des anciens participants est différée.
+
+La cible couvre l’ensemble des formulaires natifs de la version de référence. Un
+[aller-retour structurel réel](docs/limesurvey-reference.md) vérifie les 28
+types sans fichiers en deux langues dans LimeSurvey 6.5.14. L'import de réponses
+VV est aussi vérifié sur deux études aux identifiants différents.
+L'[échange des réponses](docs/response-exchange.md) décrit ce parcours et ses
+limites. La migration des reprises et la parité de tous les réglages restent à
+réaliser. L’[audit de couverture](docs/form-coverage.md) détaille les types,
+rendus et règles manquants, avec un plan pour les fonctions demandant du
+stockage. Le [catalogue](docs/form-catalog.md) recense les options et fonctions
+à suivre. L’absence de blocage sur une étude n’équivaut pas à une compatibilité
+complète.
 
 La persistance couvre les définitions, l’administration et les images natives.
 Les contenus binaires passent par un
 [port objet](docs/decisions/0002-object-storage.md), avec adaptateurs SQL,
-fichiers locaux et mémoire. Le mode local fourni utilise `.data/`, ignoré par
-Git et protégé contre la lecture directe par Vite. S3 reste à ajouter derrière
-ce même port ; le mode SQL reste utilisable sans répertoire de médias. Les
-fichiers envoyés par les participants ne sont pas encore pris en charge.
+fichiers locaux, mémoire et [S3 privé](docs/s3-storage.md). Le mode local fourni
+utilise `.data/`, ignoré par Git et protégé contre la lecture directe par Vite.
+Le mode S3 conserve son index en SQL et ne demande aucun disque pour les
+binaires ; les anciens objets SQL restent lisibles. Les fichiers envoyés par les
+participants ne sont pas encore pris en charge.
 
 ## Essayer l’adaptateur de fichiers
 
@@ -95,8 +130,8 @@ sans afficher les textes du questionnaire. Voir les
 - Compatibilité **des fichiers** `.lss` et `.lsa` avec LimeSurvey
   `6.5.14+240624`, dont le schéma de référence est `DBVersion = 623`. Voir la
   [référence amont][ls-version] et le [contrat de compatibilité].
-- Migration d’études en cours avec conservation des données, du comportement et
-  des moyens de reprise nécessaires ; le protocole est à implémenter.
+- Migration d'études en cours différée : le futur transfert devra conserver
+  données, comportement et moyens de reprise, selon le protocole documenté.
 - Validation serveur obligatoire, même lorsqu’une règle est évaluée côté client.
 
 ## Documentation
@@ -233,6 +268,11 @@ en mode fichiers. Voir le [stockage local](docs/local-storage.md).
 `.env.example` décrit la configuration ; le `.env` local est ignoré par Git.
 
 ## Contribution et licence
+
+Le [banc CPU/RAM](docs/performance.md) se lance avec `npm run bench`. Il utilise
+un serveur optimisé et des bases synthétiques jetables, puis vérifie les
+réponses après redémarrage. Les chiffres locaux restent distincts d'une
+comparaison avec LimeSurvey et d'un dimensionnement de production.
 
 Les prochains travaux s’appuient sur le modèle documenté et sur les sources de
 la version cible. Le corpus amont permet de commencer sans export utilisateur ;

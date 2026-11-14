@@ -2,6 +2,13 @@
 
 ## Exigence et portée
 
+La continuité exacte d'une étude en cours est différée à la demande du porteur
+du projet. Le protocole et ses exigences restent conservés pour cette étape
+ultérieure. Ils ne bloquent pas la création et la configuration natives, les
+nouvelles collectes ou les échanges de fichiers. L'ouverture d'une
+[nouvelle campagne depuis un import](import-execution.md) reste distincte d'une
+bascule avec anciennes participations.
+
 La migration doit conserver les données et permettre à l’étude de continuer avec
 le comportement attendu. Ce besoin fait partie de l’architecture dès maintenant,
 même si toutes les fonctions LimeSurvey seront implémentées progressivement.
@@ -9,6 +16,14 @@ même si toutes les fonctions LimeSurvey seront implémentées progressivement.
 Le [modèle interne](domain-model.md) et l’[audit des sources 6.5.14][audit]
 permettent de commencer sans export utilisateur. Le protocole ci-dessous est une
 conception à implémenter et à vérifier, pas une migration déjà disponible.
+
+La [préparation LSR](response-imports.md) réalise une première partie du
+protocole : original privé, lignes conservées en SQL, correspondances des
+cellules et chargement reprenable. Le
+[bilan par révision](imported-collection.md) localise les prérequis d'exécution.
+Une conversion réversible des cellules est maintenant disponible par ligne, sans
+réévaluation des réponses historiques. La publication en réponses de collecte et
+la continuité des participations restent à réaliser.
 
 ## Définir « sans perte »
 

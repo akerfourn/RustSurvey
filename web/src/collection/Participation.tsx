@@ -108,6 +108,7 @@ export function Participation({
       checkpoint: { language: draft.language, groupId: draft.groupId },
       submit,
     };
+    if (draft.pageId !== undefined) command.checkpoint.pageId = draft.pageId;
     setPending(command);
     setNotice(null);
     void attempt(command);
@@ -174,16 +175,23 @@ export function Participation({
     );
   let content = <p role="status">Chargement de votre participation…</p>;
   let groupId = stored?.checkpoint.groupId ?? null;
-  if (editing && stored?.status === "submitted") groupId = null;
+  let pageId = stored?.checkpoint.pageId;
+  if (editing && stored?.status === "submitted") {
+    groupId = null;
+    pageId = undefined;
+  }
   if (stored !== null && study !== null)
     content = (
       <ViewerBoundary key={`${id}:${stored.version}:${reload}:${editing}`}>
         <StudyViewer
           study={study}
           persistence={{
+            profile: stored.run.profile,
             answers: new Map(Object.entries(stored.answers)),
             language: stored.checkpoint.language,
             groupId,
+            pageId,
+            navigation: stored.run.navigation,
             submitted: stored.status === "submitted" && !editing,
             hasProgress: stored.version > 0 || !stored.run.isOpen,
             readOnly: (stored.status === "submitted" && !editing) || !stored.run.isOpen,

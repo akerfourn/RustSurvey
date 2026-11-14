@@ -33,6 +33,8 @@ function SettingField({
   function handleBoolean(event: TargetedEvent<HTMLSelectElement>): void {
     handleValue(event.currentTarget.value);
   }
+  let hint = null;
+  if (setting.hint !== undefined) hint = <small>{setting.hint}</small>;
   if (setting.kind === "expression")
     return (
       <ExpressionField
@@ -55,10 +57,9 @@ function SettingField({
           <option value="1">Oui</option>
           <option value="0">Non</option>
         </select>
+        {hint}
       </label>
     );
-  let hint = null;
-  if (setting.hint !== undefined) hint = <small>{setting.hint}</small>;
   let inputMode: "decimal" | undefined;
   if (setting.kind === "number") inputMode = "decimal";
   return (

@@ -2,6 +2,14 @@
 
 ## Phase actuelle
 
+Le porteur du projet a recentré le cycle sur une version pilote utilisable.
+Stabiliser et vérifier le paquet pilote avant d'ouvrir de nouvelles fonctions.
+La parité complète reste un chantier ultérieur, sans conditionner ce jalon. Lire
+le [guide du pilote](docs/pilot.md) et la
+[décision 0016](docs/decisions/0016-pilot-web-delivery.md). Le build public est
+servi par Rust depuis un instantané borné ; aucun chemin HTTP ne devient un
+chemin disque. Ne jamais utiliser un répertoire de données comme racine web.
+
 Le développement couvre l’adaptateur LimeSurvey, son outil CLI et un premier
 viewer web avec saisie locale, stockage SQL et premier éditeur natif. Un compte
 administrateur protège l’édition ; les questionnaires restent publics.
@@ -9,6 +17,12 @@ L’administration importe les LSS en SQL et édite les conditions de groupes et
 questions. Les autres réglages importés restent protégés dans ce lot. Suivre les
 grandes lignes et livrer des incréments fonctionnels testés ; ne pas remplacer
 le code demandé par un nouveau tour de cadrage général.
+
+Le porteur du projet a explicitement accepté de différer la continuité exacte
+des études en cours : sessions, droits de reprise et états internes incomplets
+dans les exports. Garder ce chantier documenté, sans en faire un préalable aux
+créations, nouvelles collectes et échanges de fichiers. Ne pas présenter une
+nouvelle campagne comme un transfert des anciennes participations.
 
 Lire [README.md](README.md), les [besoins](docs/requirements.md), le
 [modèle interne](docs/domain-model.md) et le document du domaine concerné avant
@@ -24,22 +38,74 @@ pas la parité ; distinguer options interprétées, tolérées et non projetées
 La persistance actuelle couvre les définitions versionnées, les sessions
 administrateur, les originaux LSS privés et les images natives. L’éditeur
 propose 28 types, paramètres, calculs et traductions. L’historique est
-restaurable sans écrasement ; le réexport LSS ne modifie que les pertinences
-enregistrées et bloque les anciennes conditions contradictoires. Le format natif
-v3 est commun aux créations et imports ; convertir explicitement les v1/v2 sans
-réécrire les révisions historiques. Lire le
-[périmètre de l’éditeur](docs/authoring.md) avant une modification de ces
-fonctions. La [collecte native](docs/collection.md) couvre désormais 28 types,
-une campagne figée, la validation Rust, les réponses SQL et la reprise privée.
-Les [règles de participation](docs/participation.md) couvrent cookies,
-invitations, limites d’usage et corrections autorisées. Les imports LimeSurvey,
-les fichiers et les transferts restent à compléter. Lire ce périmètre avant de
-modifier la collecte. Pour les futurs médias et fichiers, suivre la
+restaurable sans écrasement. L'export LSS natif possède une première preuve
+structurelle sur 28 types et deux langues dans LimeSurvey 6.5.14 ; lire la
+[procédure de référence](docs/limesurvey-reference.md). Le réexport d'un import
+ne modifie que les pertinences enregistrées et bloque les anciennes conditions
+contradictoires. Le format natif v4 est commun aux créations et imports ;
+convertir explicitement les v1/v2/v3 sans réécrire les révisions historiques.
+Lire le [périmètre de l’éditeur](docs/authoring.md) avant une modification de
+ces fonctions. La [collecte native](docs/collection.md) couvre désormais 28
+types, une campagne figée, la validation Rust, les réponses SQL et la reprise
+privée. Le profil `native-pages-v1` ajoute trois présentations et un curseur de
+page, sans convertir les anciennes campagnes ; lire la
+[décision 0012](docs/decisions/0012-native-navigation.md). Les
+[lignes exclusives](docs/exclusive-options.md) couvrent neuf types,
+l'automatique M/P et la normalisation Rust des réponses ; leur échange est
+vérifié dans la référence, sans certification de tous les parcours. Les
+[filtres de lignes](docs/array-filters.md) couvrent 14 types de source, Autre et
+la cascade, les listes radio et les classements cibles. Les règles de 46 cas
+sont comparées au moteur PHP amont sur les mêmes valeurs normalisées. Le
+filtrage natif du tableau H bloque l'export LSS fidèle ; son aperçu importé
+signale l'écart avec la référence. Les
+[valeurs par défaut](docs/default-values.md) disposent de 31 scénarios source et
+d'un export natif vérifié sur 29 configurations. Le format v4 et l'éditeur
+portent 21 types de cibles ; `native-defaults-v1` initialise les pages avec leur
+langue, sans remplacer une clé présente, même vide. Les anciens profils ne sont
+pas convertis. Les nouveaux imports persistants projettent les cibles de défauts
+représentables, atomiquement par question et par identité source ; les anciennes
+révisions restent inchangées. Les autres cibles sont diagnostiquées. Cette
+projection seule n'autorise pas la collecte importée. Ne jamais copier la
+session amont entière : ses écritures `updatedValues` peuvent être nulles pour
+une réponse inactive. Lire le périmètre et ses restrictions NAOK.
+L'[échange des réponses](docs/response-exchange.md) ajoute les coordonnées
+natives, la lecture LSR et l'export VV progressif d'une campagne fermée. Les
+cellules et deux réponses sont vérifiées dans la référence ; cela ne certifie
+pas une migration de participations. Les langues initiales anciennes inconnues
+ne doivent jamais être remplacées silencieusement par la langue courante. Les
+[règles de participation](docs/participation.md) couvrent cookies, invitations,
+limites d'usage et corrections autorisées. Le
+[profil importé](docs/import-execution.md) ouvre des campagnes neuves sur un
+périmètre qualifié, avec contexte explicite, faits d'exécution et instantané
+privé SQL 0010. Lire aussi la
+[décision 0014](docs/decisions/0014-import-execution-snapshots.md). Les autres
+configurations, les fichiers et les transferts restent à compléter. Lire ce
+périmètre avant de modifier la collecte. La
+[préparation LSR](docs/response-imports.md) conserve les lignes source en SQL
+avec reprise et correspondances ; elle n'autorise pas la collecte. Le
+[bilan des prérequis](docs/imported-collection.md) relit chaque révision et
+distingue moteur natif, projection source et continuité. Avant de modifier ces
+fonctions, lire ces deux périmètres. Les
+[options héritées](docs/source-settings.md) possèdent un résolveur borné de 30
+réglages, vérifié dans la référence ; il ne remplace pas les options de
+formulaire restant à implémenter. Un accueil hérité ou absent reste nul dans les
+nouveaux imports, sans défaut natif implicite. Les contextes source sont des
+instantanés SQL immuables liés à une révision ; un bilan les choisit par
+identifiant explicite, jamais comme « dernier contexte ». La commande auxiliaire
+`rustsurveysettings` lit seulement les 30 options et les groupes. L'auxiliaire
+distinct `rustsurveyruntime` lit les faits bornés du profil importé, sans lignes
+de participants ni de réponses. Lire la
+[décision 0011](docs/decisions/0011-source-settings-contexts.md) avant de
+modifier ce parcours. Pour les futurs médias et fichiers, suivre la
 [décision de stockage objet](docs/decisions/0002-object-storage.md) : port
-commun, adaptateurs SQL, fichiers locaux et mémoire pour les tests ; S3 reste à
-ajouter. Le [stockage local](docs/local-storage.md) décrit `.data/`, les
-réglages et la lecture des anciens objets SQL. Ne pas accéder au disque depuis
-le métier ni servir directement les répertoires privés.
+commun, adaptateurs SQL, fichiers locaux, mémoire et S3. Le
+[guide S3](docs/s3-storage.md) et la
+[décision 0015](docs/decisions/0015-s3-indexed-content.md) décrivent les chemins
+par empreinte, l'index SQL 0011 et la publication atomique. Ne pas dépendre d'un
+PUT conditionnel seul : la référence Garage l'ignore. Le
+[stockage local](docs/local-storage.md) décrit `.data/`, les réglages et la
+lecture des anciens objets SQL. Ne pas accéder au disque depuis le métier ni
+servir directement les répertoires privés.
 
 ## Contraintes du produit
 
@@ -52,9 +118,14 @@ le métier ni servir directement les répertoires privés.
 - Toute évolution de schéma passe par une migration versionnée.
 - La sobriété serveur guide les choix ; une amélioration de performance doit
   être mesurée sur une charge documentée.
+- Le [banc HTTP local](docs/performance.md) mesure CPU/RAM en release.
+  Distinguer succès et refus ; ne pas annoncer un gain contre LimeSurvey à
+  partir de cette seule référence. Les écritures participant ont deux places
+  actives et une attente bornée ; lire la
+  [décision 0013](docs/decisions/0013-bounded-write-admission.md).
 - Les calculs déportés au client ne remplacent jamais les contrôles serveur.
-- La migration d’études en cours doit préserver données et comportement, y
-  compris les réponses partielles et les moyens de reprise nécessaires. Lire le
+- La future migration d'études en cours, différée, devra préserver données et
+  comportement, y compris réponses partielles et moyens de reprise. Lire le
   [protocole de transfert](docs/study-migration.md).
 
 ## Architecture et dépendances

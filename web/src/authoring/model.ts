@@ -1,4 +1,6 @@
 import type { SurveyStudy } from "../survey/types.ts";
+import type { QuestionDefaults } from "../survey/defaults.ts";
+import { pruneQuestionDefaults } from "./default-values.ts";
 import { QUESTION_PROFILES, questionProfile } from "./question-profile.ts";
 
 export const RENDER_TYPES = {
@@ -78,6 +80,7 @@ export interface Question {
   theme: string;
   source: SourceReference | null;
   media: QuestionMedia[];
+  defaults: QuestionDefaults | null;
 }
 export interface QuestionMedia {
   id: string;
@@ -156,7 +159,7 @@ export function createGroup(makeId: () => string = createId): Group {
 }
 export function createDefinition(makeId: () => string = createId): Definition {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     languages: [],
     translations: [],
     showWelcome: null,
@@ -206,6 +209,7 @@ export function createQuestion(definition: Definition, makeId: () => string = cr
     theme: "core",
     source: null,
     media: [],
+    defaults: null,
   };
 }
 export function changeKind(
@@ -243,15 +247,18 @@ export function changeKind(
   if (kind === "information" || kind === "equation") mandatory = "no";
   const attributes = question.attributes.filter((item) => !isTypeSpecificAttribute(item.name));
   if (kind === "equation") attributes.push({ name: "equation", value: "0", language: null });
-  return {
-    ...question,
-    kind,
-    choices,
-    subquestions,
-    mandatory,
-    attributes,
-    other: profile.other && question.other,
-  };
+  return pruneQuestionDefaults(
+    {
+      ...question,
+      kind,
+      choices,
+      subquestions,
+      mandatory,
+      attributes,
+      other: profile.other && question.other,
+    },
+    question,
+  );
 }
 
 function isTypeSpecificAttribute(name: string): boolean {
@@ -278,10 +285,17 @@ function labels(translations: Translation[], language: string, text: string, hel
   else result[index] = base;
   return result;
 }
-export function toViewer(definition: Definition, id: string | null = null): SurveyStudy {
+export function toViewer(
+  definition: Definition,
+  id: string | null = null,
+  imported = false,
+): SurveyStudy {
   const language = definition.language;
   const translations = definition.translations.filter((item) => item.language !== language);
+  let showWelcome = definition.showWelcome;
+  if (showWelcome === null && !imported) showWelcome = definition.welcome !== "";
   const study: SurveyStudy = {
+    origin: imported ? "limesurvey" : "native",
     surveyId: id,
     baseLanguage: language,
     languages: definition.languages.length === 0 ? [language] : definition.languages,
@@ -297,7 +311,7 @@ export function toViewer(definition: Definition, id: string | null = null): Surv
         end: item.end,
       })),
     ],
-    showWelcome: definition.showWelcome ?? definition.welcome !== "",
+    showWelcome,
     groups: [],
     questions: [],
     subquestions: [],
@@ -333,6 +347,7 @@ export function toViewer(definition: Definition, id: string | null = null): Surv
         other: question.other,
         labels: labels(question.translations, language, question.title, question.help),
         attributes: question.attributes,
+        defaults: question.defaults,
         media: question.media,
       });
       for (const [order, row] of question.subquestions.entries())

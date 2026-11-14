@@ -1,0 +1,63 @@
+{
+  "context": {
+    "global": {
+      "alloweditaftercompletion": "N",
+      "allowprev": "Y",
+      "allowregister": "N",
+      "allowsave": "Y",
+      "anonymized": "N",
+      "assessments": "N",
+      "autoredirect": "N",
+      "datestamp": "Y",
+      "format": "G",
+      "htmlemail": "N",
+      "ipanonymize": "N",
+      "ipaddr": "N",
+      "listpublic": "N",
+      "navigationdelay": "0",
+      "nokeyboard": "N",
+      "printanswers": "N",
+      "publicgraphs": "N",
+      "publicstatistics": "N",
+      "questionindex": "0",
+      "refurl": "N",
+      "savetimings": "N",
+      "sendconfirmation": "N",
+      "showgroupinfo": "B",
+      "shownoanswer": "Y",
+      "showprogress": "Y",
+      "showqnumcode": "X",
+      "showwelcome": "Y",
+      "showxquestions": "N",
+      "tokenanswerspersistence": "N",
+      "usecookie": "N"
+    },
+    "groups": [{ "id": "2", "parentId": null, "values": {} }],
+    "schemaVersion": 1,
+    "surveyGroupId": "2",
+    "surveyId": "701"
+  },
+  "facts": {
+    "activePlugins": 0,
+    "deleteNonValues": true,
+    "effectiveTheme": "vanilla",
+    "hasParticipantsTable": false,
+    "schemaVersion": 1,
+    "showNoAnswer": true,
+    "surveyId": "701",
+    "timeAdjust": "0",
+    "timeZone": "UTC"
+  },
+  "surveyOverrides": {
+    "bounceprocessing": "N",
+    "datestamp": "Y",
+    "emailnotificationto": null,
+    "emailresponseto": null,
+    "expires": null,
+    "googleanalyticsstyle": "0",
+    "gsid": "2",
+    "showsurveypolicynotice": "0",
+    "startdate": null,
+    "usecaptcha": "N"
+  }
+}

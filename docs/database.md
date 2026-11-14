@@ -96,9 +96,45 @@ Le lien facultatif vers `responses` est réservé à la reprise liée explicitem
 choisie. Les campagnes existantes gardent le mode public. Aucun secret
 d’invitation n’est stocké en clair. Voir [les garanties](participation.md).
 
+La migration 0006 ajoute l'index de lecture progressive des réponses et leur
+langue initiale nullable. La migration 0007 ajoute `response_imports` et
+`response_import_records` : révision figée, original objet, schéma, bilan,
+curseur de chargement et lignes source privées. Les documents utilisent
+`LONGTEXT` sur MariaDB et `TEXT` sur SQLite/PostgreSQL. La reprise et le
+remplacement d'une tentative vérifient un jeton d'écriture et le curseur dans la
+même transaction que l'ajout d'au plus 50 lignes. Les réponses natives restent
+distinctes de cette [préparation](response-imports.md).
+
+La migration 0008 ajoute `source_settings_contexts` : révision, original JSON
+exact, empreintes, profil et résultat immuables. Les documents utilisent aussi
+`LONGTEXT` sur MariaDB. La limite de 32 instantanés est vérifiée dans la même
+transaction que l'insertion, après sérialisation sur la ligne étude. Cette
+opération ne crée pas de révision et ne change aucun paramètre de collecte.
+
+La migration 0009 ajoute `runs.navigation`, texte nullable pour deux réglages
+figés de présentation. Les anciennes campagnes gardent une valeur nulle ; leurs
+réponses et reçus ne sont pas réécrits. Le nouveau profil ajoute un curseur de
+page au document de réponse, sans changer les cellules stockées.
+
+La migration `m20261114_000010_import_execution` ajoute
+`runs.execution_document`, nullable : `LONGTEXT` sur MariaDB et `TEXT` sur les
+deux autres moteurs. Les campagnes natives existantes restent nulles. Le
+document privé fige une nouvelle campagne importée qualifiée ; il n'est ni
+sélectionné dans les listes ni chargé dans les transactions de réponse. Voir la
+[décision 0014](decisions/0014-import-execution-snapshots.md).
+
+La migration 0011 ajoute `s3_objects` : clé opaque unique, empreinte
+d'emplacement, SHA-256 et taille. L'insertion unique publie un contenu S3 sans
+écraser une autre correspondance ; aucun binaire n'entre dans cette table. Voir
+la [décision 0015](decisions/0015-s3-indexed-content.md).
+
 SQLite couvre la mise à niveau avec données existantes et la reprise après
 réouverture. Le test externe optionnel inclut aussi la collecte ; son exécution
-PostgreSQL/MariaDB reste nécessaire pour valider ce nouveau schéma.
+sur PostgreSQL 17 et MariaDB 11.4 a vérifié les migrations jusqu'à 0011, les
+documents supérieurs à 64 Kio, la reprise du chargement des réponses LSR et les
+contextes source de 64 Kio avec dépôts concurrents, les trois présentations de
+campagne, le profil d'exécution importé figé avec reprise et export VV, ainsi
+que la publication concurrente et la suppression conditionnelle de l'index S3.
 
 Le [modèle interne](domain-model.md) définit un schéma commun aux études :
 identités, relations, états et versions en colonnes relationnelles ; définitions
@@ -214,7 +250,9 @@ Le binaire est `LONGBLOB` sur MariaDB, `BYTEA` sur PostgreSQL et `BLOB` sur
 SQLite. Les références sont validées et insérées dans la transaction de
 définition. Les médias de l’historique restent conservés après dissociation de
 la version courante. La v3 du document s’obtient à la lecture des v1/v2 ; les
-documents historiques ne sont pas réécrits par la migration.
+documents historiques ne sont pas réécrits par la migration. La v4 ajoute
+ensuite les défauts localisés dans le document, sans migration SQL : les
+v1/v2/v3 sont converties à la lecture, sans réécriture des révisions archivées.
 
 Le 13 novembre 2026, les trois migrations et les parcours d’import, réexport,
 historique, objets et médias ont été exécutés sur SQLite, PostgreSQL 17 et
@@ -236,5 +274,22 @@ npm run test:databases -- postgres
 Le lanceur n’utilise aucune URL de base existante, ne télécharge pas d’image et
 retire uniquement ses propres conteneurs. Les tests courants restent sans
 service externe. L’adaptateur fichiers locaux est décrit dans le
-[guide de stockage local](local-storage.md). S3 et le nettoyage des objets
-restent à implémenter.
+[guide de stockage local](local-storage.md). L'adaptateur S3 est décrit dans le
+[guide S3](s3-storage.md). Le nettoyage des objets reste à implémenter.
+
+Le 14 novembre 2026, les migrations 0004 et 0005 et le parcours de collecte
+étendu ont aussi été exécutés sur PostgreSQL 17 et MariaDB 11.4 jetables :
+réponses, invitations, compteurs et reprise liée. Ce contrôle a révélé une
+lecture incorrecte de `COUNT(id)` comme entier non signé sur MariaDB. La lecture
+utilise désormais l'entier signé renvoyé par le pilote commun ; le parcours réel
+de création d'invitation passe sur les deux moteurs.
+
+La migration `m20261114_000006_response_exports` ajoute l'index
+`idx_response_export(run_id, id)` pour la lecture progressive des réponses, et
+la colonne nullable `initial_language`. Les nouvelles participations conservent
+leur langue de démarrage. Les anciennes réponses ne sont pas réécrites : une
+valeur inconnue reste `NULL`, distincte du checkpoint courant.
+
+Cette migration et le parcours VV avec langue initiale distincte du checkpoint
+ont été vérifiés le 14 novembre 2026 sur SQLite, PostgreSQL 17 et MariaDB 11.4.
+Les bases externes ont été créées puis supprimées par le lanceur jetable.

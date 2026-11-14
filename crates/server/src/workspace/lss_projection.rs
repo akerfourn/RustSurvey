@@ -1,6 +1,23 @@
 use super::{AppError, Runtime, runtime};
 use rustsurvey_domain as domain;
 use rustsurvey_limesurvey as lss;
+use serde::Serialize;
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(super) struct DefaultProjection {
+    profile: &'static str,
+    status: &'static str,
+    projected_values: usize,
+    source_values: usize,
+    issue_count: usize,
+    issues: Vec<domain::ValidationIssue>,
+}
+
+pub(super) struct Projection {
+    pub definition: domain::Definition,
+    pub defaults: DefaultProjection,
+}
 
 fn source(id: lss::SourceId, kind: Option<&str>) -> Option<domain::SourceReference> {
     Some(domain::SourceReference {
@@ -30,7 +47,7 @@ fn localized<'a>(
 pub(super) fn project(
     study: &lss::SurveySource,
     runtime: &dyn Runtime,
-) -> Result<domain::Definition, AppError> {
+) -> Result<Projection, AppError> {
     let language = study
         .base_language
         .clone()
@@ -58,7 +75,7 @@ pub(super) fn project(
             .and_then(|item| item.end.clone())
             .unwrap_or_default(),
         languages: study.languages.clone(),
-        show_welcome: Some(study.show_welcome),
+        show_welcome: study.show_welcome,
         groups: Vec::new(),
         translations: study
             .languages
@@ -124,7 +141,66 @@ pub(super) fn project(
         }
         definition.groups.push(mapped);
     }
-    Ok(definition)
+    let defaults = apply_defaults(study, &mut definition)?;
+    Ok(Projection {
+        definition,
+        defaults,
+    })
+}
+
+fn apply_defaults(
+    study: &lss::SurveySource,
+    definition: &mut domain::Definition,
+) -> Result<DefaultProjection, AppError> {
+    let sources: std::collections::BTreeMap<_, _> = study
+        .questions
+        .iter()
+        .map(|source| (source.id.0.to_string(), source))
+        .collect();
+    let mut issues = Vec::new();
+    let mut issue_count = 0;
+    let mut projected_values = 0;
+    for question in definition
+        .groups
+        .iter_mut()
+        .flat_map(|group| &mut group.questions)
+    {
+        let source = question
+            .source
+            .as_ref()
+            .and_then(|identity| sources.get(&identity.id))
+            .ok_or_else(AppError::internal)?;
+        match lss::project_question_defaults(study, source, question) {
+            Ok(defaults) => {
+                projected_values += defaults
+                    .as_ref()
+                    .map_or(0, |defaults| defaults.values.len());
+                question.defaults = defaults;
+            }
+            Err(errors) => {
+                issue_count += errors.len();
+                let remaining = 128_usize.saturating_sub(issues.len());
+                issues.extend(errors.into_iter().take(remaining));
+            }
+        }
+    }
+    let status = if issue_count == 0 {
+        "complete"
+    } else {
+        "partial"
+    };
+    Ok(DefaultProjection {
+        profile: "source-defaults-v1",
+        status,
+        projected_values,
+        issue_count,
+        source_values: study
+            .default_values
+            .iter()
+            .map(|value| value.values.len())
+            .sum(),
+        issues,
+    })
 }
 fn project_question(
     study: &lss::SurveySource,
@@ -153,7 +229,7 @@ fn project_question(
             .iter()
             .map(|item| domain::Attribute {
                 name: item.name.clone(),
-                value: item.value.clone(),
+                value: attribute_value(question, item),
                 language: item.language.clone(),
             })
             .collect(),
@@ -163,6 +239,7 @@ fn project_question(
         theme: question.theme.clone(),
         source: source(question.id, Some(&question.source_type)),
         media: Vec::new(),
+        defaults: None,
     };
     let mut choices: Vec<_> = study
         .answers
@@ -215,6 +292,22 @@ fn project_question(
         });
     }
     Ok(mapped)
+}
+fn attribute_value(question: &lss::Question, attribute: &lss::QuestionAttribute) -> String {
+    if question.source_type == "*" && attribute.name == "equation" {
+        let expression = attribute
+            .value
+            .trim()
+            .strip_prefix('{')
+            .and_then(|value| value.strip_suffix('}'));
+        if let Some(expression) = expression
+            && domain::rules::Expression::compile(expression).is_ok()
+        {
+            // LimeSurvey stores a braced template; native equation attributes store its expression.
+            return expression.to_owned();
+        }
+    }
+    attribute.value.clone()
 }
 fn kind(code: &str) -> domain::QuestionKind {
     use domain::QuestionKind::*;

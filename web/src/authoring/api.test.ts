@@ -24,7 +24,7 @@ test("test_save_should_explain_oversized_payload_rejections_even_without_json", 
 test("test_decoder_should_reject_future_versions_and_unknown_question_types", () => {
   const definition = createDefinition(() => "group-1");
   assert.deepEqual(decodeDefinition(definition), definition);
-  assert.throws(() => decodeDefinition({ ...definition, schemaVersion: 4 }), /Version/);
+  assert.throws(() => decodeDefinition({ ...definition, schemaVersion: 5 }), /Version/);
   definition.groups[0]!.questions.push(createQuestion(definition, () => "question-1"));
   const invalid: unknown = {
     ...definition,
@@ -109,7 +109,7 @@ test("test_v2_decoder_should_upgrade_without_losing_text_or_source_aliases", () 
   definition.groups[0]!.questions.push(question);
   const old = { ...definition, schemaVersion: 2 };
   const upgraded = decodeDefinition(old);
-  assert.equal(upgraded.schemaVersion, 3);
+  assert.equal(upgraded.schemaVersion, 4);
   assert.deepEqual(upgraded.groups[0]!.questions[0]!.source, question.source);
   assert.deepEqual(upgraded.groups[0]!.questions[0]!.media, []);
 });

@@ -23,7 +23,7 @@ export function PublicStudy({ id }: { id: string }) {
     return () => controller.abort();
   }, [id]);
   const study = useMemo(
-    () => (stored === null ? null : toViewer(stored.definition, stored.id)),
+    () => (stored === null ? null : toViewer(stored.definition, stored.id, stored.source !== null)),
     [stored],
   );
   let content = (

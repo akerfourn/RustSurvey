@@ -11,6 +11,7 @@ use sea_orm::{Database, DatabaseConnection};
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt().init();
     let settings = Settings::load(".env")?;
+    let web = rustsurvey_server::web::configured_assets(&settings).await?;
     let storage = StorageConfiguration::read(&settings)?;
     let password_policy = PasswordPolicy::from_development_flag(
         settings.boolean("DEV_ALLOW_WEAK_PASSWORDS", false)?,
@@ -26,8 +27,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .map_err(|_| io::Error::other("database migration failed; startup stopped"))?;
     let secure_cookie = settings.boolean("ADMIN_COOKIE_SECURE", !cfg!(debug_assertions))?;
     let objects = storage.object_store(database.clone()).await?;
+    let write_queue_capacity = settings
+        .value_or("COLLECTION_WRITE_QUEUE_CAPACITY", "8")?
+        .parse::<usize>()
+        .map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "COLLECTION_WRITE_QUEUE_CAPACITY must be an integer between 0 and 32",
+            )
+        })?;
     let workspace =
         rustsurvey_server::workspace::WorkspaceState::new(database.clone(), secure_cookie)
+            .with_participant_write_queue_capacity(write_queue_capacity)?
             .with_object_store(objects);
     if let Some(password) = settings.get("ADMIN_PASSWORD")? {
         let username = settings.value_or("ADMIN_USERNAME", "admin")?;
@@ -39,11 +50,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         )
         .await?;
     }
-    let router = Router::new()
+    let mut router = Router::new()
         .route("/api/health", get(health))
         .with_state(database.clone())
         .merge(rustsurvey_server::inspection::routes())
         .merge(rustsurvey_server::workspace::routes(workspace));
+    if let Some(web) = web {
+        router = router.merge(web.routes());
+    }
     let shutdown = shutdown_signal()?;
     let listener = rustsurvey_server::network::bind_listener(address, automatic_port).await?;
     tracing::info!(address = %listener.local_addr()?, "HTTP server listening");

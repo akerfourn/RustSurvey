@@ -1,0 +1,120 @@
+{
+  "manual": [
+    { "type": "A", "value": "3" },
+    { "type": "B", "value": "8" },
+    { "type": "C", "value": "N" },
+    { "type": "E", "value": "S" },
+    { "type": "F", "value": "01" },
+    { "type": "M", "value": "Y" },
+    { "type": "P", "value": "Y" },
+    { "type": "K", "value": "0" },
+    { "type": "Q", "value": "none" }
+  ],
+  "cases": [
+    {
+      "name": "exclusive normalization propagates into dependent array filters",
+      "type": "M",
+      "exclusive": "A2",
+      "withFilter": true,
+      "answers": { "M_A1": "Y", "M_A2": "Y", "F_A1": "01", "F_A2": "02" },
+      "expected": { "M_A2": "Y", "F_A2": "02" }
+    },
+    {
+      "name": "exclusive choice clears ordinary comments and other",
+      "type": "P",
+      "exclusive": "A2",
+      "other": true,
+      "answers": {
+        "P_A1": "Y",
+        "P_A1comment": "old",
+        "P_A2": "Y",
+        "P_A2comment": "keep",
+        "P_other": "old other",
+        "P_othercomment": "old comment"
+      },
+      "expected": { "P_A2": "Y", "P_A2comment": "keep" }
+    },
+    {
+      "name": "automatic selection ignores comments and clears them",
+      "type": "P",
+      "exclusive": "A2",
+      "auto": true,
+      "answers": { "P_A1": "Y", "P_A1comment": "old" },
+      "expected": { "P_A2": "Y" }
+    },
+    {
+      "name": "automatic choice includes the other text",
+      "type": "M",
+      "exclusive": "A2",
+      "auto": true,
+      "other": true,
+      "answers": { "M_A1": "Y" },
+      "expected": { "M_A1": "Y" }
+    },
+    {
+      "name": "automatic choice replaces every filled ordinary option",
+      "type": "M",
+      "exclusive": "A2",
+      "auto": true,
+      "other": true,
+      "answers": { "M_A1": "Y", "M_other": "custom" },
+      "expected": { "M_A2": "Y" }
+    },
+    {
+      "name": "an exclusive other text disables ordinary choices",
+      "type": "M",
+      "exclusive": "other",
+      "other": true,
+      "answers": { "M_A1": "Y", "M_other": "custom" },
+      "expected": { "M_other": "custom" }
+    },
+    {
+      "name": "an irrelevant exclusive option cannot clear relevant answers",
+      "type": "M",
+      "exclusive": "A2",
+      "hideExclusive": true,
+      "answers": { "M_A1": "Y", "M_A2": "Y" },
+      "expected": { "M_A1": "Y" }
+    },
+    {
+      "name": "automatic selection requires a relevant exclusive option",
+      "type": "M",
+      "exclusive": "A2",
+      "auto": true,
+      "hideExclusive": true,
+      "answers": { "M_A1": "Y" },
+      "expected": { "M_A1": "Y" }
+    },
+    {
+      "name": "automatic selection counts only relevant ordinary rows",
+      "type": "M",
+      "exclusive": "A2",
+      "auto": true,
+      "hideOthers": true,
+      "answers": {},
+      "expected": { "M_A2": "Y" }
+    },
+    {
+      "name": "two simultaneous exclusive choices are ambiguous",
+      "type": "M",
+      "exclusive": " A1 ; A2 ",
+      "answers": { "M_A1": "Y", "M_A2": "Y" },
+      "error": "Plusieurs lignes exclusives"
+    },
+    {
+      "name": "automatic selection has no effect with several exclusive codes",
+      "type": "M",
+      "exclusive": "A1;A2",
+      "auto": true,
+      "answers": {},
+      "expected": {}
+    },
+    {
+      "name": "an unchecked exclusive choice does not restore erased answers",
+      "type": "M",
+      "exclusive": "A2",
+      "answers": { "M_A2": "" },
+      "expected": { "M_A2": "" }
+    }
+  ]
+}

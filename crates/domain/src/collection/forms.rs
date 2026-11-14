@@ -128,7 +128,7 @@ pub(super) fn accept_attribute(
                 | DualScale
         ))
         || (name == "input_boxes" && question.kind == NumberMatrix)
-        || (name == "array_filter_style" && has_rows(question))
+        || (name == "array_filter_style" && filter_target(question))
         || (["slider_layout", "slider_reset", "slider_showminmax"].contains(&name)
             && question.kind == MultipleNumbers)
         || (name == "multiflexible_checkbox" && question.kind == NumberMatrix);
@@ -141,7 +141,9 @@ pub(super) fn accept_attribute(
         ]
         .contains(&name)
             && question.kind == NumberMatrix);
-    let filter = ["array_filter", "array_filter_exclude"].contains(&name) && has_rows(question);
+    let filter =
+        ["array_filter", "array_filter_exclude"].contains(&name) && filter_target(question);
+    let exclusive = ["exclude_all_others", "exclude_all_others_auto"].contains(&name);
     let comment = question.kind == MultipleChoiceComment
         && ((name == "commented_checkbox"
             && ["checked", "unchecked", "allways"].contains(&item.value.as_str()))
@@ -152,7 +154,7 @@ pub(super) fn accept_attribute(
         "em_validation_sq_tip",
     ]
     .contains(&name);
-    if !(boolean || literal || filter || comment || text) {
+    if !(boolean || literal || filter || exclusive || comment || text) {
         return false;
     }
     if (boolean && !["0", "1"].contains(&item.value.as_str()))
@@ -203,6 +205,10 @@ pub(super) fn filters(question: &Question) -> Vec<Filter> {
         }
     }
     filters
+}
+
+fn filter_target(question: &Question) -> bool {
+    has_rows(question) || matches!(question.kind, SingleChoice | Ranking)
 }
 
 fn kind(question: &Question) -> CellKind {
@@ -289,10 +295,14 @@ pub(super) fn cells(question: &Question, path: &str) -> Result<Vec<Cell>, Vec<Va
         }
         let mut cell = Cell::new(format!("{}_other", question.code), cell_kind);
         cell.other = true;
+        if matches!(question.kind, MultipleChoice | MultipleChoiceComment) {
+            cell.row = Some("other".into());
+        }
         cells.push(cell);
         if question.kind == MultipleChoiceComment {
             let mut comment = Cell::new(format!("{}_othercomment", question.code), CellKind::Text);
             comment.comment = true;
+            comment.row = Some("other".into());
             cells.push(comment);
         }
     }

@@ -43,6 +43,59 @@ fn corpus() -> Corpus {
 }
 
 #[test]
+fn test_equation_should_allow_translated_labels_when_a_shared_attribute_defines_the_calculation() {
+    let mut corpus = corpus();
+    corpus.definition.upgrade().unwrap();
+    corpus.definition.languages = vec!["fr".into(), "en".into()];
+    let calculation = corpus.definition.groups[0]
+        .questions
+        .iter_mut()
+        .find(|question| question.code == "CALC")
+        .unwrap();
+    calculation
+        .translations
+        .push(rustsurvey_domain::Translation {
+            language: "en".into(),
+            text: Some("Calculated result".into()),
+            help: None,
+        });
+    let expression = calculation
+        .attributes
+        .iter()
+        .find(|attribute| attribute.name == "equation")
+        .unwrap()
+        .value
+        .clone();
+    let snapshot = Questionnaire::compile_forms(&corpus.definition)
+        .unwrap()
+        .evaluate(&corpus.baseline.answers, true)
+        .unwrap();
+    assert_eq!(
+        snapshot.answers.get("CALC"),
+        corpus.baseline.expected.get("CALC")
+    );
+
+    let calculation = corpus.definition.groups[0]
+        .questions
+        .iter_mut()
+        .find(|question| question.code == "CALC")
+        .unwrap();
+    calculation
+        .attributes
+        .retain(|attribute| attribute.name != "equation");
+    calculation.title = format!("{{{expression}}}");
+    let issues = Questionnaire::compile_forms(&corpus.definition)
+        .err()
+        .unwrap();
+    assert!(
+        issues
+            .iter()
+            .any(|issue| issue.message.contains("équations localisées")),
+        "localized question text still needs qualification when it supplies the expression"
+    );
+}
+
+#[test]
 fn test_forms_profile_should_match_the_shared_28_type_behavior_corpus() {
     let corpus = corpus();
     for case in corpus.cases {

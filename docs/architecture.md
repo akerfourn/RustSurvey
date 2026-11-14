@@ -24,10 +24,11 @@ flowchart LR
     Objects --> Disk
 ```
 
-En production, le client pourra être distribué comme des fichiers statiques sur
-la même origine que l’API. Node.js sert aux outils de développement et de build
-; aucun runtime Node n’est nécessaire à cette architecture proposée. Le mode de
-distribution final reste à choisir.
+Le pilote distribue le client compilé et l'API depuis Rust, sur la même origine.
+Les ressources publiques sont chargées une fois dans une mémoire bornée et
+partagée, avec ETag et cache. Node sert au développement et au build ; son
+runtime n'est pas nécessaire dans le paquet. Voir la
+[décision 0016](decisions/0016-pilot-web-delivery.md).
 
 ## Décisions de conception
 
@@ -43,7 +44,7 @@ et continuité sont évalués séparément. Le
 l’ouvre qu’après validation d’un instantané cohérent.
 
 L’implémentation couvre l’adaptateur `.lss` et les premières définitions natives
-en SQL, avec [éditeur et administration](authoring.md). Le format natif v3
+en SQL, avec [éditeur et administration](authoring.md). Le format natif v4
 réunit créations et imports LSS ; une source XML privée est conservée à part. Le
 premier profil de [collecte native](collection.md) ajoute campagnes figées,
 réponses et reprise. Le protocole de migration complet reste à réaliser. Ces
@@ -56,9 +57,11 @@ indépendant du fournisseur. Un adaptateur compatible S3 permet le déploiement
 sans volume disque persistant ; un adaptateur local représente les mêmes objets
 par des fichiers. Les métadonnées et relations restent dans SQL. La
 [décision 0002](decisions/0002-object-storage.md) fixe ce contrat. Ces
-adaptateurs SQL, mémoire et fichiers locaux sont présents ; S3 reste différé. La
-persistance concerne définitions, sources LSS, sessions administrateur, images
-natives et participations du profil de collecte. Les aperçus restent locaux.
+adaptateurs SQL, mémoire, fichiers locaux et S3 sont présents. S3 publie des
+chemins par empreinte dans un index SQL unique, selon la
+[décision 0015](decisions/0015-s3-indexed-content.md). La persistance concerne
+définitions, sources LSS, sessions administrateur, images natives et
+participations du profil de collecte. Les aperçus restent locaux.
 
 ## Frontière de confiance
 

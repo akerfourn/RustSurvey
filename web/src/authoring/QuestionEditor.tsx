@@ -11,9 +11,12 @@ import {
 import { QuestionAxes } from "./QuestionAxes.tsx";
 import { QuestionSettings } from "./QuestionSettings.tsx";
 import { QuestionMediaEditor } from "./QuestionMediaEditor.tsx";
+import { DefaultValues } from "./DefaultValues.tsx";
 
 interface QuestionEditorProps {
   question: Question;
+  baseLanguage: string;
+  languages: readonly string[];
   variables: readonly Variable[];
   readOnlyContent: boolean;
   index: number;
@@ -24,6 +27,8 @@ interface QuestionEditorProps {
 }
 export function QuestionEditor({
   question,
+  baseLanguage,
+  languages,
   variables,
   readOnlyContent,
   index,
@@ -133,6 +138,12 @@ export function QuestionEditor({
         </label>
         <QuestionAxes question={question} variables={variables} onChange={onChange} />
         <QuestionSettings question={question} variables={variables} onChange={onChange} />
+        <DefaultValues
+          question={question}
+          baseLanguage={baseLanguage}
+          languages={languages}
+          onChange={onChange}
+        />
         <QuestionMediaEditor question={question} onChange={onChange} />
       </fieldset>
       <ConditionEditor

@@ -1,5 +1,5 @@
 import type { TargetedEvent } from "preact";
-import { displayColumns, localizedAttribute } from "../survey/attributes.ts";
+import { attribute, displayColumns, localizedAttribute } from "../survey/attributes.ts";
 import { fixedOptions } from "../survey/question-kinds.ts";
 import { localized, pipeText, plainText } from "../survey/text.ts";
 import type { QuestionInputProps } from "./QuestionInput.tsx";
@@ -8,6 +8,7 @@ import { TextControl } from "./TextControl.tsx";
 export interface InputOption {
   value: string;
   label: string;
+  disabled?: boolean;
 }
 
 export function inputOptions(props: QuestionInputProps, scale = 0): InputOption[] {
@@ -30,7 +31,7 @@ export function ChoiceInput(props: QuestionInputProps) {
   const { question, answers, onAnswer, language, baseLanguage } = props;
   const field = question.source.code;
   const value = answers.get(field) ?? "";
-  const options = inputOptions(props);
+  let options = inputOptions(props);
   if (question.source.other)
     options.push({
       value: "-oth-",
@@ -39,6 +40,13 @@ export function ChoiceInput(props: QuestionInputProps) {
           localizedAttribute(question.source, "other_replace_text", language, baseLanguage),
         ) || "Autre",
     });
+  const activeChoices = props.activeChoices;
+  if (activeChoices !== undefined) {
+    const showDisabled = attribute(question.source, "array_filter_style") === "1";
+    options = options
+      .filter((option) => activeChoices.has(option.value) || showDisabled)
+      .map((option) => ({ ...option, disabled: !activeChoices.has(option.value) }));
+  }
   function handleChange(event: TargetedEvent<HTMLInputElement | HTMLSelectElement>): void {
     onAnswer(field, event.currentTarget.value);
   }
@@ -51,6 +59,7 @@ export function ChoiceInput(props: QuestionInputProps) {
             name={field}
             value={option.value}
             checked={value === option.value}
+            disabled={option.disabled === true}
             onChange={handleChange}
           />
           <span>{option.label}</span>

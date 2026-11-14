@@ -66,14 +66,19 @@ pub(super) fn id(id: &str) -> Result<(), AppError> {
     Ok(())
 }
 
-pub(super) fn write_slot(
+pub(super) async fn write_slot(
     state: &WorkspaceState,
 ) -> Result<tokio::sync::SemaphorePermit<'_>, AppError> {
-    state.writes.try_acquire().map_err(|_| {
-        AppError::new(
-            StatusCode::SERVICE_UNAVAILABLE,
-            "write_busy",
-            "Deux enregistrements sont déjà en cours. Réessayez.",
-        )
-    })
+    super::super::write_admission::acquire(&state.writes, &state.write_waiters)
+        .await
+        .map_err(|error| {
+            if matches!(error, super::super::write_admission::AdmissionError::Closed) {
+                return AppError::internal();
+            }
+            AppError::new(
+                StatusCode::SERVICE_UNAVAILABLE,
+                "write_busy",
+                "La capacité d’enregistrement est occupée. Réessayez.",
+            )
+        })
 }

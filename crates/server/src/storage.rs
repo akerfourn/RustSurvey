@@ -1,9 +1,14 @@
 //! Deployment choices for SQL and binary storage; questionnaire code only sees ObjectStore.
-use crate::{object_store::SqlObjectStore, settings::Settings};
+mod s3;
+use crate::{
+    object_store::{SqlObjectStore, SqlS3ObjectIndex},
+    settings::Settings,
+};
 use rustsurvey_object_store::{
     ByteRange, MAX_OBJECT_BYTES, ObjectKey, ObjectMetadata, ObjectRead, ObjectStore, StoreError,
     StoreFuture,
     file::{FileObjectStore, prepare_directory},
+    s3::{S3Configuration, S3ObjectStore},
 };
 use sea_orm::DatabaseConnection;
 use std::{
@@ -19,22 +24,25 @@ const LEGACY_DATABASE_URL: &str = "sqlite://rustsurvey.db?mode=rwc";
 enum Backend {
     Sql,
     File,
+    S3,
 }
 
 pub struct StorageConfiguration {
     database_url: Option<String>,
     backend: Backend,
     directory: PathBuf,
+    s3: Option<S3Configuration>,
 }
 impl StorageConfiguration {
     pub fn read(settings: &Settings) -> io::Result<Self> {
         let backend = match settings.value_or("OBJECT_STORE_BACKEND", "sql")?.as_str() {
             "sql" => Backend::Sql,
             "file" => Backend::File,
+            "s3" => Backend::S3,
             _ => {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
-                    "OBJECT_STORE_BACKEND must be sql or file",
+                    "OBJECT_STORE_BACKEND must be sql or file or s3",
                 ));
             }
         };
@@ -56,6 +64,11 @@ impl StorageConfiguration {
             database_url,
             backend,
             directory: PathBuf::from(directory),
+            s3: if backend == Backend::S3 {
+                Some(s3::configuration(settings)?)
+            } else {
+                None
+            },
         })
     }
 
@@ -77,17 +90,31 @@ impl StorageConfiguration {
     }
 
     pub async fn object_store(
-        &self,
+        self,
         database: DatabaseConnection,
     ) -> io::Result<Arc<dyn ObjectStore>> {
-        let sql = SqlObjectStore::new(database);
-        if self.backend == Backend::Sql {
-            return Ok(Arc::new(sql));
-        }
-        let file = FileObjectStore::open(&self.directory).await.map_err(|_| {
-            io::Error::other("cannot open local object storage; check OBJECT_STORE_DIRECTORY")
-        })?;
-        Ok(Arc::new(FileWithSqlHistory { file, sql }))
+        let sql = SqlObjectStore::new(database.clone());
+        let primary: Arc<dyn ObjectStore> = match self.backend {
+            Backend::Sql => return Ok(Arc::new(sql)),
+            Backend::File => {
+                Arc::new(FileObjectStore::open(&self.directory).await.map_err(|_| {
+                    io::Error::other(
+                        "cannot open local object storage; check OBJECT_STORE_DIRECTORY",
+                    )
+                })?)
+            }
+            Backend::S3 => {
+                let configuration = self
+                    .s3
+                    .ok_or_else(|| io::Error::other("missing S3 configuration"))?;
+                let store =
+                    S3ObjectStore::new(configuration, Arc::new(SqlS3ObjectIndex::new(database)))
+                        .map_err(|_| io::Error::other("cannot initialize S3 transport"))?;
+                s3::verify(&store).await?;
+                Arc::new(store)
+            }
+        };
+        Ok(Arc::new(ExternalWithSqlHistory { primary, sql }))
     }
 }
 
@@ -104,12 +131,12 @@ fn choose_default_database(root: &Path) -> io::Result<String> {
     }
 }
 
-/// New writes go to files; old SQL keys remain readable without moving or deleting their data.
-struct FileWithSqlHistory {
-    file: FileObjectStore,
+/// New writes go to the configured backend; old SQL keys remain readable without moving their data.
+struct ExternalWithSqlHistory {
+    primary: Arc<dyn ObjectStore>,
     sql: SqlObjectStore,
 }
-impl ObjectStore for FileWithSqlHistory {
+impl ObjectStore for ExternalWithSqlHistory {
     fn put<'a>(&'a self, key: &'a ObjectKey, bytes: Vec<u8>) -> StoreFuture<'a, ObjectMetadata> {
         Box::pin(async move {
             if bytes.len() > MAX_OBJECT_BYTES {
@@ -120,12 +147,12 @@ impl ObjectStore for FileWithSqlHistory {
                 Err(StoreError::NotFound) => {}
                 Err(error) => return Err(error),
             }
-            self.file.put(key, bytes).await
+            self.primary.put(key, bytes).await
         })
     }
     fn head<'a>(&'a self, key: &'a ObjectKey) -> StoreFuture<'a, ObjectMetadata> {
         Box::pin(async move {
-            match self.file.head(key).await {
+            match self.primary.head(key).await {
                 Err(StoreError::NotFound) => self.sql.head(key).await,
                 result => result,
             }
@@ -137,7 +164,7 @@ impl ObjectStore for FileWithSqlHistory {
         range: Option<ByteRange>,
     ) -> StoreFuture<'a, ObjectRead> {
         Box::pin(async move {
-            match self.file.get(key, range).await {
+            match self.primary.get(key, range).await {
                 Err(StoreError::NotFound) => self.sql.get(key, range).await,
                 result => result,
             }
@@ -145,7 +172,7 @@ impl ObjectStore for FileWithSqlHistory {
     }
     fn delete<'a>(&'a self, key: &'a ObjectKey) -> StoreFuture<'a, ()> {
         Box::pin(async move {
-            self.file.delete(key).await?;
+            self.primary.delete(key).await?;
             self.sql.delete(key).await
         })
     }

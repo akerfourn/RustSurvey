@@ -89,6 +89,11 @@ TypeScript, Vite, ESLint et Prettier sont installés localement par `npm ci`.
 | `npm run check:all`    | Vérifications client et Rust          |
 | `npm run test:storage` | HTTP et stockage local jetables       |
 
+Les [mesures CPU/RAM](performance.md) utilisent `npm run bench`. Le
+[banc de participants espacés](performance-participants.md) utilise
+`npm run bench:participants -- --package PATH` sur un paquet pilote existant,
+sans reconstruction. Les deux créent et suppriment leurs données temporaires.
+
 Les tests Rust couvrent l’adaptateur LSS, sa CLI, la projection du viewer et
 l’API HTTP d’inspection, le domaine natif, les sessions et les sauvegardes SQL.
 Les tests TypeScript couvrent les expressions, dépendances, validations et
@@ -151,6 +156,7 @@ conservent un port strict : un conflit arrête le démarrage.
 | `DATABASE_URL`             | `sqlite://.data/rustsurvey.db?mode=rwc`, ou ancienne base racine seule   |
 | `OBJECT_STORE_BACKEND`     | `sql` sans réglage ; `file` dans `.env.example`                          |
 | `OBJECT_STORE_DIRECTORY`   | `.data/media`, utilisé en mode fichiers                                  |
+| `STATIC_ASSETS_DIRECTORY`  | Absent : API seule ; `web/dist` pour servir le build depuis Rust         |
 | `API_PROXY_TARGET`         | Découvert par `npm run dev`                                              |
 | `ADMIN_USERNAME`           | `admin`, pour le premier compte                                          |
 | `ADMIN_PASSWORD`           | Aucun ; initialisation explicite du compte                               |
@@ -200,24 +206,79 @@ Dans l’autre terminal, pour lancer uniquement le client :
 API_PROXY_TARGET=http://127.0.0.1:4000 npm run dev:web
 ```
 
-`web/dist` contient le build statique. Son hébergement et le routage `/api` en
-production restent à préparer ; `vite preview` n’est pas un déploiement.
+`web/dist` contient le build statique. `STATIC_ASSETS_DIRECTORY=web/dist` permet
+au serveur Rust de le servir sur la même origine que `/api`, sans Vite. Le build
+est chargé une fois, en mémoire bornée, sans accès disque par requête. La
+variable absente conserve le mode API seule de `npm run dev`.
+
+`npm run package:pilot` construit le client et Rust en release, compile les
+trois pilotes SQL, puis prépare et vérifie un paquet neuf dans `target/pilot/`.
+Ce paquet se lance sans outils de développement ; voir le [guide](pilot.md). Le
+routage refuse les fichiers privés, les cartes source et les chemins non
+présents dans son instantané public. La
+[décision 0016](decisions/0016-pilot-web-delivery.md) précise limites, cache et
+politique de sécurité du contenu.
+
+Le premier démarrage du paquet Windows a aussi été contrôlé le 14 novembre 2026
+sur une copie temporaire : fichier `.env` issu de l'exemple livré, chemins
+relatifs `web` et `.data`, connexion, import de l'exemple natif et conservation
+de la session et du questionnaire après arrêt complet. Seuls le mot de passe
+synthétique et le port éphémère du test remplacent les valeurs du modèle. Ce
+contrôle ponctuel complète la recette automatisée du paquet ; la recette
+visuelle reste à réaliser.
 
 ## Vérifications et limites
 
-Contrôle de l’incrément de collecte effectué sous Windows le 13 novembre 2026,
-avec la chaîne stable installée : `npm run check:all` réussit avec 194 tests web
-et 146 tests Rust. Le test externe multi-bases reste ignoré en l’absence de
-moteur Docker démarré. Le test HTTP réel de stockage couvre aussi la collecte et
-la reprise après redémarrage. Aucune mesure comparative CPU/RAM ni validation
-visuelle de ce parcours n’est annoncée.
+Contrôle du 14 novembre 2026 sous Windows avec la chaîne stable installée :
+`npm run check` et `npm run check:rust` réussissent avec 367 tests web, 13 tests
+d'outillage et 304 tests Rust sous Windows. Un cas supplémentaire de refus des
+liens symboliques est réservé aux plateformes Unix. Les tests externes restent
+ignorés par ces commandes, puis sont exécutés explicitement sur des
+environnements jetables. PostgreSQL 17 et MariaDB 11.4 vérifient les migrations
+jusqu'à 0011, les invitations, les 28 types, l'export VV, la préparation LSR
+reprenable et les campagnes importées qualifiées. Le test HTTP réel vérifie
+aussi les téléchargements LSS/VV et le chargement des LSR après redémarrage, en
+stockage SQL et fichiers. Le bilan de collecte importée est vérifié sur une
+ancienne révision et avec le LSS réel de la référence. Les nouveaux imports
+persistants projettent les défauts représentables ; le corpus réel vérifie leurs
+cibles et langues. La conversion réversible des réponses LSR est également relue
+après redémarrage. Le [profil importé](import-execution.md) possède maintenant
+un parcours API de nouvelle collecte sur le LSS réel de la référence : réponse,
+révision figée, reprise et export. Le test HTTP arrête puis relance aussi le
+processus avant sauvegarde, réessai, VV et LSS. Le panneau d'administration est
+raccordé et compilé ; aucune validation visuelle de ce parcours ni mesure
+comparative CPU/RAM n'est annoncée. La reprise exacte des anciennes
+participations est différée à la demande du porteur du projet.
+
+`npm run test:s3` ajoute une référence Garage 2.5.0 jetable : signature réelle,
+contrat commun, publication SQL, anciens objets SQL, droits sur les images,
+originaux LSR et arrêt complet du processus HTTP. L'image est préparée
+explicitement ; voir le [guide S3](s3-storage.md). Aucun compte distant ni offre
+HDS n'est qualifié par ces tests. La copie d'anciens objets fichiers vers S3 et
+la mesure CPU/RAM de cet adaptateur restent à réaliser.
+
+`npm run test:limesurvey` compare structures, cellules et réponses avec la
+version 6.5.14. Les images doivent être préparées explicitement ; voir la
+[procédure de référence](limesurvey-reference.md). Le
+[périmètre d'échange](response-exchange.md) distingue données, exécution et
+continuité des reprises.
+
+La référence vérifie aussi les 30 options héritables dans quatre contextes. Les
+tests courants vérifient l'import de `showwelcome=I` sans défaut local et la
+conservation de cet état dans les aperçus. Le CLI `group-settings` peut résoudre
+les options avec un contexte source explicite et borné.
+
+L'administration conserve les contextes source par révision et les sélectionne
+explicitement. Les tests réels vérifient un original de 64 Kio, la limite
+concurrente, l'extraction via la commande console LimeSurvey et le refus
+d'écrasement. La sélection reste utilisable après arrêt complet du serveur.
 
 Le profil de [collecte native](collection.md) ajoute validation des réponses
 Rust, campagnes figées, reprise, idempotence et migration 0004. Les corpus
 partagés couvrent 87 expressions et dix parcours. Les tests SQLite fichier
 ferment puis rouvrent la base pour vérifier réponses, checkpoint et reçus. Le
-test externe optionnel inclut le même parcours de collecte ; il faut le
-réexécuter sur PostgreSQL/MariaDB pour valider ce nouveau schéma.
+test externe optionnel inclut le même parcours de collecte et l'export de
+campagne. Il est exécuté sur des bases vides créées pour cette vérification.
 
 Sous Windows, `.gitattributes` impose LF aux fichiers texte, conformément à
 `.editorconfig`, afin d’éviter les faux écarts Prettier après checkout. La

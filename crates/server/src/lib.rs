@@ -6,5 +6,6 @@ pub mod network;
 pub mod object_store;
 pub mod settings;
 pub mod storage;
+pub mod web;
 
 pub mod workspace;

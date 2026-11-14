@@ -88,17 +88,21 @@ export function questionSettings(kind: QuestionKind): QuestionSetting[] {
       { name: "min_answers", label: "Nombre minimal de réponses", kind: "expression" },
       { name: "max_answers", label: "Nombre maximal de réponses", kind: "expression" },
     );
-  if (profile.rows)
+  if (profile.rows || ["single_choice", "ranking"].includes(kind)) {
+    let filterHint =
+      "Codes de questions séparés par ; : choix, champs ou tableaux multiples, classement. Les codes des lignes ou choix doivent correspondre. Le code other désigne Autre.";
+    if (kind === "array_column")
+      filterHint += " Le filtre de ce tableau n’est pas exportable vers LimeSurvey 6.5.14.";
     settings.push(
       {
         name: "array_filter",
-        label: "Filtre : codes de choix multiples à inclure",
+        label: "Filtre : questions source à inclure",
         kind: "text",
-        hint: "Codes de questions séparés par ;. Les codes des lignes doivent correspondre aux codes des choix source.",
+        hint: filterHint,
       },
       {
         name: "array_filter_exclude",
-        label: "Filtre : codes de choix multiples à exclure",
+        label: "Filtre : questions source à exclure",
         kind: "text",
       },
       {
@@ -107,11 +111,38 @@ export function questionSettings(kind: QuestionKind): QuestionSetting[] {
         kind: "boolean",
       },
     );
+  }
   if (profile.other)
     settings.push(
       { name: "other_replace_text", label: "Libellé de la réponse « autre »", kind: "text" },
       { name: "other_numbers_only", label: "Réponse « autre » numérique", kind: "boolean" },
     );
+  if (
+    [
+      "multiple_choice",
+      "multiple_choice_comment",
+      "multiple_numbers",
+      "multiple_text",
+      "array_five",
+      "array_ten",
+      "array_yes_no",
+      "array_increase",
+      "array_choice",
+    ].includes(kind)
+  )
+    settings.push({
+      name: "exclude_all_others",
+      label: "Codes des lignes exclusives",
+      kind: "text",
+      hint: "Codes séparés par ;. Renseigner une ligne exclusive efface et désactive les autres lignes. Le code other désigne l’option Autre si elle est activée.",
+    });
+  if (["multiple_choice", "multiple_choice_comment"].includes(kind))
+    settings.push({
+      name: "exclude_all_others_auto",
+      label: "Sélectionner l’option exclusive quand toutes les autres sont remplies",
+      kind: "boolean",
+      hint: "Ne s’applique qu’avec un seul code exclusif, sans point-virgule.",
+    });
   if (kind === "single_choice" || kind === "dropdown")
     settings.push({
       name: "other_comment_mandatory",

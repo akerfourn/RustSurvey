@@ -1,6 +1,11 @@
 //! Native questionnaire definitions, independent of SQL, HTTP and LimeSurvey.
 use serde::{Deserialize, Serialize};
+pub mod cells;
 pub mod collection;
+pub mod defaults;
+pub mod exclusive;
+pub mod filtering;
+pub mod navigation;
 pub mod participation;
 pub mod rules;
 mod validation;
@@ -8,7 +13,7 @@ mod validation;
 pub const MAX_DOCUMENT_BYTES: usize = 8 * 1024 * 1024;
 pub const MAX_QUESTIONS: usize = 500;
 pub const MAX_ANSWER_CELLS: usize = 20000;
-pub const SCHEMA_VERSION: u32 = 3;
+pub const SCHEMA_VERSION: u32 = 4;
 
 pub fn always() -> String {
     "1".to_owned()
@@ -118,6 +123,8 @@ pub struct Question {
     pub source: Option<SourceReference>,
     #[serde(default)]
     pub media: Vec<QuestionMedia>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub defaults: Option<defaults::QuestionDefaults>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -189,6 +196,15 @@ pub struct ValidationIssue {
 
 impl Definition {
     pub fn upgrade(&mut self) -> Result<(), &'static str> {
+        if self.schema_version < 4
+            && self
+                .groups
+                .iter()
+                .flat_map(|group| &group.questions)
+                .any(|question| question.defaults.is_some())
+        {
+            return Err("Les valeurs par défaut nécessitent le format natif v4.");
+        }
         if self.schema_version < 3
             && self
                 .groups
@@ -223,7 +239,7 @@ impl Definition {
             }
             self.schema_version = 2;
         }
-        if self.schema_version == 2 {
+        if self.schema_version == 2 || self.schema_version == 3 {
             self.schema_version = SCHEMA_VERSION;
         }
         if self.schema_version != SCHEMA_VERSION {
@@ -233,7 +249,7 @@ impl Definition {
     }
 
     pub fn validate(&self) -> Vec<ValidationIssue> {
-        if self.schema_version == 1 || self.schema_version == 2 {
+        if (1..SCHEMA_VERSION).contains(&self.schema_version) {
             let mut definition = self.clone();
             if let Err(message) = definition.upgrade() {
                 return vec![ValidationIssue {

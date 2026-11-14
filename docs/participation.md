@@ -145,7 +145,8 @@ un processus n’est nécessaire. Ce choix privilégie la cohérence ; son coût
 Les tests couvrent cookies, droits, quotas, concurrence, dates, révocation,
 corrections et migrations SQLite. `npm run test:storage` vérifie aussi les
 invitations, compteurs et reprises après arrêt complet du serveur. Le parcours
-optionnel multi-bases doit encore être exécuté sur PostgreSQL/MariaDB jetables.
+optionnel multi-bases a été exécuté le 14 novembre 2026 sur PostgreSQL 17 et
+MariaDB 11.4 jetables, y compris la création et la reprise des invitations.
 
 [manual]: https://www.limesurvey.org/manual/Surveys_-_introduction
 [entry-cookie]:

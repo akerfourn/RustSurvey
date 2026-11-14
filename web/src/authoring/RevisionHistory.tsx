@@ -13,6 +13,7 @@ import { toViewer, type StoredStudy } from "./model.ts";
 import { StudyViewer } from "../components/StudyViewer.tsx";
 import { ViewerBoundary } from "../components/ViewerBoundary.tsx";
 import type { InspectionReport } from "../survey/types.ts";
+import { LssDownload } from "./LssDownload.tsx";
 
 interface Props {
   id: string;
@@ -123,6 +124,17 @@ function HistoryBody({
     function handleRestore(): void {
       void restore(item.revision);
     }
+    let nativeExport = null;
+    if (report === undefined)
+      nativeExport = (
+        <LssDownload
+          id={id}
+          revision={item.revision}
+          label="Exporter la structure LSS"
+          onExpired={onExpired}
+          native={true}
+        />
+      );
     return (
       <li key={item.revision}>
         <span>
@@ -137,6 +149,7 @@ function HistoryBody({
           >
             Définition JSON
           </a>
+          {nativeExport}
           <button
             type="button"
             className="secondary"
@@ -162,7 +175,11 @@ function HistoryBody({
       <section>
         <h3>Aperçu de la révision {selected.revision}</h3>
         <ViewerBoundary key={`history-${selected.revision}`}>
-          <StudyViewer study={toViewer(selected.definition, id)} report={report} debug={true} />
+          <StudyViewer
+            study={toViewer(selected.definition, id, report !== undefined)}
+            report={report}
+            debug={true}
+          />
         </ViewerBoundary>
       </section>
     );

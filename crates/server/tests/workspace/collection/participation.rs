@@ -744,7 +744,7 @@ async fn test_participation_migration_should_preserve_existing_runs_responses_an
         .await,
     )
     .await;
-    Migrator::down(&fixture.database, Some(1)).await.unwrap();
+    rollback_after(&fixture.database, 4).await;
     assert!(
         !SchemaManager::new(&fixture.database)
             .has_column("runs", "participation_policy")

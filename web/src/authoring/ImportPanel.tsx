@@ -45,7 +45,7 @@ export function ImportPanel({ csrf, onExpired, format = "lss" }: Props) {
   let label = "Importer et enregistrer le LSS";
   let title = "Importer une étude LimeSurvey";
   let description =
-    "Schéma 623, fichier de 8 Mio maximum. L’original est conservé en SQL. Les réponses restent locales.";
+    "Schéma 623, fichier de 8 Mio maximum. L’original est conservé. Les réponses peuvent ensuite être ajoutées dans une préparation privée.";
   let fileLabel = "Fichier LSS";
   let accept = ".lss,application/xml,text/xml";
   if (format === "native") {

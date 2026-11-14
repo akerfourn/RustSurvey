@@ -8,6 +8,8 @@ l’[éditeur avec administration](authoring.md).
 
 ## Parcours de lecture
 
+Pour essayer le livrable actuel, commencer par le [guide du pilote](pilot.md).
+
 1. [Besoins et périmètre](requirements.md).
 2. [Analyse des sources LimeSurvey 6.5.14](limesurvey-source-audit.md).
 3. [Architecture proposée](architecture.md).
@@ -29,6 +31,27 @@ l’[éditeur avec administration](authoring.md).
 18. [Édition étendue, historique et médias natifs](decisions/0005-authoring-media-and-history.md).
 
 19. [Données privées et stockage local](local-storage.md).
+
+20. [Vérification dans LimeSurvey 6.5.14](limesurvey-reference.md).
+
+21. [Échange des réponses LSR et VV](response-exchange.md).
+22. [Choix des cellules et de l'export VV](decisions/0009-response-exchange.md).
+23. [Préparation privée des réponses LSR](response-imports.md).
+24. [Choix de préparation des réponses](decisions/0010-response-import-staging.md).
+25. [Prérequis de collecte des études importées](imported-collection.md).
+26. [Résolution des options héritées LimeSurvey](source-settings.md).
+27. [Choix de persistance des contextes source](decisions/0011-source-settings-contexts.md).
+28. [Présentation figée des campagnes natives](decisions/0012-native-navigation.md).
+29. [Lignes et choix exclusifs](exclusive-options.md).
+30. [Filtres de lignes, sources et cascade](array-filters.md).
+31. [Édition, collecte et échange des valeurs par défaut](default-values.md).
+32. [Mesures CPU et mémoire](performance.md).
+33. [Nouvelles campagnes sur des imports qualifiés](import-execution.md).
+34. [Instantanés d'exécution des campagnes importées](decisions/0014-import-execution-snapshots.md).
+35. [Configuration et vérification du stockage S3](s3-storage.md).
+36. [Contenus S3 et publication SQL immuable](decisions/0015-s3-indexed-content.md).
+37. [Distribution du client web et paquet pilote](decisions/0016-pilot-web-delivery.md).
+38. [Participants nombreux, pauses et pointes de charge](performance-participants.md).
 
 ## Lire les statuts
 

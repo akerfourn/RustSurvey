@@ -3,6 +3,7 @@ import { ApiError, message } from "../authoring/api.ts";
 import { closeRun, listResponses, type ResponseSummary, type Run } from "./api.ts";
 import { Invitations } from "./Invitations.tsx";
 import { policyLabel } from "./PolicyControl.tsx";
+import { navigationLabel } from "../survey/navigation.ts";
 
 interface RunCardProps {
   run: Run;
@@ -98,6 +99,17 @@ export function RunCard({ run, csrf, onChange, onExpired }: RunCardProps) {
     );
   });
   let responses = null;
+  let exportLink = null;
+  if (!run.isOpen)
+    exportLink = (
+      <p>
+        <a href={`/api/admin/runs/${run.id}/responses.vv`}>
+          Exporter toutes les réponses (VV LimeSurvey)
+        </a>
+        {" · "}
+        <a href={`/api/admin/runs/${run.id}/definition.lss`}>Exporter la structure LSS</a>
+      </p>
+    );
   let invitations = null;
   let participationLink = "Ouvrir le lien public de participation";
   if (run.participationPolicy.mode === "invitation") {
@@ -108,6 +120,7 @@ export function RunCard({ run, csrf, onChange, onExpired }: RunCardProps) {
     responses = (
       <div>
         <p>Les téléchargements restent réservés à l’administration.</p>
+        {exportLink}
         <ul>{entries}</ul>
         <div className="button-row">
           <button type="button" onClick={handlePrevious} disabled={page === 0 || loading}>
@@ -128,6 +141,7 @@ export function RunCard({ run, csrf, onChange, onExpired }: RunCardProps) {
         {status} · version {run.revision} · {new Date(run.createdAt * 1000).toLocaleString()}
       </h3>
       <p>{policyLabel(run.participationPolicy)}</p>
+      <p>{navigationLabel(run.navigation)}</p>
       <p>
         <a href={`#/runs/${run.id}`} target="_blank" rel="noreferrer">
           {participationLink}

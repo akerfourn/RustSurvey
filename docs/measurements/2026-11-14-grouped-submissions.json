@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-14T20:31:59.503Z",
+  "subject": "Paced virtual participants on the delivered pilot; no LimeSurvey comparison",
+  "source": {
+    "head": "422bd6e5b760c30cc20affefd1aec37b468727b0",
+    "dirty": true,
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)",
+    "binarySha256": "673c9c2156e7cf57b70903ea79cb9835a092fd9539ab8075e24d0701d436b9bd",
+    "packageManifestSha256": "a12ab41f71c1b0a2748ad8ccbbdf07e1221c00ea168abc57beec3aaefb76b8c0"
+  },
+  "host": {
+    "platform": "win32",
+    "release": "10.0.26300",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 7700X 8-Core Processor             ",
+    "logicalProcessors": 16,
+    "totalMemoryBytes": 67799826432,
+    "node": "v24.15.0"
+  },
+  "configuration": {
+    "clients": [1000],
+    "arrival-seconds": 30,
+    "think-seconds": 1,
+    "cycles": 1,
+    "idle-seconds": 1,
+    "burst": 0,
+    "database": "disposable SQLite file, default driver settings",
+    "objectStore": "file",
+    "http": "one independent persistent HTTP/1.1 connection per virtual user",
+    "https": false,
+    "browser": false,
+    "sameHostClient": true,
+    "retries": 0,
+    "queue": 8,
+    "memorySamplingIntervalMs": 100,
+    "workload": "28 native question types, all on one page",
+    "coldAssetsPerUser": true
+  },
+  "scenarios": [
+    {
+      "kind": "paced",
+      "requestedParticipants": 1000,
+      "profile": "native-pages-v1",
+      "definitionSha256": "e4b95efce2e64e36e15c2cfdd83538e84099442e0131c21827188b5cc44e083a",
+      "phases": {
+        "arrival": {
+          "resources": {
+            "durationMs": 29983.412800000002,
+            "cpuMs": 3125,
+            "cpuPercentOfOneCore": 10.42242929730801,
+            "residentBeforeBytes": 15282176,
+            "residentAfterBytes": 86122496,
+            "sampledPeakResidentBytes": 86122496,
+            "lifetimePeakResidentBytes": 86122496,
+            "privateCommittedAfterBytes": 76668928,
+            "memorySamples": 284,
+            "peakHttpInFlight": 1,
+            "peakClientConnections": 1000,
+            "clientConnectionsAtEnd": 1000
+          },
+          "traffic": {
+            "attempts": 5000,
+            "successful": 5000,
+            "rejected": 0,
+            "statuses": {
+              "200:ok": 4000,
+              "201:ok": 1000
+            },
+            "successesPerSecond": 166.75886875692817,
+            "successfulLatencyMs": {
+              "p50": 0.5778000000000247,
+              "p95": 3.6354000000028464,
+              "p99": 4.092899999999645
+            },
+            "rejectedLatencyMs": {
+              "p50": null,
+              "p95": null,
+              "p99": null
+            },
+            "receivedBytes": 253308000,
+            "sentBytes": 69000,
+            "scheduleLagMs": {
+              "p50": 6.241300000001502,
+              "p95": 14.003799999999956,
+              "p99": 14.788000000000466
+            }
+          },
+          "byKind": {
+            "asset": {
+              "attempts": 3000,
+              "successful": 3000,
+              "rejected": 0,
+              "statuses": {
+                "200:ok": 3000
+              },
+              "successesPerSecond": 100.0553212541569,
+              "successfulLatencyMs": {
+                "p50": 0.36520000000018626,
+                "p95": 0.8469999999979336,
+                "p99": 1.3359000000000378
+              },
+              "rejectedLatencyMs": {
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "receivedBytes": 225208000,
+              "sentBytes": 0,
+              "scheduleLagMs": {
+                "p50": 6.241300000001502,
+                "p95": 14.003799999999956,
+                "p99": 14.788000000000466
+              }
+            },
+            "definition": {
+              "attempts": 1000,
+              "successful": 1000,
+              "rejected": 0,
+              "statuses": {
+                "200:ok": 1000
+              },
+              "successesPerSecond": 33.35177375138563,
+              "successfulLatencyMs": {
+                "p50": 0.5814999999997781,
+                "p95": 0.7190000000000509,
+                "p99": 0.86529999999766
+              },
+              "rejectedLatencyMs": {
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "receivedBytes": 13953000,
+              "sentBytes": 0,
+              "scheduleLagMs": {
+                "p50": null,
+                "p95": null,
+                "p99": null
+              }
+            },
+            "start": {
+              "attempts": 1000,
+              "successful": 1000,
+              "rejected": 0,
+              "statuses": {
+                "201:ok": 1000
+              },
+              "successesPerSecond": 33.35177375138563,
+              "successfulLatencyMs": {
+                "p50": 3.457100000000082,
+                "p95": 4.037799999998242,
+                "p99": 4.593199999999342
+              },
+              "rejectedLatencyMs": {
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "receivedBytes": 14147000,
+              "sentBytes": 69000,
+              "scheduleLagMs": {
+                "p50": null,
+                "p95": null,
+                "p99": null
+              }
+            }
+          }
+        },
+        "idle": {
+          "resources": {
+            "durationMs": 1008.6782000000021,
+            "cpuMs": 0,
+            "cpuPercentOfOneCore": 0,
+            "residentBeforeBytes": 86122496,
+            "residentAfterBytes": 86122496,
+            "sampledPeakResidentBytes": 86122496,
+            "lifetimePeakResidentBytes": 86122496,
+            "privateCommittedAfterBytes": 76668928,
+            "memorySamples": 11,
+            "peakHttpInFlight": 0,
+            "peakClientConnections": 1000,
+            "clientConnectionsAtEnd": 1000
+          },
+          "traffic": {
+            "attempts": 0,
+            "successful": 0,
+            "rejected": 0,
+            "statuses": {},
+            "successesPerSecond": 0,
+            "successfulLatencyMs": {
+              "p50": null,
+              "p95": null,
+              "p99": null
+            },
+            "rejectedLatencyMs": {
+              "p50": null,
+              "p95": null,
+              "p99": null
+            },
+            "receivedBytes": 0,
+            "sentBytes": 0,
+            "scheduleLagMs": {
+              "p50": null,
+              "p95": null,
+              "p99": null
+            }
+          },
+          "byKind": {}
+        },
+        "activity": {
+          "resources": {
+            "durationMs": 1050.0737000000008,
+            "cpuMs": 656.25,
+            "cpuPercentOfOneCore": 62.495613403135366,
+            "residentBeforeBytes": 86122496,
+            "residentAfterBytes": 86806528,
+            "sampledPeakResidentBytes": 86806528,
+            "lifetimePeakResidentBytes": 86806528,
+            "privateCommittedAfterBytes": 77234176,
+            "memorySamples": 12,
+            "peakHttpInFlight": 27,
+            "peakClientConnections": 1000,
+            "clientConnectionsAtEnd": 1000
+          },
+          "traffic": {
+            "attempts": 1000,
+            "successful": 314,
+            "rejected": 686,
+            "statuses": {
+              "503:write_busy": 686,
+              "200:ok": 314
+            },
+            "successesPerSecond": 299.02663022604963,
+            "successfulLatencyMs": {
+              "p50": 27.585800000000745,
+              "p95": 45.056000000000495,
+              "p99": 155.7525999999998
+            },
+            "rejectedLatencyMs": {
+              "p50": 0.21240000000034343,
+              "p95": 1.0355999999992491,
+              "p99": 2.0159999999996217
+            },
+            "receivedBytes": 132782,
+            "sentBytes": 887000,
+            "scheduleLagMs": {
+              "p50": 0.5139000000017404,
+              "p95": 3.7063000000016473,
+              "p99": 11.827000000001135
+            }
+          },
+          "byKind": {
+            "submit": {
+              "attempts": 1000,
+              "successful": 314,
+              "rejected": 686,
+              "statuses": {
+                "503:write_busy": 686,
+                "200:ok": 314
+              },
+              "successesPerSecond": 299.02663022604963,
+              "successfulLatencyMs": {
+                "p50": 27.585800000000745,
+                "p95": 45.056000000000495,
+                "p99": 155.7525999999998
+              },
+              "rejectedLatencyMs": {
+                "p50": 0.21240000000034343,
+                "p95": 1.0355999999992491,
+                "p99": 2.0159999999996217
+              },
+              "receivedBytes": 132782,
+              "sentBytes": 887000,
+              "scheduleLagMs": {
+                "p50": 0.5139000000017404,
+                "p95": 3.7063000000016473,
+                "p99": 11.827000000001135
+              }
+            }
+          }
+        }
+      },
+      "enteredParticipants": 1000,
+      "offeredWritesPerSecond": 1000,
+      "submittedParticipants": 314,
+      "rowsVerified": 1000,
+      "rowsVerifiedAfterRestart": 1000
+    }
+  ],
+  "state": "complete",
+  "completedAt": "2026-11-14T20:32:32.289Z"
+}

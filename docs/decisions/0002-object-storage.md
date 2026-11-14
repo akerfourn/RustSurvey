@@ -7,22 +7,23 @@ novembre 2026. La demande d’avancer sur la persistance remplace le report
 initial des fonctions avec stockage.
 
 Le port `ObjectStore`, ses adaptateurs SQL, mémoire et fichiers locaux ainsi
-qu’un parcours d’images natives sont présents. S3 reste à développer. Le mode
-local fourni utilise `.data/` ; le mode SQL reste utilisable sans répertoire de
-médias. Aucun SDK S3 ni service supplémentaire n’est requis.
+qu'un parcours d'images natives sont présents. L'adaptateur S3 est désormais
+disponible, selon la [décision 0015](0015-s3-indexed-content.md). Le mode local
+fourni utilise `.data/` ; le mode SQL reste utilisable sans répertoire de
+médias. Aucun SDK S3 complet ni service supplémentaire n'est requis.
 
 ## Décision
 
 Le domaine manipule des références logiques de médias. Les contenus binaires
-passent par `crates/object-store`, indépendant de HTTP, SQL et du disque.
+passent par le port `ObjectStore`, indépendant de HTTP, SQL et du disque.
 `WorkspaceState::with_object_store` permet d’injecter un adaptateur.
 
-| Adaptateur          | État       | Rôle                                               |
-| ------------------- | ---------- | -------------------------------------------------- |
-| `SqlObjectStore`    | Implémenté | Valeur par défaut, même base que les définitions   |
-| `MemoryObjectStore` | Implémenté | Tests, limites explicites de volume et d’objets    |
-| `S3ObjectStore`     | Prévu      | Endpoint et conteneur compatibles S3 configurables |
-| `FileObjectStore`   | Implémenté | Répertoire privé, derrière le même contrat         |
+| Adaptateur          | État       | Rôle                                              |
+| ------------------- | ---------- | ------------------------------------------------- |
+| `SqlObjectStore`    | Implémenté | Valeur par défaut, même base que les définitions  |
+| `MemoryObjectStore` | Implémenté | Tests, limites explicites de volume et d’objets   |
+| `S3ObjectStore`     | Implémenté | Contenus S3 et publication immuable par index SQL |
+| `FileObjectStore`   | Implémenté | Répertoire privé, derrière le même contrat        |
 
 L’adaptateur SQL répond à la contrainte actuelle sans stockage disque attaché
 aux médias. Sa table `objects` utilise `LONGBLOB` sur MariaDB, `BYTEA` sur
@@ -34,7 +35,7 @@ flowchart LR
     Server["Application Rust"] --> Port["Port ObjectStore"]
     Port --> SQL["Adaptateur SQL"]
     Port --> Memory["Adaptateur mémoire borné"]
-    Port -.-> S3["Futur adaptateur S3"]
+    Port --> S3["Adaptateur S3 et index SQL"]
     Port --> Disk["Adaptateur fichiers locaux"]
 ```
 
@@ -58,8 +59,9 @@ Le port borne chaque contenu à 8 Mio. Le contrat utilise actuellement des
 tampons bornés. L’adaptateur fichiers prépare ses écritures dans un répertoire
 temporaire privé avant publication atomique. Les adaptateurs SQL et fichiers
 lisent le binaire entier avant de découper une plage ; ce n’est pas une lecture
-SQL en flux. Un futur adaptateur S3 pourra utiliser les plages du fournisseur.
-Le streaming de très gros fichiers devra faire évoluer ce contrat explicitement.
+SQL en flux. S3 vérifie aussi le contenu entier ; les plages du fournisseur ne
+sont pas encore utilisées. Le streaming de très gros fichiers devra faire
+évoluer ce contrat explicitement.
 
 Les erreurs distinguent absence, conflit, indisponibilité, taille, clé et plage
 invalides. L’intégrité SHA-256 appartient au contrat ; un ETag fournisseur ne

@@ -10,7 +10,7 @@ use crate::{Definition, Question, QuestionKind, ValidationIssue};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub use syntax::{Expression, references};
-pub use value::{EvaluationBudget, Scalar};
+pub use value::{EvaluationBudget, MAX_STRING_UNITS, Scalar};
 
 pub fn fields(question: &Question) -> Vec<String> {
     use QuestionKind::*;
@@ -101,6 +101,11 @@ pub fn validate(definition: &Definition, previous: Option<&Definition>) -> Vec<V
         .iter()
         .flat_map(|group| &group.questions)
         .collect();
+    let previous_sources: BTreeMap<_, _> = previous
+        .into_iter()
+        .flat_map(|definition| definition.groups.iter().flat_map(|group| &group.questions))
+        .map(|question| (question.code.as_str(), question))
+        .collect();
     let mut variables = BTreeMap::new();
     for question in &questions {
         for field in fields(question) {
@@ -188,20 +193,23 @@ pub fn validate(definition: &Definition, previous: Option<&Definition>) -> Vec<V
                         .map(str::trim)
                         .filter(|code| !code.is_empty())
                     {
-                        if let Some(source) = questions.iter().find(|item| {
-                            item.code == code
-                                && matches!(
-                                    item.kind,
-                                    QuestionKind::MultipleChoice
-                                        | QuestionKind::MultipleChoiceComment
-                                )
-                        }) {
+                        let source = questions.iter().find(|item| item.code == code);
+                        let source_changed = match (previous_sources.get(code), source) {
+                            (Some(old), Some(current)) => {
+                                old.id != current.id || old.kind != current.kind
+                            }
+                            (None, None) => false,
+                            _ => true,
+                        };
+                        if let Some(source) =
+                            source.filter(|source| crate::filtering::supports_source(source.kind))
+                        {
                             dependencies.insert(source.id.as_str());
-                        } else if attribute_changed && issues.len() < 100 {
+                        } else if (attribute_changed || source_changed) && issues.len() < 100 {
                             issues.push(ValidationIssue {
                                 path: attribute_path.clone(),
                                 message: format!(
-                                    "Le filtre {code} doit désigner une question à choix multiples."
+                                    "Le filtre {code} doit désigner une question à lignes multiples ou un classement."
                                 ),
                             });
                         }

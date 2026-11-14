@@ -44,21 +44,28 @@ participant. Les aperçus restent locaux. Une première
 [collecte native](collection.md) prend en charge 28 types avec validation Rust,
 révision figée, stockage SQL et reprise privée. Les
 [règles de participation](participation.md) couvrent cookie facultatif,
-invitations, limites d’usage et corrections autorisées. Les imports et les
-autres fonctions de formulaire nécessitant un état durable restent différés.
-Leur présence dans un import continue à être diagnostiquée. Les médias et pièces
-jointes utiliseront un port de stockage objet, avec adaptateurs S3 et fichiers
-locaux, selon la [décision 0002](decisions/0002-object-storage.md). Le
-déploiement S3 ne doit pas dépendre d’un volume disque persistant attaché au
-serveur.
+invitations, limites d'usage et corrections autorisées. Un
+[profil importé](import-execution.md) qualifie des campagnes neuves ; il ne
+transfère pas les anciennes participations. Les autres fonctions de formulaire
+nécessitant un état durable restent à compléter et leur présence dans un import
+continue à être diagnostiquée. Les médias et pièces jointes utiliseront un port
+de stockage objet, avec adaptateurs S3 et fichiers locaux, selon la
+[décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne doit pas
+dépendre d’un volume disque persistant attaché au serveur.
 
-La migration d’études en cours est une exigence acquise : conserver structure,
-réponses complètes et partielles, participants, droits de reprise et
-comportement attendu. Les ressources et états externes nécessaires font aussi
-partie de l’inventaire de transfert. Une fonction non prise en charge bloque la
-bascule concernée plutôt que provoquer une perte silencieuse.
+La migration d'études en cours reste un objectif ultérieur. Le porteur du projet
+a explicitement accepté de différer la continuité exacte des états internes et
+des droits de reprise. Elle ne conditionne pas la livraison des créations,
+nouvelles collectes et échanges de fichiers. Lorsqu'une bascule sera proposée,
+elle devra conserver réponses complètes et partielles, participants, ressources
+et comportement ; une fonction manquante ne devra pas provoquer de perte.
 
 ## Périmètre initial proposé
+
+La priorité actuelle est une [version pilote utilisable](pilot.md) sur les
+fonctions déjà prises en charge. La parité complète reste une cible ultérieure.
+La distribution et la recette du pilote ne doivent pas attendre fichiers, quotas
+avancés ou transfert des anciennes participations.
 
 Le premier adaptateur peut commencer par `.lss`, pour la structure. Les archives
 `.lsa` et leurs données associées font partie de la cible de migration dès la

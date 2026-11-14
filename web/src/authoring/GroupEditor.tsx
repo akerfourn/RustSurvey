@@ -3,9 +3,12 @@ import type { Variable } from "./conditions.ts";
 import type { TargetedEvent } from "preact";
 import { moveItem, type Group, type Question } from "./model.ts";
 import { QuestionEditor } from "./QuestionEditor.tsx";
+import { pruneQuestionDefaults } from "./default-values.ts";
 
 interface GroupEditorProps {
   group: Group;
+  baseLanguage: string;
+  languages: readonly string[];
   variables: readonly Variable[];
   readOnlyContent: boolean;
   index: number;
@@ -18,6 +21,8 @@ interface GroupEditorProps {
 }
 export function GroupEditor({
   group,
+  baseLanguage,
+  languages,
   variables,
   readOnlyContent,
   index,
@@ -45,9 +50,12 @@ export function GroupEditor({
   }
   const questions = group.questions.map((question, questionIndex) => {
     function handleChange(updated: Question): void {
+      const updatedQuestion = pruneQuestionDefaults(updated, question);
       onChange({
         ...group,
-        questions: group.questions.map((item) => (item.id === question.id ? updated : item)),
+        questions: group.questions.map((item) =>
+          item.id === updatedQuestion.id ? updatedQuestion : item,
+        ),
       });
     }
     function handleMove(direction: -1 | 1): void {
@@ -66,6 +74,8 @@ export function GroupEditor({
         variables={variables}
         readOnlyContent={readOnlyContent}
         question={question}
+        baseLanguage={baseLanguage}
+        languages={languages}
         index={questionIndex}
         count={group.questions.length}
         onChange={handleChange}

@@ -15,6 +15,8 @@ export interface QuestionInputProps {
   baseLanguage: string | null;
   fields: ReadonlyMap<string, string>;
   activeFields: ReadonlySet<string>;
+  activeChoices?: ReadonlySet<string> | undefined;
+  otherVisible?: boolean;
   languages: readonly string[];
   onLanguage: (language: string) => void;
   onAnswer: (field: string, value: string) => void;

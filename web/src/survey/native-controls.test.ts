@@ -428,7 +428,10 @@ test("test_ranking_should_bound_the_product_of_positions_and_options_before_rend
 
 test("test_filter_sources_should_be_diagnosed_when_they_are_unknown_or_create_cycles", () => {
   const study = source("M", { array_filter: "MISSING" });
-  assert.match(inspect(study).issues.join(), /doit désigner un choix multiple/);
+  assert.match(
+    inspect(study).issues.join(),
+    /doit désigner une question à lignes multiples ou un classement/,
+  );
   study.questions[0]!.attributes = settings({ array_filter: "GRID" });
   assert.match(inspect(study).issues.join(), /Cycle/);
 });

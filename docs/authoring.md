@@ -21,10 +21,18 @@ reste un brouillon local. Le panneau **Collecter des réponses** ouvre séparém
 une [campagne native durable](collection.md) sur une révision enregistrée.
 
 L’administration dispose d’un import LSS persistant. Il alimente la même
-définition v3 que les créations, en conservant langues, types, traductions,
+définition v4 que les créations, en conservant langues, types, traductions,
 sous-questions, échelles, paramètres et règles. La fixture des 28 types sans
 fichiers est couverte. L’édition des imports est limitée aux conditions des
 groupes et questions ; les autres propriétés sont protégées côté serveur.
+
+Les nouveaux imports projettent aussi les valeurs par défaut représentables dans
+leurs cellules natives. Le rapport distingue projection complète et cibles non
+prises en charge, sans changer les anciens imports. Voir le
+[périmètre des défauts](default-values.md). Cette projection seule ne qualifie
+pas leur collecte. Le panneau **Collecter des réponses** propose séparément une
+[campagne importée neuve](import-execution.md), avec contexte source sélectionné
+et faits d'exécution. Les anciennes participations ne sont pas transférées.
 
 Le XML original est conservé séparément en SQL et téléchargé uniquement après
 authentification. Il reste identique après les modifications de conditions. Ce
@@ -33,6 +41,19 @@ lien exporte les conditions de la révision enregistrée dans le LSS. Le parcour
 `#/import` reste une inspection temporaire, sans enregistrement.
 
 ## Importer et modifier des conditions
+
+Le panneau [Inventaire de compatibilité et de migration](imported-collection.md)
+examine la révision enregistrée et localise les données source non projetées. Il
+ne débloque pas la collecte. Le panneau
+[Importer des réponses LimeSurvey](response-imports.md) ajoute un LSR dans une
+préparation privée, avec progression durable et reprise après interruption. Les
+valeurs restent distinctes des participations natives.
+
+**Contexte des réglages source** conserve les fichiers extraits de LimeSurvey
+pour une révision. Déposer puis sélectionner explicitement un contexte, ou le
+retrouver dans la liste après redémarrage. Le bilan indique les valeurs résolues
+; aucune définition ni participation n'est modifiée. Voir le
+[parcours d'extraction et de dépôt](source-settings.md).
 
 1. Dans **Administration**, sélectionner un LSS puis **Importer et enregistrer
    le LSS**. Le schéma 623 et une structure valide sont requis.
@@ -63,6 +84,11 @@ fait d’avoir été stockées. Le profil du [viewer](viewer.md) reste applicabl
 
 ## Types, réglages et traductions natifs
 
+**Valeurs par défaut** configure les réponses initiales de 21 types, par langue
+ou avec une valeur principale partagée. Une réponse effacée reste vide après
+reprise. L'aperçu, la collecte et l'export LSS natifs utilisent les mêmes
+coordonnées ; voir [le périmètre et les limites](default-values.md).
+
 **Calculs, validation et présentation** expose les options prises en charge :
 équation, règle de validation, bornes par cellule et sur la somme, nombre de
 réponses, longueur du texte, filtres de sous-questions, curseurs et matrices.
@@ -76,11 +102,17 @@ propres à l’ancien type. Renommer un code ne réécrit pas automatiquement le
 expressions : les références devenues inconnues doivent être corrigées avant la
 sauvegarde.
 
+Les [lignes exclusives](exclusive-options.md) se configurent par leurs codes,
+séparés par `;`, pour A/B/C/E/F/M/P/K/Q. Les choix multiples M/P proposent aussi
+la sélection automatique d'une option unique lorsque toutes les autres sont
+remplies. Les codes inconnus ou devenus invalides après édition sont refusés ;
+ces règles sont également contrôlées par Rust pendant la collecte.
+
 Rust contrôle syntaxe, références et cycles des nouvelles expressions. Les
 validations peuvent lire leur propre réponse ; les pertinences et calculs ne
-peuvent pas former de cycle. Rust contrôle aussi les sources M/P des filtres,
-les valeurs littérales et les intervalles de curseurs/matrices. Il valide aussi
-les réponses d’une collecte dans le profil natif décrit dans
+peuvent pas former de cycle. Rust contrôle les sources des filtres et leurs
+dépendances, les valeurs littérales et les intervalles de curseurs/matrices. Il
+valide aussi les réponses d’une collecte dans le profil natif décrit dans
 [Collecte et reprise](collection.md). Les autres types restent hors profil.
 
 **Langues du questionnaire** accepte au plus 32 codes. **Traductions** permet de
@@ -88,6 +120,14 @@ choisir une langue et de rechercher un groupe, une question ou un choix. Les
 nouvelles traductions sont initialisées depuis le texte de base. Changer la
 langue principale conserve les textes de la précédente. Retirer une langue du
 parcours conserve ses traductions dans le document.
+
+Les [filtres de lignes](array-filters.md) acceptent les codes de questions à
+lignes multiples ou de classements, séparés par `;`. Les sources sont validées
+aussi lorsqu'une question est renommée ou change de type. Les cascades gardent
+les restrictions de leurs ancêtres. Les cibles listes radio et classements
+exposent aussi ces réglages. Le filtrage natif d'un tableau H n'est pas
+exportable vers la référence 6.5.14, qui ignore ce réglage cible ; son aperçu
+importé signale cet écart et bloque la saisie.
 
 ## Images natives et stockage objet
 
@@ -115,6 +155,28 @@ téléversements participants restent à faire.
 
 ## Exports de définition et LSS
 
+Pour une création native, chaque ligne de l'historique propose **Exporter la
+structure LSS**. Le fichier décrit cette révision figée au schéma 623. Les
+textes, langues, types, axes, choix et règles du profil sont représentés. Les
+médias, thèmes spécifiques, traductions inactives, attributs inconnus et codes
+incompatibles bloquent le téléchargement avec un diagnostic. La politique de
+campagne et les réponses ne font pas partie de cette structure.
+
+La route privée est
+`GET /api/admin/studies/{id}/revisions/{revision}/definition.lss` ; le paramètre
+`surveyId` choisit l'identifiant d'échange, entre 1 et 999999999, avec 1 par
+défaut. Le téléchargement exige une session administrateur et reste sans cache.
+La bibliothèque et le CLI exposent le même export borné à 8 Mio.
+
+L'export d'une révision utilise la présentation native par défaut : un groupe
+par page et progression affichée. **Exporter la structure LSS** depuis une
+campagne utilise plutôt `/api/admin/runs/{id}/definition.lss`, avec son format
+et sa progression figés. Les invitations et secrets restent exclus du LSS.
+
+Le [test de référence](limesurvey-reference.md) vérifie l'import et le réexport
+réels des 28 types en deux langues. Cette preuve structurelle est distincte du
+parcours API de nouvelle collecte du [profil importé](import-execution.md).
+
 L’historique fournit la définition JSON d’une révision. **Importer une
 définition native** la valide comme un nouveau questionnaire. Le fichier ne
 contient ni binaires ni XML original privé. Une référence à une image d’une
@@ -130,7 +192,8 @@ L’original reste toujours distinct et immuable.
 
 Les fixtures synthétiques vérifient lecture, conservation et relecture des
 conditions. L’import fonctionnel du résultat dans LimeSurvey 6.5.14 reste à
-certifier. Les créations natives ne sont pas encore exportables en LSS.
+certifier. Les créations natives disposent de l'export distinct décrit plus
+haut.
 
 ## Installation et connexion
 
@@ -149,6 +212,11 @@ de syntaxe arrête le démarrage sans afficher les valeurs du fichier.
 | `ADMIN_PASSWORD`           | Aucun défaut serveur ; valeur de test dans l’exemple ; crée seulement le premier compte |
 | `ADMIN_COOKIE_SECURE`      | `false` en debug, `true` en release                                                     |
 | `DEV_ALLOW_WEAK_PASSWORDS` | `false` par défaut ; mots de passe courts pour le bootstrap en debug                    |
+
+`COLLECTION_WRITE_QUEUE_CAPACITY` règle l'attente des écritures participant : 0
+à 32, avec 8 par défaut et un délai maximal de 250 ms. Les deux places actives
+sont conservées ; zéro rétablit leur rejet immédiat en surcharge. Voir
+[la collecte](collection.md) et [les mesures](performance.md).
 
 L’identifiant accepte 1 à 64 caractères ASCII alphanumériques, tiret et
 soulignement. Le mot de passe doit contenir au moins 12 caractères et au plus
@@ -195,16 +263,18 @@ migrations simultanées sur plusieurs instances restent à coordonner.
 
 ## Définition et sauvegarde
 
-`crates/domain` porte le document natif `schemaVersion: 3`, sans dépendance à
+`crates/domain` porte le document natif `schemaVersion: 4`, sans dépendance à
 HTTP, SQL ou LimeSurvey. Les textes, groupes, questions et choix sont typés. Le
 serveur refuse versions, champs et types inconnus au lieu de les perdre.
 
-La lecture et la sauvegarde convertissent explicitement les v1/v2 : les choix
+La lecture et la sauvegarde convertissent explicitement les v1/v2/v3 : les choix
 multiples deviennent des sous-questions avec les mêmes identifiants et codes, et
 les conditions absentes valent `1`. Les révisions historiques ne sont pas
 réécrites. La v3 ajoute les références d’images ; une ancienne version qui en
-déclare est refusée. Une nouvelle sauvegarde produit une révision v3. Les
-informations source non projetées restent dans l’archive XML privée.
+déclare est refusée. La v4 ajoute les défauts par coordonnées et langue ; ces
+champs sont refusés dans les versions antérieures. Une nouvelle sauvegarde
+produit une révision v4. Les informations source non projetées restent dans
+l’archive XML privée.
 
 Les limites actuelles sont 8 Mio par document et par XML, 50 groupes, 500
 questions, 200 éléments par axe, 32 langues, 2000 cellules par question, 20000

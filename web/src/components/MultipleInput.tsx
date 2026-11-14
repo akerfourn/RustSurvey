@@ -111,7 +111,7 @@ export function MultipleInput(props: QuestionInputProps) {
       );
     });
   let other = null;
-  if (question.source.other) {
+  if (question.source.other && props.otherVisible !== false) {
     const field = `${question.source.code}_other`;
     const label =
       plainText(
@@ -125,7 +125,13 @@ export function MultipleInput(props: QuestionInputProps) {
     other = (
       <div className="subquestion">
         <label htmlFor={`field-${field}`}>{label}</label>
-        <TextControl {...props} field={field} label={label} type="S" />
+        <TextControl
+          {...props}
+          field={field}
+          label={label}
+          type="S"
+          disabled={!activeFields.has(field)}
+        />
         {comment}
       </div>
     );

@@ -58,7 +58,7 @@ pub(super) fn is_unanswered(
             .iter()
             .any(|name| !["", "0"].contains(&attribute(&question.source, name)))
     {
-        return empty;
+        return !cells.is_empty() && empty;
     }
     missing
 }

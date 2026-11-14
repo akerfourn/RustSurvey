@@ -1,9 +1,14 @@
 mod access;
+mod export_body;
+mod export_time;
+mod exports;
 mod handlers;
 mod invitations;
+mod navigation;
 mod participation;
 mod repository;
 mod runs;
+mod source_execution;
 mod writes;
 
 use super::{AppError, WorkspaceState};
@@ -16,6 +21,7 @@ use axum::{
 use rustsurvey_domain::{
     Definition,
     collection::{Answers, Questionnaire, Snapshot},
+    navigation::NavigationSettings,
     participation::ParticipationPolicy,
 };
 use serde::{Deserialize, Serialize};
@@ -25,6 +31,8 @@ use serde::{Deserialize, Serialize};
 pub(super) struct Checkpoint {
     pub language: String,
     pub group_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub page_id: Option<String>,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -34,7 +42,7 @@ pub(super) struct Document {
     pub checkpoint: Checkpoint,
 }
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(super) struct Run {
     pub id: String,
@@ -44,11 +52,17 @@ pub(super) struct Run {
     pub is_open: bool,
     pub created_at: i64,
     pub participation_policy: ParticipationPolicy,
+    pub navigation: Option<NavigationSettings>,
+    #[serde(skip)]
+    has_execution: bool,
 }
 
 pub(super) fn routes(state: WorkspaceState) -> Router<WorkspaceState> {
     let writes = Router::new()
-        .route("/api/admin/studies/{id}/runs", post(runs::create))
+        .route(
+            "/api/admin/studies/{id}/runs",
+            post(runs::create).layer(DefaultBodyLimit::max(64 * 1024)),
+        )
         .route("/api/admin/runs/{id}/close", post(runs::close))
         .route(
             "/api/admin/runs/{id}/invitations",
@@ -77,6 +91,8 @@ pub(super) fn routes(state: WorkspaceState) -> Router<WorkspaceState> {
         .merge(participant_writes)
         .route("/api/admin/studies/{id}/runs", get(runs::list))
         .route("/api/admin/runs/{id}/responses", get(handlers::list))
+        .route("/api/admin/runs/{id}/responses.vv", get(exports::vv))
+        .route("/api/admin/runs/{id}/definition.lss", get(runs::export))
         .route("/api/admin/runs/{id}/invitations", get(invitations::list))
         .route(
             "/api/admin/runs/{run_id}/responses/{id}/response.json",
@@ -94,7 +110,7 @@ async fn participant_write(
 ) -> Result<axum::response::Response, AppError> {
     access::client(request.headers())?;
     access::token_hash(request.headers())?;
-    let _permit = access::write_slot(&state)?;
+    let _permit = access::write_slot(&state).await?;
     Ok(next.run(request).await)
 }
 
@@ -136,8 +152,14 @@ async fn evaluate(
     definition: Definition,
     answers: Answers,
     submit: bool,
-    profile: String,
-) -> Result<Snapshot, AppError> {
+    run: &Run,
+    previous: Option<&Checkpoint>,
+    requested: &Checkpoint,
+) -> Result<(Definition, Snapshot, Checkpoint), AppError> {
+    let profile = run.profile.clone();
+    let settings = run.navigation;
+    let previous = previous.map(navigation::cursor);
+    let requested = requested.clone();
     let permit = state.imports.clone().try_acquire_owned().map_err(|_| {
         AppError::new(
             StatusCode::SERVICE_UNAVAILABLE,
@@ -148,7 +170,28 @@ async fn evaluate(
     tokio::task::spawn_blocking(move || {
         let _permit = permit;
         let runtime = Questionnaire::compile_profile(&definition, &profile).map_err(invalid)?;
-        runtime.evaluate(&answers, submit).map_err(invalid)
+        if profile == rustsurvey_domain::collection::DEFAULTS_PROFILE {
+            let settings = settings.ok_or_else(AppError::internal)?;
+            let (snapshot, page) = runtime
+                .enter_page(
+                    &answers,
+                    settings,
+                    &requested.language,
+                    previous.as_ref(),
+                    Some(&navigation::cursor(&requested)),
+                    submit,
+                )
+                .map_err(navigation::initialization_error)?;
+            let checkpoint = Checkpoint {
+                language: requested.language,
+                page_id: Some(page.id),
+                group_id: page.group_id,
+            };
+            return Ok((definition, snapshot, checkpoint));
+        }
+        let snapshot = runtime.evaluate(&answers, submit).map_err(invalid)?;
+        let checkpoint = navigation::normalize(settings, &definition, &snapshot, &requested)?;
+        Ok((definition, snapshot, checkpoint))
     })
     .await
     .map_err(|_| AppError::internal())?

@@ -1,15 +1,19 @@
 import type { ImportInfo } from "./model.ts";
 import { LssDownload } from "./LssDownload.tsx";
+import { ResponseImports } from "../response-imports/ResponseImports.tsx";
+import { CollectionCheck } from "./CollectionCheck.tsx";
 export function ImportDetails({
   id,
   source,
   revision,
   onExpired,
+  csrf,
 }: {
   id: string | null;
   source: ImportInfo | null;
   revision: number;
   onExpired: () => void;
+  csrf: string | null;
 }) {
   if (source === null || id === null) return null;
   const diagnostics = source.report.diagnostics.map((item, index) => (
@@ -17,6 +21,19 @@ export function ImportDetails({
       {item.code} · {item.location} : {item.message}
     </li>
   ));
+  const defaultProjection = source.report.defaultProjection;
+  let defaultsSummary = null;
+  if (defaultProjection !== undefined) {
+    let status = "Certaines cibles restent à prendre en charge.";
+    if (defaultProjection.status === "complete")
+      status = "Les cibles sont représentées dans l’aperçu natif.";
+    defaultsSummary = (
+      <p>
+        Valeurs par défaut : {defaultProjection.projectedValues} sur{" "}
+        {defaultProjection.sourceValues} valeurs transférées. {status}
+      </p>
+    );
+  }
   return (
     <section className="panel import-details">
       <h2>Étude importée depuis un LSS</h2>
@@ -47,7 +64,16 @@ export function ImportDetails({
           Schéma {source.report.sourceSchema}. Empreinte SHA-256 : <code>{source.sha256}</code>
         </p>
         <ul>{diagnostics}</ul>
+        {defaultsSummary}
       </details>
+      <CollectionCheck
+        key={`${id}:${revision}`}
+        id={id}
+        revision={revision}
+        onExpired={onExpired}
+        csrf={csrf}
+      />
+      <ResponseImports key={id} id={id} revision={revision} csrf={csrf} onExpired={onExpired} />
     </section>
   );
 }

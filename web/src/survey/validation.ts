@@ -192,12 +192,17 @@ function isUnanswered(question: RuntimeQuestion, cells: ResponseCell[], answers:
       (name) => attribute(question.source, name) !== "" && attribute(question.source, name) !== "0",
     )
   ) {
-    return !primary.some((cell) => (answers.get(cell.key) ?? "") !== "");
+    return primary.length > 0 && !primary.some((cell) => (answers.get(cell.key) ?? "") !== "");
   }
   return primary.some((cell) => (answers.get(cell.key) ?? "") === "");
 }
 
-export function validate(runtime: SurveyRuntime, snapshot: Snapshot, groupId?: string): Validation {
+export function validate(
+  runtime: SurveyRuntime,
+  snapshot: Snapshot,
+  groupId?: string,
+  questionIds?: ReadonlySet<string>,
+): Validation {
   const errors = new Map<string, string[]>();
   const warnings = new Map<string, string[]>();
   for (const [id, question] of runtime.questions) {
@@ -208,6 +213,7 @@ export function validate(runtime: SurveyRuntime, snapshot: Snapshot, groupId?: s
     )
       continue;
     if (groupId !== undefined && question.source.groupId !== groupId) continue;
+    if (questionIds !== undefined && !questionIds.has(id)) continue;
     const cells = question.cells.filter((cell) => snapshot.activeFields.has(cell.key));
     const questionErrors = validateValues(
       question,

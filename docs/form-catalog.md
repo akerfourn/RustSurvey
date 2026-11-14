@@ -120,8 +120,8 @@ pas un travail terminé.
 | `em_validation_sq_tip`              | XML    | Non géré          | F3          |
 | `equals_num_value`                  | XML    | Partiel           | F3          |
 | `equation`                          | XML    | Partiel           | F2          |
-| `exclude_all_others`                | XML    | Non géré          | F3          |
-| `exclude_all_others_auto`           | XML    | Non géré          | F3          |
+| `exclude_all_others`                | XML    | Partiel           | F3          |
+| `exclude_all_others_auto`           | XML    | Partiel           | F3          |
 | `hidden`                            | XML    | Partiel           | F4          |
 | `hide_tip`                          | XML    | Toléré            | F4          |
 | `input_boxes`                       | XML    | Partiel           | F4          |

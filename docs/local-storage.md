@@ -106,6 +106,8 @@ fichiers, les plages d’octets et les redémarrages avec les deux emplacements
 SQLite. Il n’utilise pas la base, le compte ou les médias de l’installation
 courante.
 
-S3, streaming de gros fichiers, collecte des pièces jointes, import des médias
-LimeSurvey et nettoyage des objets inutilisés restent à réaliser. La
+Le [mode S3](s3-storage.md) est disponible sans disque pour les binaires. La
+copie des anciens objets fichiers vers S3 reste explicite et son outil reste à
+réaliser. Streaming de gros fichiers, collecte des pièces jointes, import des
+médias LimeSurvey et nettoyage des objets inutilisés restent à réaliser. La
 [décision 0002](decisions/0002-object-storage.md) décrit le contrat commun.

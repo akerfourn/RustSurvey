@@ -8,6 +8,26 @@ use tower::ServiceExt;
 
 const DEMO: &str = include_str!("../../../examples/surveys/demo.lss");
 
+#[tokio::test]
+async fn test_inspect_should_accept_inherited_welcome_and_report_its_missing_source_context() {
+    let source = DEMO.replace(
+        "<showwelcome>Y</showwelcome>",
+        "<showwelcome>I</showwelcome>",
+    );
+    let response = inspect(source, "application/xml").await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let body = json(response).await;
+    assert_eq!(body["report"]["errors"], 0);
+    assert!(body["study"]["showWelcome"].is_null());
+    assert!(
+        body["report"]["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|issue| issue["code"] == "unresolved_setting")
+    );
+}
+
 async fn inspect(source: impl Into<Body>, content_type: &str) -> axum::response::Response {
     routes()
         .oneshot(

@@ -31,7 +31,7 @@ fn valid_question_code(value: &str) -> bool {
             .all(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
 }
 
-fn valid_language(value: &str) -> bool {
+pub(crate) fn valid_language(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 32
         && value
@@ -225,6 +225,9 @@ impl Validator {
             );
         }
         self.choices(question, path);
+        for issue in crate::defaults::validate(question, path) {
+            self.issue(issue.path, &issue.message);
+        }
         let fields = crate::rules::fields(question);
         if fields.len() > 2000 {
             self.issue(path, "Maximum de 2000 cellules par question.");

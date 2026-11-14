@@ -82,16 +82,25 @@ fn read_survey(xml: &Document, model: &mut SurveySource, report: &mut Report) {
     model.survey_id = source_id(xml, row, "sid", "surveys.rows[0]", report);
     model.base_language = text(xml, row, "language", "surveys.rows[0]", report).map(str::to_owned);
     model.show_welcome = match xml.field(row, "showwelcome") {
-        None | Some("") | Some("Y") => true,
-        Some("N") => false,
+        Some("Y") => Some(true),
+        Some("N") => Some(false),
+        None | Some("") | Some("I") => {
+            report.push(
+                Severity::Warning,
+                DiagnosticCode::UnresolvedSetting,
+                "surveys.rows[0].showwelcome".to_owned(),
+                "showwelcome requires source group settings; no local default is applied",
+            );
+            None
+        }
         _ => {
             issue(
                 report,
                 DiagnosticCode::InvalidField,
                 "surveys.rows[0].showwelcome",
-                "showwelcome must be Y or N",
+                "showwelcome must be Y or N, or I for inheritance",
             );
-            false
+            None
         }
     };
     if let Some(language) = &model.base_language
@@ -262,6 +271,20 @@ fn read_question(xml: &Document, row: usize, path: &str, report: &mut Report) ->
             .to_owned(),
         validation: xml.field(row, "preg").unwrap_or("").to_owned(),
         other: xml.field(row, "other") == Some("Y"),
+        same_default: match xml.field(row, "same_default") {
+            None | Some("") => None,
+            Some("0") => Some(false),
+            Some("1") => Some(true),
+            _ => {
+                issue(
+                    report,
+                    DiagnosticCode::InvalidField,
+                    format!("{path}.same_default"),
+                    "same_default must be 0 or 1 when present",
+                );
+                None
+            }
+        },
         labels: Vec::new(),
         attributes: Vec::new(),
     })

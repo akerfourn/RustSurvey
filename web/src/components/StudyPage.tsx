@@ -1,9 +1,6 @@
 import { useEffect, useRef } from "preact/hooks";
-import type { Snapshot, SurveyRuntime } from "../survey/engine.ts";
-import { localized, pipeText, plainText } from "../survey/text.ts";
-import type { SurveyGroup } from "../survey/types.ts";
-import type { Validation } from "../survey/validation.ts";
-import { QuestionCard } from "./QuestionCard.tsx";
+import type { NavigationSettings, SurveyPage } from "../survey/navigation.ts";
+import { StudyGroup, type StudyGroupProps } from "./StudyGroup.tsx";
 
 interface NavigationProps {
   previousDisabled: boolean;
@@ -32,81 +29,51 @@ function StudyNavigation({
   );
 }
 
-interface StudyPageProps extends NavigationProps {
-  runtime: SurveyRuntime;
-  snapshot: Snapshot;
-  group: SurveyGroup;
-  language: string;
+interface StudyPageProps extends NavigationProps, Omit<StudyGroupProps, "group" | "questionIds"> {
+  page: SurveyPage;
+  pageCount: number;
+  format: NavigationSettings["format"];
+  showProgress: boolean;
   position: number;
-  validation: Validation;
-  attempted: boolean;
-  readOnly: boolean;
-  onAnswer: (field: string, value: string) => void;
-  onClear: (fields: readonly string[]) => void;
-  onLanguage: (language: string) => void;
-  mediaBaseUrl: string | null;
 }
 
 export function StudyPage(props: StudyPageProps) {
-  const {
-    runtime,
-    snapshot,
-    group,
-    language,
-    position,
-    validation,
-    attempted,
-    readOnly,
-    onAnswer,
-    onClear,
-  } = props;
-  const heading = useRef<HTMLHeadingElement>(null);
+  const { runtime, page, pageCount, position, validation, attempted } = props;
+  const heading = useRef<HTMLDivElement>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     heading.current?.scrollIntoView({ block: "start" });
-  }, [group.id]);
-  const label = localized(group.labels, language, runtime.study.baseLanguage);
-  const groupTitle = pipeText(plainText(label?.name), snapshot.answers, runtime.fields).text;
-  const groupDescription = pipeText(
-    plainText(label?.description),
-    snapshot.answers,
-    runtime.fields,
-  ).text;
-  const questions = [...runtime.questions.values()].filter(
-    (question) => question.source.groupId === group.id && snapshot.visible.has(question.source.id),
-  );
-  const content = questions.map((question) => {
-    let errors: string[] = [];
-    let warnings: string[] = [];
-    if (attempted) {
-      errors = validation.errors.get(question.source.id) ?? [];
-      warnings = validation.warnings.get(question.source.id) ?? [];
-    }
-    return (
-      <QuestionCard
-        key={question.source.id}
-        question={{
-          ...question,
-          subquestions: question.subquestions.filter((row) =>
-            snapshot.visibleSubquestions.has(row.id),
-          ),
-        }}
-        answers={snapshot.answers}
-        language={language}
-        baseLanguage={runtime.study.baseLanguage}
-        fields={runtime.fields}
-        activeFields={snapshot.activeFields}
-        languages={runtime.study.languages}
-        onLanguage={props.onLanguage}
-        errors={errors}
-        warnings={warnings}
-        readOnly={readOnly}
-        onAnswer={onAnswer}
-        onClear={onClear}
-        mediaBaseUrl={props.mediaBaseUrl}
-      />
+  }, [page.id]);
+  const content = runtime.groups.flatMap((group) => {
+    const questionIds = page.questionIds.filter(
+      (id) => runtime.questions.get(id)?.source.groupId === group.id,
     );
+    if (questionIds.length === 0) return [];
+    return <StudyGroup key={group.id} {...props} group={group} questionIds={questionIds} />;
   });
+  let emptyContent = null;
+  if (content.length === 0)
+    emptyContent = (
+      <p className="notice">Aucune question pertinente à afficher pour les réponses actuelles.</p>
+    );
+  let progress = null;
+  let pageLabel = "Page";
+  if (props.format === "group") pageLabel = "Groupe";
+  if (props.format === "question") pageLabel = "Question";
+  if (props.showProgress)
+    progress = (
+      <div>
+        <p className="eyebrow">
+          {pageLabel} {position + 1} sur {pageCount} · {page.questionIds.length} question(s)
+          affichée(s)
+        </p>
+        <progress
+          value={position + 1}
+          max={pageCount}
+          aria-label="Progression dans le questionnaire"
+        />
+      </div>
+    );
   let errorContent = null;
   if (attempted && validation.errors.size > 0)
     errorContent = (
@@ -116,25 +83,14 @@ export function StudyPage(props: StudyPageProps) {
     );
   return (
     <div>
-      <div className="group-heading">
-        <p className="eyebrow">
-          Groupe {position + 1} sur {snapshot.groups.length} · {questions.length} question(s)
-          affichée(s)
-        </p>
-        <h3 ref={heading} tabIndex={-1}>
-          {groupTitle || `Groupe ${group.id}`}
-        </h3>
-        <p className="muted">{groupDescription}</p>
-        <progress
-          value={position + 1}
-          max={snapshot.groups.length}
-          aria-label="Progression dans les groupes"
-        />
+      <div className="group-heading" ref={heading} tabIndex={-1} aria-label="Page du questionnaire">
+        {progress}
       </div>
       <div className="navigation-top">
         <StudyNavigation {...props} />
       </div>
       {content}
+      {emptyContent}
       {errorContent}
       <StudyNavigation {...props} />
     </div>

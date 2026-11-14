@@ -114,7 +114,8 @@ fn prepare_import(
             "La structure LSS ne possède pas de projection exploitable.",
         )
     })?;
-    let definition = lss_projection::project(model, runtime)?;
+    let projection = lss_projection::project(model, runtime)?;
+    let definition = projection.definition;
     let issues = definition.validate();
     if !issues.is_empty() {
         return Err(AppError::invalid_definition(issues));
@@ -131,7 +132,8 @@ fn prepare_import(
     let report = json!({
         "sourceSchema":report.source_schema, "targetSchema":report.target_schema,
         "errors":report.errors, "warnings":report.warnings, "omittedDiagnostics":report.omitted_diagnostics,
-        "checkedSections":report.checked_sections, "sections":report.sections, "diagnostics":report.diagnostics
+        "checkedSections":report.checked_sections, "sections":report.sections, "diagnostics":report.diagnostics,
+        "defaultProjection":projection.defaults
     });
     let xml =
         String::from_utf8(source.original_xml().to_vec()).map_err(|_| AppError::internal())?;

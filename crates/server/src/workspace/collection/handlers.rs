@@ -1,6 +1,7 @@
-use super::super::{auth, history};
+use super::super::auth;
 use super::{
-    AppError, Checkpoint, Document, Run, WorkspaceState, access, participation, repository, writes,
+    AppError, Checkpoint, Document, Run, WorkspaceState, access, navigation, participation,
+    repository, writes,
 };
 use axum::{
     Json,
@@ -8,7 +9,7 @@ use axum::{
     http::{HeaderMap, StatusCode, header},
     response::{IntoResponse, Response},
 };
-use rustsurvey_domain::collection::{Answers, FORMS_PROFILE, PROFILE};
+use rustsurvey_domain::collection::Answers;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 
@@ -46,9 +47,9 @@ pub(super) struct Page {
 async fn state_document(state: &WorkspaceState, id: &str, hash: &str) -> Result<Value, AppError> {
     let stored = repository::authorized(state, id, hash).await?;
     let run = repository::run(&state.database, &stored.run_id).await?;
-    let revision = history::load(state, &run.study_id, run.revision).await?;
+    let definition = super::source_execution::definition(state, &run).await?;
     Ok(
-        json!({"id": stored.id, "run": run, "definition": revision.definition, "version": stored.version, "status": stored.status, "answers": stored.document.answers, "checkpoint": stored.document.checkpoint, "createdAt": stored.created_at, "updatedAt": stored.updated_at}),
+        json!({"id": stored.id, "run": run, "definition": definition, "version": stored.version, "status": stored.status, "answers": stored.document.answers, "checkpoint": stored.document.checkpoint, "createdAt": stored.created_at, "updatedAt": stored.updated_at}),
     )
 }
 
@@ -64,28 +65,14 @@ pub(super) async fn start(
     let Json(input) = body.map_err(AppError::json)?;
     access::id(&input.response_id)?;
     let run = repository::run(&state.database, &id).await?;
-    if !matches!(run.profile.as_str(), PROFILE | FORMS_PROFILE) {
-        return Err(AppError::internal());
-    }
-    let revision = history::load(&state, &run.study_id, run.revision).await?;
-    super::checkpoint(
-        &revision.definition,
-        &Checkpoint {
-            language: input.language.clone(),
-            group_id: None,
-        },
-    )?;
-    let group_id = revision
-        .definition
-        .groups
-        .first()
-        .map(|group| group.id.clone());
+    let definition = super::source_execution::definition(&state, &run).await?;
+    let document = navigation::initial(&state, &run, definition, input.language.clone()).await?;
     let response_id = writes::start(
         &state,
         &run,
         &input,
         &hash,
-        group_id,
+        document,
         invitation_hash.as_deref(),
         participation::browser_completed(&run, &headers),
     )
@@ -143,27 +130,18 @@ pub(super) async fn save(
     if !run.is_open {
         return Err(super::closed());
     }
-    if !matches!(run.profile.as_str(), PROFILE | FORMS_PROFILE) {
-        return Err(AppError::internal());
-    }
-    let revision = history::load(&state, &run.study_id, run.revision).await?;
-    super::checkpoint(&revision.definition, &input.checkpoint)?;
-    let snapshot = super::evaluate(
+    let definition = super::source_execution::definition(&state, &run).await?;
+    super::checkpoint(&definition, &input.checkpoint)?;
+    let (_, snapshot, checkpoint) = super::evaluate(
         &state,
-        revision.definition,
+        definition,
         input.answers.clone(),
         input.submit,
-        run.profile.clone(),
+        &run,
+        Some(&stored.document.checkpoint),
+        &input.checkpoint,
     )
     .await?;
-    let mut checkpoint = input.checkpoint.clone();
-    if checkpoint
-        .group_id
-        .as_ref()
-        .is_none_or(|id| !snapshot.groups.contains(id))
-    {
-        checkpoint.group_id = snapshot.groups.first().cloned();
-    }
     let document = Document {
         answers: snapshot.answers,
         checkpoint,
@@ -225,7 +203,7 @@ pub(super) async fn export(
         return Err(super::missing());
     }
     let run = repository::run(&state.database, &run_id).await?;
-    let document = json!({"id": id, "run": run, "version": stored.version, "status": stored.status, "answers": stored.document.answers, "checkpoint": stored.document.checkpoint, "createdAt": stored.created_at, "updatedAt": stored.updated_at});
+    let document = json!({"id": id, "run": run, "version": stored.version, "status": stored.status, "answers": stored.document.answers, "checkpoint": stored.document.checkpoint, "initialLanguage":stored.initial_language, "createdAt": stored.created_at, "updatedAt": stored.updated_at});
     Ok((
         [(
             header::CONTENT_DISPOSITION,

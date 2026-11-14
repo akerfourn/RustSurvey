@@ -20,8 +20,33 @@ use std::sync::{
 use tower::ServiceExt;
 
 const PASSWORD: &str = "synthetic-admin-password";
+
+#[tokio::test]
+async fn test_participant_write_queue_should_accept_bounded_capacity_and_refuse_unbounded_values() {
+    let fixture = fixture().await;
+    let state =
+        WorkspaceState::with_runtime(fixture.database.clone(), false, fixture.runtime.clone());
+    for capacity in [0, 8, 32] {
+        assert!(
+            state
+                .clone()
+                .with_participant_write_queue_capacity(capacity)
+                .is_ok()
+        );
+    }
+    let error = state
+        .with_participant_write_queue_capacity(33)
+        .err()
+        .unwrap();
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+    assert!(error.to_string().contains("between 0 and 32"));
+}
+#[path = "workspace/collection_check.rs"]
+mod collection_check_tests;
 #[path = "workspace/collection.rs"]
 mod collection_tests;
+#[path = "workspace/defaults.rs"]
+mod default_tests;
 #[path = "workspace/exports.rs"]
 mod export_tests;
 #[path = "workspace/history.rs"]
@@ -32,6 +57,12 @@ mod local_storage_tests;
 mod media_tests;
 #[path = "../../object-store/tests/common/mod.rs"]
 mod object_contract;
+#[path = "workspace/response_imports.rs"]
+mod response_import_tests;
+#[path = "workspace/s3_storage.rs"]
+mod s3_storage_tests;
+#[path = "workspace/source_contexts.rs"]
+mod source_context_tests;
 #[path = "../../object-store/tests/common/directory.rs"]
 mod test_directory;
 
@@ -72,6 +103,14 @@ async fn fixture() -> Fixture {
     let options = rustsurvey_server::database::options("sqlite::memory:".to_owned());
     let database = Database::connect(options).await.unwrap();
     initialize(database).await
+}
+
+async fn rollback_after(database: &DatabaseConnection, last_kept_migration: usize) {
+    let count = Migrator::migrations().len();
+    assert!(last_kept_migration < count);
+    Migrator::down(database, Some((count - last_kept_migration) as u32))
+        .await
+        .unwrap();
 }
 async fn initialize(database: DatabaseConnection) -> Fixture {
     Migrator::up(&database, None).await.unwrap();
@@ -558,7 +597,7 @@ async fn test_invalid_definitions_and_oversized_bodies_should_not_create_records
     let fixture = fixture().await;
     let (cookie, csrf) = login(&fixture).await;
     let mut invalid = definition();
-    invalid["schemaVersion"] = json!(4);
+    invalid["schemaVersion"] = json!(5);
     let response = call(
         &fixture.app,
         "POST",
@@ -744,7 +783,7 @@ async fn import_roundtrip(fixture: &Fixture) {
     let status = response.status();
     let stored = json(response).await;
     assert_eq!(status, StatusCode::CREATED, "{stored}");
-    assert_eq!(stored["definition"]["schemaVersion"], 3);
+    assert_eq!(stored["definition"]["schemaVersion"], 4);
     assert_eq!(stored["definition"]["languages"], json!(["fr", "en"]));
     let id = stored["id"].as_str().unwrap();
     assert!(
@@ -1023,7 +1062,7 @@ async fn test_second_migration_should_preserve_v1_documents_and_upgrade_them_on_
     ));
     let stored =
         json(call(&app, "GET", &format!("/api/studies/{id}"), None, None, None).await).await;
-    assert_eq!(stored["definition"]["schemaVersion"], 3);
+    assert_eq!(stored["definition"]["schemaVersion"], 4);
     assert_eq!(stored["definition"]["title"], "Legacy");
     assert_eq!(stored["revision"], 1);
     let row = database
@@ -1100,11 +1139,17 @@ async fn test_external_database_should_apply_migrations_and_roundtrip_large_docu
     );
     let fixture = initialize(database).await;
     large_document_roundtrip(&fixture).await;
+    default_tests::roundtrip(&fixture).await;
     import_roundtrip(&fixture).await;
     concurrent_updates(&fixture).await;
     history_tests::roundtrip(&fixture).await;
     media_tests::roundtrip(&fixture).await;
     collection_tests::roundtrip(&fixture).await;
+    response_import_tests::roundtrip(&fixture).await;
+    response_import_tests::resume_roundtrip(&fixture).await;
+    source_context_tests::roundtrip(&fixture).await;
+    source_context_tests::concurrent_limit(&fixture).await;
+    s3_storage_tests::index_roundtrip(&fixture).await;
     object_contract::contract(&rustsurvey_server::object_store::SqlObjectStore::new(
         fixture.database.clone(),
     ))

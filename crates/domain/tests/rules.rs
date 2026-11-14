@@ -165,7 +165,7 @@ fn test_expression_budgets_should_bound_depth_size_and_token_count() {
 fn test_legacy_upgrade_should_preserve_ids_choice_codes_and_unconditional_behavior() {
     let mut old:Definition=serde_json::from_value(json!({"schemaVersion":1,"title":"Old","language":"fr","welcome":"","end":"","groups":[{"id":"g1","title":"Group","description":"","questions":[{"id":"q1","code":"CHOICES","title":"Choices","help":"","kind":"multiple_choice","mandatory":"no","choices":[{"id":"a1","code":"01","label":"First"},{"id":"a2","code":"02","label":"Second"}]}]}]})).unwrap();
     old.upgrade().unwrap();
-    assert_eq!(old.schema_version, 3);
+    assert_eq!(old.schema_version, 4);
     assert_eq!(old.groups[0].relevance, "1");
     let question = &old.groups[0].questions[0];
     assert_eq!(question.id, "q1");

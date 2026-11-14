@@ -1,8 +1,10 @@
 //! SQL adapter for the object port. Engine-specific binary types belong to the migration.
+mod s3_index;
 use rustsurvey_object_store::{
     ByteRange, MAX_OBJECT_BYTES, ObjectKey, ObjectMetadata, ObjectRead, ObjectStore, StoreError,
     StoreFuture,
 };
+pub use s3_index::SqlS3ObjectIndex;
 use sea_orm::{
     ConnectionTrait, DatabaseConnection, QueryResult, SqlErr,
     sea_query::{Expr, ExprTrait, Query},

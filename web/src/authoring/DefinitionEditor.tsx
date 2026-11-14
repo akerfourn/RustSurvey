@@ -18,6 +18,7 @@ export function DefinitionEditor({
   onChange: (definition: Definition) => void;
 }) {
   const variables = useMemo(() => variableCatalog(definition), [definition]);
+  const languages = [...new Set([definition.language, ...definition.languages])];
   function handleTitle(event: TargetedEvent<HTMLInputElement>): void {
     onChange({ ...definition, title: event.currentTarget.value });
   }
@@ -63,6 +64,8 @@ export function DefinitionEditor({
         variables={variables}
         readOnlyContent={readOnlyContent}
         group={group}
+        baseLanguage={definition.language}
+        languages={languages}
         index={index}
         count={definition.groups.length}
         canAddQuestion={questionCount < 500}

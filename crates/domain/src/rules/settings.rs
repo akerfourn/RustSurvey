@@ -24,6 +24,20 @@ pub(super) fn validate(
     path: &str,
     issues: &mut Vec<ValidationIssue>,
 ) {
+    let exclusivity_unchanged = previous.is_some_and(|old| {
+        old.kind == question.kind
+            && old.other == question.other
+            && old.subquestions == question.subquestions
+            && exclusive_attributes(old) == exclusive_attributes(question)
+    });
+    if !exclusivity_unchanged
+        && let Err(message) = crate::exclusive::ExclusiveOptions::parse(question)
+    {
+        issues.push(ValidationIssue {
+            path: format!("{path}.attributes"),
+            message: message.into(),
+        });
+    }
     for (index, item) in question.attributes.iter().enumerate() {
         if item.value.is_empty() || previous.is_some_and(|old| old.attributes.contains(item)) {
             continue;
@@ -136,4 +150,14 @@ pub(super) fn validate(
             });
         }
     }
+}
+
+fn exclusive_attributes(question: &Question) -> Vec<&crate::Attribute> {
+    question
+        .attributes
+        .iter()
+        .filter(|attribute| {
+            ["exclude_all_others", "exclude_all_others_auto"].contains(&attribute.name.as_str())
+        })
+        .collect()
 }

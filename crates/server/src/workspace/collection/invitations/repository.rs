@@ -1,7 +1,7 @@
 use super::{AppError, Invitation};
 use rustsurvey_domain::participation::InvitationLimits;
 use sea_orm::{
-    ConnectionTrait, DbBackend, QueryResult,
+    ConnectionTrait, QueryResult,
     sea_query::{Expr, ExprTrait, Order, Query, SimpleExpr},
 };
 
@@ -32,12 +32,6 @@ pub(super) async fn count(
         )
         .await?
         .ok_or_else(AppError::internal)?;
-    if connection.get_database_backend() == DbBackend::MySql {
-        return row
-            .try_get_by_index::<u64>(0)?
-            .try_into()
-            .map_err(|_| AppError::internal());
-    }
     Ok(row.try_get_by_index::<i64>(0)?)
 }
 

@@ -27,11 +27,21 @@ l’import d’une autre étude et le rechargement repartent de zéro. Le JSON
 téléchargeable conserve les cellules locales ; ce format n’est pas un export de
 réponses LimeSurvey et sa réimportation n’est pas encore implémentée.
 
+Les aperçus décrits ici gardent une navigation par groupe. Les campagnes natives
+peuvent choisir groupe, question ou page unique ; leur curseur est enregistré
+avec les réponses. Leur [parcours durable](collection.md) reste distinct des
+aperçus et de l'exécution d'une étude LimeSurvey importée.
+
+Un affichage d'accueil hérité ou absent reste inconnu dans les nouveaux imports.
+L'aperçu peut montrer les questions, mais signale ce réglage non résolu et ne
+valide pas un parcours complet. Les valeurs explicites Y/N restent appliquées.
+Voir [la résolution des options](source-settings.md).
+
 L’[éditeur natif](authoring.md) utilise aussi ce viewer pour ses aperçus et ses
 liens publics. La définition est alors chargée depuis SQL ; les réponses restent
 locales dans les deux parcours. Le compte administrateur n’intervient que pour
 créer et modifier les définitions. L’import depuis l’administration conserve la
-source et une définition v3 en SQL. Ses conditions de groupes et questions sont
+source et une définition v4 en SQL. Ses conditions de groupes et questions sont
 éditables ; l’aperçu reçoit aussi le rapport d’import pour garder les
 diagnostics, notamment les sections non prises en charge. L’inspection des
 valeurs et de la visibilité est réservée à l’aperçu d’administration.
@@ -67,6 +77,12 @@ groupes, 2 langues et 52 cellules. La fixture initiale reste disponible avec
 **Essayer l’exemple**.
 
 ### Cellules, commentaires et validation
+
+Les [lignes exclusives](exclusive-options.md) désactivent les autres lignes en
+les gardant visibles. Leur effacement se propage aux commentaires et aux
+questions filtrées. Les types M/P proposent la sélection automatique d'une
+option exclusive unique. Les attributs invalides continuent de produire un
+diagnostic et de bloquer la validation du parcours.
 
 Les cellules portent un rôle et une échelle explicites. Le JSON local utilise
 `CODE_ligne` pour un tableau simple, `CODE_ligne_0`/`CODE_ligne_1` pour les deux
@@ -115,13 +131,17 @@ filtres et équations. Il détecte les cycles et variables inconnues. Les répon
 masquées sont effacées avant les règles dépendantes. La pertinence des deux axes
 de matrice est prise en compte.
 
-`array_filter` et `array_filter_exclude` acceptent des codes de questions M/P,
-séparés par `;`, pour les lignes des tableaux et saisies multiples. Les filtres
-successifs se combinent par intersection. Un code de ligne absent d’une source
-n’ajoute pas de restriction pour cette source. Le style 0 masque la ligne ; le
-style 1 la laisse désactivée. Ses réponses sont effacées et elle ne reste pas
-obligatoire. Les sources de filtre d’autres types, les filtres de choix
-simples/classement et les sélecteurs avancés restent diagnostiqués.
+`array_filter` et `array_filter_exclude` acceptent les sources
+M/P/Q/K/A/B/C/E/F/H/1/:/;/R, séparées par `;`, pour les lignes des tableaux et
+saisies multiples. Les filtres des ancêtres sont conservés dans les cascades. Un
+code absent d'une source n'ajoute pas de restriction de cette source. Le style 0
+masque la ligne ; le style 1 la laisse désactivée. Ses réponses sont effacées et
+elle ne reste pas obligatoire. Le code `other` et les commentaires possèdent
+leurs rôles distincts. Les listes radio et classements cibles filtrent leurs
+choix ; les positions de classement sont resserrées après retrait. Autre reste
+disponible dans une liste radio, comme dans la référence. Voir les
+[règles et preuves](array-filters.md), notamment la limite d'export du tableau H
+filtré et le diagnostic bloquant de son aperçu importé.
 
 Le type `*` utilise l’attribut `equation` ou une expression simple du texte de
 base. Les équations sont recalculées après leurs dépendances ; une valeur
@@ -173,10 +193,13 @@ détails de conversion et de casse Unicode restent à confronter au corpus amont
 Les variables utilisent les cellules connues et le suffixe `.NAOK`, sans
 reproduire encore toute la sémantique ExpressionScript de pertinence. Les alias
 SGQA, attributs `.shown`/`.value`, variables réservées, évaluations natives et
-extensions ne sont pas implémentés. Les valeurs par défaut, anciennes
-conditions, regex, ordres aléatoires, quotas et minuteries actives restent
-diagnostiqués. Hors images natives, les fonctions avec stockage des
-participations demeurent différées.
+extensions ne sont pas implémentés. Les défauts natifs sont appliqués à l'entrée
+des pages ; [leur périmètre](default-values.md) distingue les limites NAOK et
+leur projection dans les nouveaux imports persistants. L'inspecteur temporaire
+et les anciennes révisions conservent leur diagnostic. Les anciennes conditions,
+regex, ordres aléatoires, quotas et minuteries actives restent diagnostiqués.
+Hors images natives, les fonctions avec stockage des participations demeurent
+différées.
 
 Un attribut inconnu de valeur `0` n’est plus supposé désactivé. Seuls les noms
 et valeurs neutres explicitement reconnus sont tolérés. Les options secondaires

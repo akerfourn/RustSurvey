@@ -11,6 +11,7 @@ use crate::{Error, Limits};
 pub(crate) struct Element {
     pub name: String,
     pub unqualified: bool,
+    pub has_attributes: bool,
     pub children: Vec<usize>,
     pub text: String,
     pub span: Range<usize>,
@@ -189,6 +190,7 @@ impl Parser {
         self.elements.push(Element {
             name: tag.name().as_ref().to_owned(),
             unqualified,
+            has_attributes: tag.attributes().next().is_some(),
             children: Vec::new(),
             text: String::new(),
             span: start as usize..end as usize,

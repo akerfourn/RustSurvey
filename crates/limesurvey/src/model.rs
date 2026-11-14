@@ -74,6 +74,7 @@ pub struct Question {
     pub randomization_group: String,
     pub validation: String,
     pub other: bool,
+    pub same_default: Option<bool>,
     pub labels: Vec<LocalizedQuestion>,
     pub attributes: Vec<QuestionAttribute>,
 }
@@ -120,6 +121,23 @@ pub struct QuestionAttribute {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DefaultValue {
+    pub id: SourceId,
+    pub question_id: SourceId,
+    pub subquestion_id: Option<SourceId>,
+    pub scale: u32,
+    pub special_type: String,
+    pub values: Vec<LocalizedDefaultValue>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct LocalizedDefaultValue {
+    pub language: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AnswerOption {
     pub id: SourceId,
     pub question_id: SourceId,
@@ -149,12 +167,13 @@ pub struct SurveySource {
     pub base_language: Option<String>,
     pub languages: Vec<String>,
     pub titles: Vec<LocalizedTitle>,
-    pub show_welcome: bool,
+    pub show_welcome: Option<bool>,
     pub messages: Vec<LocalizedSurveyMessages>,
     pub groups: Vec<Group>,
     pub questions: Vec<Question>,
     pub subquestions: Vec<Subquestion>,
     pub answers: Vec<AnswerOption>,
+    pub default_values: Vec<DefaultValue>,
 }
 
 #[derive(Debug, Default, Serialize)]

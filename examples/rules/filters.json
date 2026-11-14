@@ -1,0 +1,377 @@
+{
+  "cases": [
+    {
+      "name": "multiple choice presence",
+      "kind": "multiple_choice",
+      "answers": { "SRC_A1": "Y" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "multiple choice with comments presence",
+      "kind": "multiple_choice_comment",
+      "answers": { "SRC_A1": "Y", "SRC_A1comment": "note" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "multiple text presence",
+      "kind": "multiple_text",
+      "answers": { "SRC_A1": "text" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "multiple numeric zero is present",
+      "kind": "multiple_numbers",
+      "answers": { "SRC_A1": "0" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "five point array presence",
+      "kind": "array_five",
+      "answers": { "SRC_A1": "3" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "ten point array presence",
+      "kind": "array_ten",
+      "answers": { "SRC_A1": "8" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "array no is present",
+      "kind": "array_yes_no",
+      "answers": { "SRC_A1": "N" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "array same is present",
+      "kind": "array_increase",
+      "answers": { "SRC_A1": "S" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "flexible array presence",
+      "kind": "array_choice",
+      "answers": { "SRC_A1": "01" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "column array is a source",
+      "kind": "array_column",
+      "answers": { "SRC_A1": "01" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "either dual scale makes the row present",
+      "kind": "dual_scale",
+      "answers": { "SRC_A1_1": "10" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "numeric matrix zero is present",
+      "kind": "number_matrix",
+      "sourceAttributes": { "input_boxes": "1" },
+      "answers": { "SRC_A1_B1": "0" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "text matrix presence",
+      "kind": "text_matrix",
+      "answers": { "SRC_A1_B2": "0" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "ranking selects by answer code rather than position",
+      "kind": "ranking",
+      "answers": { "SRC_1": "A2" },
+      "expected": { "TARGET_A2": "01" }
+    },
+    {
+      "name": "checkbox matrix zero is unselected",
+      "kind": "number_matrix",
+      "sourceAttributes": { "multiflexible_checkbox": "1" },
+      "answers": { "SRC_A1_B1": "0", "SRC_A2_B2": "1" },
+      "expected": { "TARGET_A2": "01" }
+    },
+    {
+      "name": "a checkbox matrix selects a row if any column is checked",
+      "kind": "number_matrix",
+      "sourceAttributes": { "multiflexible_checkbox": "1" },
+      "answers": { "SRC_A1_B1": "0", "SRC_A1_B2": "1" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "ranking exclusion keeps unranked choices",
+      "kind": "ranking",
+      "mode": "exclude",
+      "answers": { "SRC_1": "A2" },
+      "expected": { "TARGET_A1": "01" }
+    },
+    {
+      "name": "other text selects the matching row",
+      "kind": "multiple_choice",
+      "other": true,
+      "targetRows": ["other"],
+      "answers": { "SRC_other": "custom" },
+      "expected": { "TARGET_other": "01" }
+    },
+    {
+      "name": "other comment alone does not select a row",
+      "kind": "multiple_choice_comment",
+      "other": true,
+      "sourceAttributes": { "commented_checkbox": "allways" },
+      "targetRows": ["other"],
+      "answers": { "SRC_othercomment": "note" },
+      "expected": {}
+    },
+    {
+      "name": "a comment alone does not select its row",
+      "kind": "multiple_choice_comment",
+      "sourceAttributes": { "commented_checkbox": "allways" },
+      "answers": { "SRC_A1comment": "note" },
+      "expected": {}
+    },
+    {
+      "name": "a real row ending in comment remains a selection",
+      "kind": "multiple_choice",
+      "sourceRows": ["A1comment", "A2"],
+      "targetRows": ["A1comment", "A2"],
+      "answers": { "SRC_A1comment": "Y" },
+      "expected": { "TARGET_A1comment": "01" }
+    },
+    {
+      "name": "an unmapped target row remains unrestricted",
+      "kind": "multiple_choice",
+      "targetRows": ["A1", "EXTRA"],
+      "answers": {},
+      "expected": { "TARGET_EXTRA": "01" }
+    },
+    {
+      "name": "hidden source rows are removed before selection",
+      "kind": "multiple_choice",
+      "sourceHiddenRows": ["A1"],
+      "answers": { "SRC_A1": "Y" },
+      "expected": {}
+    },
+    {
+      "name": "exclusive normalization precedes source selection",
+      "kind": "multiple_choice",
+      "sourceAttributes": { "exclude_all_others": "A2" },
+      "answers": { "SRC_A1": "Y", "SRC_A2": "Y" },
+      "expectedSource": { "SRC_A2": "Y" },
+      "expected": { "TARGET_A2": "01" }
+    },
+    {
+      "name": "automatic exclusivity precedes source selection",
+      "kind": "multiple_choice",
+      "sourceAttributes": { "exclude_all_others": "A2", "exclude_all_others_auto": "1" },
+      "answers": { "SRC_A1": "Y" },
+      "expectedSource": { "SRC_A2": "Y" },
+      "expected": { "TARGET_A2": "01" }
+    },
+    {
+      "name": "cascade keeps an ancestor restriction through missing intermediate codes",
+      "kind": "multiple_choice",
+      "middleRows": ["A1"],
+      "targetRows": ["A2"],
+      "answers": { "SRC_A1": "Y", "MID_A1": "text" },
+      "expected": {}
+    },
+    {
+      "name": "cascade preserves exclusion polarity",
+      "kind": "multiple_choice",
+      "middleRows": ["A1"],
+      "ancestorMode": "exclude",
+      "targetRows": ["A2"],
+      "answers": { "SRC_A2": "Y", "MID_A1": "text" },
+      "expected": {}
+    },
+    {
+      "name": "excluding an intermediate source still applies ancestor inclusion",
+      "kind": "multiple_choice",
+      "middleRows": ["A1"],
+      "mode": "exclude",
+      "targetRows": ["A2"],
+      "answers": { "SRC_A1": "Y", "MID_A1": "text" },
+      "expected": {}
+    },
+    {
+      "name": "unselected other is hidden and its comment cleared",
+      "kind": "multiple_choice_comment",
+      "other": true,
+      "targetKind": "multiple_choice_comment",
+      "targetOther": true,
+      "answers": { "SRC_A1": "Y" },
+      "expected": { "TARGET_A1": "Y", "TARGET_A1comment": "note" },
+      "visibleOther": false
+    },
+    {
+      "name": "disabled filter style leaves other visible",
+      "kind": "multiple_choice_comment",
+      "other": true,
+      "targetKind": "multiple_choice_comment",
+      "targetOther": true,
+      "style": "1",
+      "answers": { "SRC_A1": "Y" },
+      "expected": { "TARGET_A1": "Y", "TARGET_A1comment": "note" },
+      "visibleOther": true
+    },
+    {
+      "name": "other text and comment survive when the source other is selected",
+      "kind": "multiple_choice_comment",
+      "other": true,
+      "targetKind": "multiple_choice_comment",
+      "targetOther": true,
+      "answers": { "SRC_other": "custom" },
+      "expected": { "TARGET_other": "custom", "TARGET_othercomment": "note" },
+      "visibleOther": true
+    },
+    {
+      "name": "radio filter clears an unavailable choice",
+      "kind": "multiple_choice",
+      "targetKind": "single_choice",
+      "answers": { "SRC_A1": "Y" },
+      "targetAnswers": { "TARGET": "A2" },
+      "expected": {},
+      "expectedChoices": { "A1": true, "A2": false }
+    },
+    {
+      "name": "radio filter retains an available choice",
+      "kind": "multiple_choice",
+      "targetKind": "single_choice",
+      "answers": { "SRC_A1": "Y" },
+      "targetAnswers": { "TARGET": "A1" },
+      "expected": { "TARGET": "A1" },
+      "expectedChoices": { "A1": true, "A2": false }
+    },
+    {
+      "name": "radio other remains available when source other is unselected",
+      "kind": "multiple_choice",
+      "other": true,
+      "targetKind": "single_choice",
+      "targetOther": true,
+      "answers": { "SRC_A1": "Y" },
+      "targetAnswers": { "TARGET": "-oth-", "TARGET_other": "custom" },
+      "expected": { "TARGET": "-oth-", "TARGET_other": "custom" },
+      "expectedChoices": { "A1": true, "A2": false, "other": true },
+      "visibleOther": true
+    },
+    {
+      "name": "radio filter retains selected other and its text",
+      "kind": "multiple_choice",
+      "other": true,
+      "targetKind": "single_choice",
+      "targetOther": true,
+      "answers": { "SRC_other": "custom" },
+      "targetAnswers": { "TARGET": "-oth-", "TARGET_other": "detail" },
+      "expected": { "TARGET": "-oth-", "TARGET_other": "detail" },
+      "expectedChoices": { "A1": false, "A2": false, "other": true },
+      "visibleOther": true
+    },
+    {
+      "name": "radio exclusion removes only selected codes",
+      "kind": "multiple_text",
+      "targetKind": "single_choice",
+      "mode": "exclude",
+      "answers": { "SRC_A2": "detail" },
+      "targetAnswers": { "TARGET": "A1" },
+      "expected": { "TARGET": "A1" },
+      "expectedChoices": { "A1": true, "A2": false }
+    },
+    {
+      "name": "disabled radio filter style still clears an unavailable selection",
+      "kind": "multiple_choice",
+      "targetKind": "single_choice",
+      "style": "1",
+      "answers": { "SRC_A1": "Y" },
+      "targetAnswers": { "TARGET": "A2" },
+      "expected": {},
+      "expectedChoices": { "A1": true, "A2": false }
+    },
+    {
+      "name": "radio choice absent from the source is unrestricted",
+      "kind": "multiple_choice",
+      "targetKind": "single_choice",
+      "targetChoices": ["A1", "A2", "A3"],
+      "answers": {},
+      "targetAnswers": { "TARGET": "A3" },
+      "expected": { "TARGET": "A3" },
+      "expectedChoices": { "A1": false, "A2": false, "A3": true }
+    },
+    {
+      "name": "ranking filter removes a middle choice and compacts positions",
+      "kind": "multiple_choice",
+      "sourceRows": ["A1", "A2", "A3"],
+      "targetKind": "ranking",
+      "targetChoices": ["A1", "A2", "A3"],
+      "answers": { "SRC_A1": "Y", "SRC_A3": "Y" },
+      "targetAnswers": { "TARGET_1": "A1", "TARGET_2": "A2", "TARGET_3": "A3" },
+      "expected": { "TARGET_1": "A1", "TARGET_2": "A3" },
+      "expectedChoices": { "A1": true, "A2": false, "A3": true }
+    },
+    {
+      "name": "ranking filter removes the first choice without losing the next",
+      "kind": "multiple_choice",
+      "targetKind": "ranking",
+      "answers": { "SRC_A1": "Y" },
+      "targetAnswers": { "TARGET_1": "A2", "TARGET_2": "A1" },
+      "expected": { "TARGET_1": "A1" },
+      "expectedChoices": { "A1": true, "A2": false }
+    },
+    {
+      "name": "ranking exclusion removes selected choices",
+      "kind": "multiple_choice",
+      "targetKind": "ranking",
+      "mode": "exclude",
+      "answers": { "SRC_A2": "Y" },
+      "targetAnswers": { "TARGET_1": "A2", "TARGET_2": "A1" },
+      "expected": { "TARGET_1": "A1" },
+      "expectedChoices": { "A1": true, "A2": false }
+    },
+    {
+      "name": "ranking can filter another ranking by choice code",
+      "kind": "ranking",
+      "targetKind": "ranking",
+      "answers": { "SRC_1": "A2" },
+      "targetAnswers": { "TARGET_1": "A1", "TARGET_2": "A2" },
+      "expected": { "TARGET_1": "A2" },
+      "expectedChoices": { "A1": false, "A2": true }
+    },
+    {
+      "name": "ranking target retains ancestor rules across missing middle codes",
+      "kind": "multiple_choice",
+      "middleRows": ["A1"],
+      "targetKind": "ranking",
+      "answers": { "SRC_A2": "Y" },
+      "targetAnswers": { "TARGET_1": "A1", "TARGET_2": "A2" },
+      "expected": { "TARGET_1": "A2" },
+      "expectedChoices": { "A1": false, "A2": true }
+    },
+    {
+      "name": "ranking filter with no available choice clears all positions",
+      "kind": "multiple_choice",
+      "targetKind": "ranking",
+      "answers": {},
+      "targetAnswers": { "TARGET_1": "A2", "TARGET_2": "A1" },
+      "expected": {},
+      "expectedChoices": { "A1": false, "A2": false }
+    },
+    {
+      "name": "ranking choice absent from the source is unrestricted",
+      "kind": "multiple_choice",
+      "targetKind": "ranking",
+      "targetChoices": ["A1", "A2", "A3"],
+      "answers": {},
+      "targetAnswers": { "TARGET_1": "A3" },
+      "expected": { "TARGET_1": "A3" },
+      "expectedChoices": { "A1": false, "A2": false, "A3": true }
+    },
+    {
+      "name": "filtered ranking is normalized before serving as another filter source",
+      "kind": "multiple_choice",
+      "middleKind": "ranking",
+      "answers": { "SRC_A1": "Y", "MID_1": "A2", "MID_2": "A1" },
+      "expected": { "TARGET_A1": "01" },
+      "expectedMiddle": { "MID_1": "A1" }
+    }
+  ]
+}

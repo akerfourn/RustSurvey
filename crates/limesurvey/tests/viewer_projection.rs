@@ -50,7 +50,7 @@ fn test_projection_should_expose_welcome_and_end_per_language_without_changing_h
     let document = LssDocument::parse(DEMO.as_bytes(), Limits::default()).unwrap();
     let model = document.source_model().unwrap();
 
-    assert!(model.show_welcome);
+    assert_eq!(model.show_welcome, Some(true));
     assert_eq!(model.messages.len(), 2);
     assert_eq!(
         model.messages[0].welcome.as_deref(),
@@ -74,7 +74,7 @@ fn test_projection_should_keep_message_content_when_welcome_display_is_disabled(
     let document = LssDocument::parse(source.as_bytes(), Limits::default()).unwrap();
     let model = document.source_model().unwrap();
 
-    assert!(!model.show_welcome);
+    assert_eq!(model.show_welcome, Some(false));
     assert!(model.messages[0].welcome.is_some());
 }
 

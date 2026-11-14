@@ -6,9 +6,17 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
+aws-credential-types.workspace = true
+aws-sigv4.workspace = true
+reqwest.workspace = true
+rustls.workspace = true
 sha2.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+
+[dev-dependencies]
+axum.workspace = true
+tokio = { workspace = true, features = ["test-util"] }
 
 [lints]
 workspace = true

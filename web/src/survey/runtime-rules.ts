@@ -10,6 +10,7 @@ import {
 } from "./attributes.ts";
 import type { RuntimeQuestion } from "./engine.ts";
 import type { SurveyGroup, SurveyStudy } from "./types.ts";
+import { FILTER_SOURCE_TYPES, emptySelections } from "./filters.ts";
 
 export function variableName(name: string): string {
   return name.replace(/\.NAOK$/, "");
@@ -66,6 +67,8 @@ export function prepareRules(
       }
       const expression = compileRule(item.value, fields, question.issues);
       if (expression !== null) question.constraints.set(item.name, expression);
+    } else if (["exclude_all_others", "exclude_all_others_auto"].includes(item.name)) {
+      continue;
     } else if (INTERACTION_ATTRIBUTES.has(item.name)) {
       if (!["0", "1"].includes(item.value) || (item.language !== null && item.language !== "")) {
         question.issues.push(`Valeur d’attribut non prise en charge : ${item.name}.`);
@@ -101,12 +104,18 @@ export function prepareRules(
     ) {
       continue;
     } else if (["array_filter", "array_filter_exclude"].includes(item.name)) {
+      if (question.source.sourceType === "H" && study.origin === "limesurvey") {
+        question.issues.push(
+          "LimeSurvey 6.5.14 n’applique pas ce filtre au tableau par colonnes ; sa saisie importée ne peut pas être simulée fidèlement.",
+        );
+        continue;
+      }
       if (
-        !["M", "P", "Q", "K", "A", "B", "C", "E", "F", "H", "1", ":", ";"].includes(
+        !["M", "P", "Q", "K", "A", "B", "C", "E", "F", "H", "1", ":", ";", "L", "R"].includes(
           question.source.sourceType,
         )
       ) {
-        question.issues.push("Filtre de choix ou de classement non pris en charge.");
+        question.issues.push("Filtre non pris en charge pour ce type de question.");
         continue;
       }
       for (const code of item.value
@@ -114,18 +123,16 @@ export function prepareRules(
         .map((part) => part.trim())
         .filter((part) => part !== "")) {
         const source = study.questions.find((candidate) => candidate.code === code);
-        if (source === undefined || !["M", "P"].includes(source.sourceType)) {
-          question.issues.push(`Le filtre ${code} doit désigner un choix multiple.`);
+        if (source === undefined || !FILTER_SOURCE_TYPES.has(source.sourceType)) {
+          question.issues.push(
+            `Le filtre ${code} doit désigner une question à lignes multiples ou un classement.`,
+          );
         } else
           question.filters.push({
             sourceId: source.id,
             code,
             exclude: item.name === "array_filter_exclude",
-            selections: new Set(
-              study.subquestions
-                .filter((row) => row.parentId === source.id && row.scale === 0)
-                .map((row) => `${code}_${row.code}`),
-            ),
+            selections: emptySelections(),
           });
       }
     } else if (TEXT_ATTRIBUTES.has(item.name) || isPassiveAttribute(item.name)) {

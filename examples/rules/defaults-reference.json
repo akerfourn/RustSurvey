@@ -1,0 +1,277 @@
+{
+  "cases": [
+    {
+      "name": "initialized text survives language change and explicit clearing",
+      "question": "S",
+      "sameDefault": false,
+      "values": { "fr": "bonjour", "en": "hello" },
+      "steps": [
+        { "language": "fr", "state": "missing", "expected": "bonjour" },
+        { "language": "en", "state": "keep", "expected": "bonjour" },
+        { "language": "en", "state": "null", "expected": "hello" },
+        { "language": "en", "state": "empty", "expected": "" },
+        { "language": "fr", "state": "missing", "expected": "bonjour" }
+      ]
+    },
+    {
+      "name": "shared defaults use the base language",
+      "question": "S",
+      "sameDefault": true,
+      "values": { "fr": "base", "en": "localized" },
+      "steps": [{ "language": "en", "state": "missing", "expected": "base" }]
+    },
+    {
+      "name": "a missing localized default does not fall back to the base language",
+      "question": "S",
+      "sameDefault": false,
+      "values": { "fr": "base" },
+      "steps": [{ "language": "en", "state": "missing", "expected": null }]
+    },
+    {
+      "name": "an empty base default remains empty",
+      "question": "S",
+      "sameDefault": true,
+      "values": { "fr": "", "en": "localized" },
+      "steps": [{ "language": "en", "state": "missing", "expected": "" }]
+    },
+    {
+      "name": "a text expression runs once without replacing a supplied value",
+      "question": "S",
+      "sameDefault": true,
+      "values": { "fr": "total {sum(1, 2)}" },
+      "steps": [
+        { "language": "fr", "state": "missing", "expected": "total 3" },
+        { "language": "fr", "state": "existing", "value": "manual", "expected": "manual" }
+      ]
+    },
+    {
+      "name": "numeric zero is a present default",
+      "question": "N",
+      "values": { "fr": "0" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "0" }]
+    },
+    {
+      "name": "an ISO date is initialized",
+      "question": "D",
+      "values": { "fr": "2024-02-29" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "2024-02-29" }]
+    },
+    {
+      "name": "a radio answer code keeps its leading zero",
+      "question": "L",
+      "values": { "fr": "01" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "01" }]
+    },
+    {
+      "name": "a yes no expression is initialized",
+      "question": "YN",
+      "values": { "fr": "{if(1, 'Y', 'N')}" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "Y" }]
+    },
+    {
+      "name": "a multiple choice row is initialized",
+      "question": "M",
+      "row": "A1",
+      "target": "M_A1",
+      "values": { "fr": "Y" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "Y" }]
+    },
+    {
+      "name": "a commented multiple choice row is initialized",
+      "question": "P",
+      "row": "A1",
+      "target": "P_A1",
+      "values": { "fr": "Y" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "Y" }]
+    },
+    {
+      "name": "a multiple text row preserves whitespace and lexical numbers",
+      "question": "Q",
+      "row": "A1",
+      "target": "Q_A1",
+      "values": { "fr": "  001 été  " },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "  001 été  " }]
+    },
+    {
+      "name": "a multiple numerical row accepts zero",
+      "question": "K",
+      "row": "A1",
+      "target": "K_A1",
+      "values": { "fr": "0" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "0" }]
+    },
+    {
+      "name": "a fixed scale array row has a default",
+      "question": "A",
+      "row": "A1",
+      "target": "A_A1",
+      "values": { "fr": "3" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "3" }]
+    },
+    {
+      "name": "a choice array row has a default",
+      "question": "F",
+      "row": "A1",
+      "target": "F_A1",
+      "values": { "fr": "01" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "01" }]
+    },
+    {
+      "name": "a column array row has a default",
+      "question": "H",
+      "row": "A1",
+      "target": "H_A1",
+      "values": { "fr": "01" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "01" }]
+    },
+    {
+      "name": "selected radio other has a text default",
+      "question": "L",
+      "special": "other",
+      "target": "L_other",
+      "seed": { "L": "-oth-" },
+      "values": { "fr": "custom" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "custom" }]
+    },
+    {
+      "name": "multiple choice other does not receive a field default",
+      "nativeSupported": false,
+      "question": "M",
+      "special": "other",
+      "target": "M_other",
+      "values": { "fr": "custom" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": null }]
+    },
+    {
+      "name": "ranking positions do not receive scalar defaults",
+      "nativeSupported": false,
+      "question": "R",
+      "target": "R_1",
+      "values": { "fr": "01" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": null }]
+    },
+    {
+      "name": "an invalid numeric default remains in the engine write request",
+      "nativeExecutable": false,
+      "question": "N",
+      "values": { "fr": "invalid" },
+      "steps": [
+        {
+          "language": "fr",
+          "state": "missing",
+          "expected": "invalid",
+          "expectedWrite": { "present": true, "value": "invalid" }
+        }
+      ]
+    },
+    {
+      "name": "an irrelevant default may exist in session while its persisted value is null",
+      "question": "T",
+      "relevance": "S == 'show'",
+      "values": { "fr": "initial" },
+      "steps": [
+        {
+          "language": "fr",
+          "state": "missing",
+          "seed": { "S": "hide" },
+          "expected": "initial",
+          "expectedWrite": { "present": true, "value": null }
+        },
+        {
+          "language": "fr",
+          "state": "null",
+          "seed": { "S": "show" },
+          "expected": "initial",
+          "expectedWrite": { "present": true, "value": "initial" }
+        }
+      ]
+    },
+    {
+      "name": "a filtered row default is persisted only when the row becomes active",
+      "question": "Q",
+      "row": "A2",
+      "target": "Q_A2",
+      "filter": "M",
+      "values": { "fr": "detail" },
+      "steps": [
+        {
+          "language": "fr",
+          "state": "missing",
+          "seed": { "M_A1": "Y" },
+          "expected": "detail",
+          "expectedWrite": { "present": true, "value": null }
+        },
+        {
+          "language": "fr",
+          "state": "null",
+          "seed": { "M_A2": "Y" },
+          "expected": "detail",
+          "expectedWrite": { "present": true, "value": "detail" }
+        }
+      ]
+    },
+    {
+      "name": "a huge text default preserves unicode",
+      "question": "U",
+      "values": { "fr": "texte été 日本" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "texte été 日本" }]
+    },
+    {
+      "name": "a dropdown default uses its answer code",
+      "question": "DDL",
+      "values": { "fr": "02" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "02" }]
+    },
+    {
+      "name": "a five point default uses its fixed code",
+      "question": "FIVE",
+      "values": { "fr": "4" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "4" }]
+    },
+    {
+      "name": "a gender default uses its fixed code",
+      "question": "GEN",
+      "values": { "fr": "F" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "F" }]
+    },
+    {
+      "name": "a single choice with comment initializes the main answer",
+      "question": "O",
+      "values": { "fr": "02" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "02" }]
+    },
+    {
+      "name": "a ten point array initializes a row",
+      "question": "B",
+      "row": "A1",
+      "target": "B_A1",
+      "values": { "fr": "10" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "10" }]
+    },
+    {
+      "name": "a yes no array initializes a negative answer",
+      "question": "C",
+      "row": "A1",
+      "target": "C_A1",
+      "values": { "fr": "N" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "N" }]
+    },
+    {
+      "name": "an increase array initializes a decrease answer",
+      "question": "E",
+      "row": "A1",
+      "target": "E_A1",
+      "values": { "fr": "D" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "D" }]
+    },
+    {
+      "name": "selected dropdown other has a text default",
+      "question": "DDL",
+      "special": "other",
+      "target": "DDL_other",
+      "seed": { "DDL": "-oth-" },
+      "values": { "fr": "custom" },
+      "steps": [{ "language": "fr", "state": "missing", "expected": "custom" }]
+    }
+  ]
+}

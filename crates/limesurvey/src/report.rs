@@ -13,6 +13,7 @@ pub enum DiagnosticCode {
     UnsupportedSchema,
     InvalidTable,
     InvalidField,
+    UnresolvedSetting,
     DuplicateId,
     MissingReference,
     SurveyMismatch,

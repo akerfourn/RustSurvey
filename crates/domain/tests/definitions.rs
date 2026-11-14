@@ -82,7 +82,7 @@ fn test_definition_should_reject_ambiguous_answer_names_and_required_information
 #[test]
 fn test_definition_should_bound_structure_text_and_schema_versions() {
     let mut value = fixture();
-    value["schemaVersion"] = json!(4);
+    value["schemaVersion"] = json!(5);
     value["title"] = json!("a".repeat(201));
     let issues = serde_json::from_value::<Definition>(value)
         .unwrap()
@@ -124,7 +124,7 @@ fn test_v2_upgrade_should_add_empty_media_without_changing_ids_and_reject_v3_ref
     value["schemaVersion"] = json!(2);
     let mut upgraded: Definition = serde_json::from_value(value.clone()).unwrap();
     upgraded.upgrade().unwrap();
-    assert_eq!(upgraded.schema_version, 3);
+    assert_eq!(upgraded.schema_version, 4);
     assert_eq!(upgraded.groups[0].questions[0].id, "q1");
     assert_eq!(upgraded.groups[0].questions[0].choices[0].code, "01");
     assert!(upgraded.groups[0].questions[0].media.is_empty());

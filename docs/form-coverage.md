@@ -14,17 +14,20 @@ jour. Les états ci-dessous décrivent le moteur de formulaire. L’incrément
 d’[édition native](authoring.md) ajoute ensuite le stockage SQL des définitions
 et de l’administration, puis les sources LSS privées et les conditions éditables
 de groupes/questions dans le format v2. Le format v3 ajoute les images natives ;
-l’éditeur expose maintenant 28 types, paramètres et traductions. Le premier
-profil de [collecte native](collection.md), étendu à 28 types, couvre validation
-Rust, réponses SQL et reprise. Il inclut filtres, curseurs et conditions des
-axes ; les imports restent des aperçus locaux. Les
+l’éditeur expose maintenant 28 types, paramètres et traductions. La v4 ajoute
+les défauts natifs par coordonnées et langue. Le premier profil de
+[collecte native](collection.md), étendu à 28 types, couvre validation Rust,
+réponses SQL et reprise. Il inclut filtres, curseurs et conditions des axes ; un
+[profil importé](import-execution.md) qualifie aussi des campagnes neuves. Les
+anciennes participations ne sont pas transférées. Les
 [règles de participation](participation.md) ajoutent cookies et invitations.
 
 F5 dispose ainsi d’un premier sous-ensemble natif. Les autres fonctions F5/F6,
-la collecte des imports et la certification restent différées ; les propositions
-ci-dessous décrivent la cible complète. Les médias et fichiers suivent la
+les configurations importées hors profil et la certification restent à réaliser
+; les propositions ci-dessous décrivent la cible complète. Les médias et
+fichiers suivent la
 [décision de stockage objet](decisions/0002-object-storage.md). Le port, les
-adaptateurs SQL/mémoire/fichiers et les images natives sont présents ; S3 et
+adaptateurs SQL/mémoire/fichiers/S3 et les images natives sont présents ; les
 téléversements participants restent à réaliser.
 
 Le périmètre est le formulaire vu et rempli par le participant. L’éditeur
@@ -88,8 +91,8 @@ et un rendu ressemblant ne sont pas des preuves d’équivalence.
 - Les aperçus gardent les réponses en mémoire. Les campagnes natives du profil
   initial possèdent validation Rust, collecte SQL et reprise privée.
 - Le réexport original conserve les octets du LSS. La modification d’un titre
-  est disponible ; la génération complète d’un questionnaire modifié ne l’est
-  pas.
+  est disponible. Les créations natives possèdent un export LSS distinct,
+  vérifié structurellement sur 28 types et deux langues dans la référence.
 
 Ces décomptes décrivent des entrées de registres, **pas un pourcentage de
 compatibilité**. Chaque type possède des variantes et des interactions. Zéro
@@ -113,9 +116,9 @@ document.
 | `5`  | Choix de 1 à 5                       | Base    | Variantes de présentation et options communes             | F4       |
 | `Y`  | Oui/non                              | Base    | Variantes et libellés d’interface localisés               | F4       |
 | `G`  | Genre historique                     | Base    | Variantes et libellés d’interface localisés               | F4       |
-| `L`  | Liste radio                          | Base    | Tri, filtres et thèmes de boutons/images                  | F1/F3/F4 |
+| `L`  | Liste radio                          | Base    | Tri et thèmes de boutons/images                           | F1/F3/F4 |
 | `!`  | Liste déroulante                     | Base    | Autre, catégories, recherche, préfixes                    | F1/F4    |
-| `M`  | Choix multiples                      | Base    | Exclusivité, ordre et rendu autre avec case transitoire   | F1/F3    |
+| `M`  | Choix multiples                      | Base    | Ordre et rendu autre avec case transitoire                | F1/F3    |
 | `Q`  | Textes multiples                     | Base    | Lignes à la demande et contraintes par cellule            | F3/F4    |
 | `K`  | Nombres multiples                    | Base    | Options avancées des curseurs et format numérique         | F3/F4    |
 | `F`  | Tableau de choix par ligne           | Base    | Ordre, en-têtes répétés et largeur                        | F3/F4    |
@@ -130,7 +133,7 @@ document.
 | `;`  | Tableau de textes                    | Base    | Totaux affichés, variantes et corpus                      | F1/F3/F4 |
 | `O`  | Liste avec commentaire               | Base    | Variantes de rendu et corpus                              | F1       |
 | `P`  | Choix multiples avec commentaires    | Partiel | Commentaires sans effacement automatique et variantes     | F1/F3    |
-| `R`  | Classement                           | Partiel | Filtres, limites natives et glisser-déposer               | F1/F3/F4 |
+| `R`  | Classement                           | Partiel | Limites natives et glisser-déposer                        | F1/F3/F4 |
 | `I`  | Changement de langue                 | Base    | Interface multilingue complète et corpus                  | F1/F4    |
 | `*`  | Équation                             | Partiel | Affectations, équations composites/localisées et export   | F2       |
 | `\|` | Téléversement de fichiers            | Absent  | Métadonnées, quotas de taille/nombre et stockage          | F6       |
@@ -149,11 +152,15 @@ les positions de classement et les échelles. Les métadonnées de fichiers rest
 différées. Les noms concaténés servent encore d’alias locaux ; une ambiguïté est
 bloquante. Ils ne remplacent pas une identité interne stable.
 
-Il faut réaliser les `FieldBinding` du [modèle interne](domain-model.md), avec
-coordonnées et rôle typés, identités stables et alias d’expression distincts. Le
-mapping vers les colonnes SGQA doit être vérifié pour chaque type et utilisé par
-les imports/exports de réponses. Aujourd’hui, le viewer utilise ses noms locaux
-; il n’offre pas cet échange.
+Les `FieldBinding` natifs du [modèle interne](domain-model.md) possèdent
+maintenant coordonnées et rôle typés, identités stables et alias d'expression
+distincts. Le mapping des 28 types sans fichiers est vérifié contre les colonnes
+réelles de la référence et utilisé pour l'export des réponses natives. Les
+correspondances des imports sont disponibles dans la
+[préparation LSR](response-imports.md). Leur collecte et la conversion en
+participations restent à réaliser ; le
+[bilan des prérequis](imported-collection.md) localise les données non
+projetées. Voir l'[échange des réponses](response-exchange.md).
 
 La représentation source doit distinguer absent, `NULL`, vide, non coché et
 valeur présente lorsque LimeSurvey les distingue. Conserver aussi codes à zéros
@@ -162,17 +169,17 @@ viewer ne suffit pas au stockage sans perte.
 
 ### Pertinence, filtres et initialisation
 
-| Fonction                     | Existant                                     | À réaliser                                                   |
-| ---------------------------- | -------------------------------------------- | ------------------------------------------------------------ |
-| Pertinence groupe/question   | Graphe et effacement en cascade              | Vérifier la sémantique amont et les cas de navigation        |
-| Pertinence de sous-question  | Visibilité et validité par cellule/ligne/axe | Compléter les sélecteurs et le corpus amont                  |
-| Filtres inclusifs/exclusifs  | Sources M/P, lignes, styles 0/1              | Autres sources, choix simples et classement                  |
-| Choix exclusifs              | Non gérés                                    | Exclusivité, auto-sélection, commentaire et autre            |
-| Question cachée              | `hidden=1` distingue affichage et pertinence | Corpus, valeurs par défaut et collecte                       |
-| Valeurs par défaut           | Section principale bloquante                 | Littéraux, expressions, traductions et `same_default`        |
-| Anciennes conditions         | Section bloquante                            | Traduction des scénarios et rapprochement avec la pertinence |
-| Préremplissage par URL       | Conservé, non projeté                        | Paramètres autorisés, typage et politique de priorité        |
-| Aléatoire et ordre dépendant | Actif généralement bloquant                  | Groupes/questions/choix, `parent_order`, ordre réalisé       |
+| Fonction                     | Existant                                                       | À réaliser                                                   |
+| ---------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------ |
+| Pertinence groupe/question   | Graphe et effacement en cascade                                | Vérifier la sémantique amont et les cas de navigation        |
+| Pertinence de sous-question  | Visibilité et validité par cellule/ligne/axe                   | Compléter les sélecteurs et le corpus amont                  |
+| Filtres inclusifs/exclusifs  | 14 sources, Autre, cascade, styles 0/1, cibles L/R             | Autres variantes et comparaison complète des parcours        |
+| Choix exclusifs              | Neuf types, automatique M/P, commentaires et autre             | Comparaison complète des parcours amont                      |
+| Question cachée              | `hidden=1` distingue affichage et pertinence                   | Corpus, valeurs par défaut et collecte                       |
+| Valeurs par défaut           | Projection persistante ; édition, export et collecte natifs v4 | Cibles restantes, NAOK et interactions restantes             |
+| Anciennes conditions         | Section bloquante                                              | Traduction des scénarios et rapprochement avec la pertinence |
+| Préremplissage par URL       | Conservé, non projeté                                          | Paramètres autorisés, typage et politique de priorité        |
+| Aléatoire et ordre dépendant | Actif généralement bloquant                                    | Groupes/questions/choix, `parent_order`, ordre réalisé       |
 
 L’initialisation doit avoir une phase explicite. Une valeur par défaut ne doit
 pas écraser une réponse au retour arrière ni être réappliquée après un
@@ -180,7 +187,20 @@ effacement sans preuve que la source le demande. Le masquage d’une question
 calculée ne signifie pas suppression de son résultat. Le filtrage doit mettre à
 jour les choix autorisés, l’obligatoire et les réponses devenues invalides.
 
+Les [défauts](default-values.md) disposent de 31 scénarios amont distinguant
+état de session et écritures. Les valeurs persistables sont comparées aux
+moteurs natifs Rust/TypeScript et 29 configurations natives sont réimportées
+dans la référence. Le profil `native-defaults-v1` initialise les pages sans
+remplacer une réponse présente. La projection des imports et le contexte NAOK
+restent à faire.
+
 ### Validation
+
+Les [lignes exclusives](exclusive-options.md) sont configurables dans l'éditeur
+et interprétées par les moteurs Rust/TypeScript. La pertinence et les filtres
+précèdent l'exclusivité ; les questions dépendantes utilisent les valeurs
+normalisées. L'import réel des attributs est vérifié dans LimeSurvey 6.5.14.
+Cette preuve d'échange ne certifie pas toutes les interactions de formulaire.
 
 Présents dans le profil local : obligatoire strict/souple, nombre fini, entier,
 date ISO, `min_num_value_n`, `max_num_value_n`, `min_answers`, `max_answers`,
@@ -241,24 +261,30 @@ acquise. Aucun `eval` ni exécution de PHP n’est nécessaire.
 
 ## Rendus et parcours à compléter
 
-| Domaine                  | Situation actuelle                                  | Cible                                                             |
-| ------------------------ | --------------------------------------------------- | ----------------------------------------------------------------- |
-| Pagination               | Toujours par groupe                                 | Formats A/G/S, options héritées, sauts et retour autorisé         |
-| Début/fin                | Accueil/fin en texte                                | Description, politique de données, consentement, URL de fin       |
-| Informations de parcours | Compteur et navigation propres au viewer            | Affichage des groupes, numéros/codes, index, progression          |
-| Sans réponse             | Effacement local et option sur tableaux facultatifs | Politique effective `shownoanswer` et comportement par type       |
-| Texte                    | Conversion en texte                                 | HTML sûr, liens, listes, emphase et substitutions échappées       |
-| Ressources               | Aucune image ni pièce jointe rendue                 | Images, audio/vidéo, liens et ressources de thème nécessaires     |
-| Disposition              | Colonnes et tableaux simples                        | Largeurs, lignes, préfixes/suffixes, en-têtes, masquage des aides |
-| Contrôles                | Champs, radios, menus, cases                        | Curseurs, notes, menus de tableaux et catégories                  |
-| Langues                  | Libellés importés, langue de base en repli          | Interface traduite, formats locaux, droite-à-gauche, type I       |
-| Impression               | Non gérée                                           | Questionnaire et réponses imprimables, sauts de page              |
-| Accessibilité            | Bases présentes, DOM non vérifié                    | Clavier, focus, erreurs, lecteurs d’écran et petits écrans        |
+| Domaine                  | Situation actuelle                                         | Cible                                                             |
+| ------------------------ | ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| Pagination               | Modes A/G/S dans les campagnes natives ; aperçu par groupe | Options héritées, index, sauts et retour configurable             |
+| Début/fin                | Accueil/fin en texte                                       | Description, politique de données, consentement, URL de fin       |
+| Informations de parcours | Compteur et navigation propres au viewer                   | Affichage des groupes, numéros/codes, index, progression          |
+| Sans réponse             | Effacement local et option sur tableaux facultatifs        | Politique effective `shownoanswer` et comportement par type       |
+| Texte                    | Conversion en texte                                        | HTML sûr, liens, listes, emphase et substitutions échappées       |
+| Ressources               | Aucune image ni pièce jointe rendue                        | Images, audio/vidéo, liens et ressources de thème nécessaires     |
+| Disposition              | Colonnes et tableaux simples                               | Largeurs, lignes, préfixes/suffixes, en-têtes, masquage des aides |
+| Contrôles                | Champs, radios, menus, cases                               | Curseurs, notes, menus de tableaux et catégories                  |
+| Langues                  | Libellés importés, langue de base en repli                 | Interface traduite, formats locaux, droite-à-gauche, type I       |
+| Impression               | Non gérée                                                  | Questionnaire et réponses imprimables, sauts de page              |
+| Accessibilité            | Bases présentes, DOM non vérifié                           | Clavier, focus, erreurs, lecteurs d’écran et petits écrans        |
 
 Les trois formats de réponse sont A, G et S ; la valeur I signifie héritage, pas
 un quatrième écran. L’impression est une présentation distincte. La provenance
 des réglages hérités doit être conservée et leur valeur effective résolue avant
 publication.
+
+Les campagnes `native-pages-v1` figent le format et la progression, avec retour
+autorisé et reprise sur la question précise. L'import réel des trois formats et
+des indicateurs est vérifié dans LimeSurvey ; les parcours complets restent à
+comparer. Les aperçus et les imports gardent leur périmètre distinct. Voir la
+[décision 0012](decisions/0012-native-navigation.md).
 
 Les 8 thèmes de question fournis ajoutent ces variantes :
 
@@ -395,10 +421,10 @@ administrateur ne sont un préalable.
 
 Le port de stockage objet est présent avec adaptateurs SQL, mémoire et fichiers.
 Un premier parcours d’images natives contrôle propriétaire, taille, signature,
-dimensions et association à une révision. L’adaptateur S3 et les pièces jointes
-des participants restent à réaliser ; voir la
-[décision 0002](decisions/0002-object-storage.md). Le déploiement S3 ne devra
-pas dépendre d’un volume disque persistant.
+dimensions et association à une révision. L'adaptateur S3 et son index SQL sont
+disponibles ; les pièces jointes des participants restent à réaliser. Voir la
+[décision 0002](decisions/0002-object-storage.md) et le
+[guide S3](s3-storage.md). Les binaires S3 ne dépendent pas d'un volume local.
 
 Prévoir un protocole temporaire → prêt → associé et une collecte des fichiers
 orphelins : le stockage objet et SQL ont des cycles d’écriture distincts. Les

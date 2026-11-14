@@ -4,6 +4,10 @@ Première bibliothèque Rust pour les structures `.lss`, avec un outil CLI. Le
 modèle exposé décrit le fichier source et ses identifiants ; il ne remplace pas
 le modèle de persistance des études.
 
+Les [valeurs par défaut](../../docs/default-values.md) sont conservées dans ce
+modèle de lecture, avec cibles, traductions et `same_default`. Leur lecture ne
+les applique pas aux réponses et ne débloque pas une collecte importée.
+
 ## Commandes
 
 Depuis la racine du dépôt :
@@ -33,6 +37,35 @@ contient des erreurs. Cette commande archive la source ; elle ne certifie pas
 son fonctionnement. `set-title` exige le schéma 623 et l’absence d’erreurs
 structurelles. Il modifie seulement le contenu du titre dans la langue choisie.
 Les autres octets, extensions et attributs sont conservés.
+
+Pour une définition JSON native sans données source importées :
+
+```sh
+cargo run -p rustsurvey-limesurvey --locked -- export-native \
+  definition.json native.lss 701
+```
+
+`701` est l'identifiant d'échange du questionnaire. Cet export porte la
+structure, les langues, les axes, les choix et les règles du profil natif. Il ne
+contient ni réponses, ni politique de campagne, ni fichiers. Les données non
+représentables bloquent l'export : médias, thèmes spécifiques, traductions
+inactives ou attributs inconnus. Les codes que LimeSurvey renommerait sont
+refusés plutôt que modifiés silencieusement.
+
+Un dernier argument facultatif `navigation.json` configure la présentation :
+
+```json
+{ "format": "question", "showProgress": false }
+```
+
+`format` accepte `group`, `question` et `all`. Les deux champs sont requis et le
+fichier est limité à 1 Kio. Sans argument, l'export utilise un groupe par page
+et affiche la progression. Le retour est explicitement autorisé dans les trois
+formats. L'export privé d'une campagne fournit ses réglages figés.
+
+L'aller-retour structurel des 28 types et de deux langues est vérifié dans
+LimeSurvey 6.5.14. Cela ne certifie ni tous les réglages ni leur exécution. Voir
+la [procédure de référence](../../docs/limesurvey-reference.md).
 
 ## Contrôles présents
 
@@ -95,6 +128,26 @@ produisent le rapport CLI ; aucune nouvelle dépendance de runtime web ou de bas
 de données n’est introduite.
 
 ## Tests
+
+Le CLI expose aussi `export-bindings`, `import-responses`, `export-responses` et
+`export-vv`. Le lecteur LSR conserve les colonnes et valeurs source sans charger
+de réponses en SQL. L'export VV est utilisé pour les campagnes natives afin
+d'éviter les altérations du chemin LSR dans la référence. Voir les
+[commandes, garanties et limites](../../docs/response-exchange.md).
+
+`LssDocument::projection_gaps()` inventorie les données qui ne sont pas portées
+par la projection native actuelle. Les valeurs source ne sont pas recopiées dans
+les diagnostics. Ce contrôle conservateur ne certifie pas l'exécution ; il
+alimente le [bilan de collecte importée](../../docs/imported-collection.md). Les
+`source_bindings` relient les cellules aux identités source archivées. Le
+serveur utilise ces deux fonctions et conserve les LSR dans une
+[préparation privée](../../docs/response-imports.md) distincte du lecteur CLI.
+
+`group-settings INPUT_LSS OUTPUT_JSON [CONTEXT_JSON]` résout 30 options de
+groupes sans défaut local. `LssDocument::group_settings` fournit les mêmes
+valeurs typées et leur provenance. Un accueil hérité reste inconnu dans la
+projection tant que son contexte manque ; son original n'est pas modifié. Voir
+le [périmètre et les cas de référence](../../docs/source-settings.md).
 
 ```sh
 cargo test -p rustsurvey-limesurvey --locked

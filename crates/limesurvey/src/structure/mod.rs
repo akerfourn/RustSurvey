@@ -3,6 +3,7 @@ use crate::{
     xml::Document,
 };
 
+mod defaults;
 mod details;
 mod edit;
 mod fields;
@@ -25,12 +26,12 @@ const CHECKED: &[&str] = &[
     "group_l10ns",
     "question_l10ns",
     "answer_l10ns",
+    "defaultvalues",
+    "defaultvalue_l10ns",
 ];
 const UNCHECKED: &[&str] = &[
     "assessments",
     "conditions",
-    "defaultvalues",
-    "defaultvalue_l10ns",
     "question_attributes",
     "quota",
     "quota_members",
@@ -74,6 +75,7 @@ pub(crate) fn inspect(xml: &Document, report: &mut Report) -> Option<SurveySourc
     let mut model = project::read_model(xml, report);
     translations::validate_translations(xml, &model, report);
     details::enrich(xml, &mut model);
+    defaults::read(xml, &mut model, report);
     Some(model)
 }
 

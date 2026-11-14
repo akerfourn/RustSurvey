@@ -10,6 +10,44 @@ use rustsurvey_limesurvey::{Limits, LssDocument};
 const SOURCE: &[u8] = include_bytes!("fixtures/minimal-623.lss");
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(0);
 
+#[test]
+fn test_group_settings_command_should_preserve_unknown_context_and_write_private_reports_only() {
+    let directory = TestDirectory::new();
+    let input = directory.file("input.lss");
+    let output = directory.file("settings.json");
+    fs::write(&input, SOURCE).unwrap();
+    let result = cli(&[Path::new("group-settings"), &input, &output]);
+    assert!(result.status.success(), "{:?}", result.stderr);
+    assert!(result.stdout.is_empty() && result.stderr.is_empty());
+    let bytes = fs::read(&output).unwrap();
+    let report: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    assert_eq!(report["complete"], false);
+    assert!(
+        report["settings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|setting| setting["name"] == "showwelcome" && setting["value"].is_null())
+    );
+    assert!(
+        !cli(&[Path::new("group-settings"), &input, &output])
+            .status
+            .success()
+    );
+    assert_eq!(fs::read(&output).unwrap(), bytes);
+    let context = directory.file("context.json");
+    fs::write(
+        &context,
+        br#"{"schemaVersion":1,"private":"synthetic-private-context"}"#,
+    )
+    .unwrap();
+    let rejected = directory.file("rejected.json");
+    let result = cli(&[Path::new("group-settings"), &input, &rejected, &context]);
+    assert!(!result.status.success());
+    assert!(!rejected.exists());
+    assert!(!String::from_utf8_lossy(&result.stderr).contains("synthetic-private-context"));
+}
+
 struct TestDirectory(PathBuf);
 
 impl TestDirectory {
@@ -39,6 +77,41 @@ fn cli(arguments: &[&Path]) -> Output {
         .args(arguments)
         .output()
         .expect("run local CLI")
+}
+
+#[test]
+fn test_response_commands_should_preserve_source_values_without_overwriting_or_logging_them() {
+    let directory = TestDirectory::new();
+    let input = directory.file("responses.json");
+    let xml = directory.file("responses.lsr");
+    let decoded = directory.file("decoded.json");
+    let vv = directory.file("responses.vv");
+    let aliases = directory.file("aliases.json");
+    let table = serde_json::json!({"languages":["fr"],"columns":["701X1X1","701X1X2","701X1X3"],"rows":[{"701X1X1":"  O'Neil `value`\r\n{question_not_shown}  ","701X1X2":"","701X1X3":null}]});
+    fs::write(&input, serde_json::to_vec(&table).unwrap()).unwrap();
+    fs::write(&aliases, br#"{"701X1X1":"Q1"}"#).unwrap();
+    let result = cli(&[Path::new("export-responses"), &input, &xml]);
+    assert!(result.status.success());
+    assert!(result.stdout.is_empty() && result.stderr.is_empty());
+    assert!(
+        cli(&[Path::new("import-responses"), &xml, &decoded])
+            .status
+            .success()
+    );
+    let actual: serde_json::Value = serde_json::from_slice(&fs::read(decoded).unwrap()).unwrap();
+    assert_eq!(actual, table);
+    assert!(
+        cli(&[Path::new("export-vv"), &input, &aliases, &vv])
+            .status
+            .success()
+    );
+    let exported = fs::read(&vv).unwrap();
+    assert!(
+        !cli(&[Path::new("export-vv"), &input, &aliases, &vv])
+            .status
+            .success()
+    );
+    assert_eq!(fs::read(vv).unwrap(), exported);
 }
 
 #[test]
@@ -85,6 +158,64 @@ fn test_export_should_preserve_all_bytes_when_destination_is_new() {
 
     assert!(result.status.success(), "{:?}", result.stderr);
     assert_eq!(fs::read(&output).unwrap(), SOURCE);
+}
+
+#[test]
+fn test_native_export_cli_should_generate_schema_623_without_overwriting_files() {
+    let directory = TestDirectory::new();
+    let input = directory.file("native.json");
+    let output = directory.file("native.lss");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../examples/rules/collection-forms.json"
+    ))
+    .unwrap();
+    fs::write(&input, serde_json::to_vec(&corpus["definition"]).unwrap()).unwrap();
+    let arguments = [
+        Path::new("export-native"),
+        &input,
+        &output,
+        Path::new("701"),
+    ];
+    let result = cli(&arguments);
+    assert!(result.status.success(), "{:?}", result.stderr);
+    let bytes = fs::read(&output).unwrap();
+    let document = LssDocument::parse(&bytes, Limits::default()).unwrap();
+    assert_eq!(document.source_model().unwrap().questions.len(), 28);
+    assert!(!cli(&arguments).status.success());
+    assert_eq!(fs::read(&output).unwrap(), bytes);
+}
+
+#[test]
+fn test_native_export_cli_should_validate_optional_navigation_before_creating_the_output() {
+    let directory = TestDirectory::new();
+    let input = directory.file("native.json");
+    let output = directory.file("native.lss");
+    let navigation = directory.file("navigation.json");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../examples/rules/collection-forms.json"
+    ))
+    .unwrap();
+    fs::write(&input, serde_json::to_vec(&corpus["definition"]).unwrap()).unwrap();
+    let arguments = [
+        Path::new("export-native"),
+        &input,
+        &output,
+        Path::new("701"),
+        &navigation,
+    ];
+    fs::write(&navigation, br#"{"format":"question"}"#).unwrap();
+    let invalid = cli(&arguments);
+    assert!(!invalid.status.success());
+    assert!(String::from_utf8_lossy(&invalid.stderr).contains("invalid navigation settings JSON"));
+    assert!(!output.exists());
+    fs::write(
+        &navigation,
+        br#"{"format":"question","showProgress":false}"#,
+    )
+    .unwrap();
+    assert!(cli(&arguments).status.success());
+    let document = LssDocument::parse(&fs::read(&output).unwrap(), Limits::default()).unwrap();
+    assert_eq!(document.source_model().unwrap().questions.len(), 28);
 }
 
 #[test]

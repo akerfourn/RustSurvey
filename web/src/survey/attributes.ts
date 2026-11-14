@@ -137,7 +137,6 @@ export const INACTIVE_ATTRIBUTES = new Set([
   "random_order",
   "reverse",
   "alphasort",
-  "exclude_all_others_auto",
   "dropdown_dates",
   "samechoiceheight",
   "samelistheight",

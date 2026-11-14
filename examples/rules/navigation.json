@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "name": "group draft starts with only the relevant group",
+      "format": "group",
+      "answers": {},
+      "pages": [{ "id": "g:main", "groupId": "main", "questionIds": ["gate"] }]
+    },
+    {
+      "name": "question pages skip hidden calculations and retain dependent questions",
+      "format": "question",
+      "answers": { "GATE": "Y", "AGE": "18" },
+      "pages": [
+        { "id": "q:gate", "groupId": "main", "questionIds": ["gate"] },
+        { "id": "q:age", "groupId": "details", "questionIds": ["age"] },
+        { "id": "q:choice", "groupId": "details", "questionIds": ["choice"] },
+        { "id": "q:note", "groupId": "details", "questionIds": ["note"] },
+        { "id": "q:follow", "groupId": "details", "questionIds": ["follow"] },
+        { "id": "q:multiple", "groupId": "details", "questionIds": ["multiple"] }
+      ]
+    },
+    {
+      "name": "all mode keeps group boundaries in one page",
+      "format": "all",
+      "answers": { "GATE": "Y", "AGE": "18" },
+      "pages": [
+        {
+          "id": "all",
+          "groupId": null,
+          "questionIds": ["gate", "age", "choice", "note", "follow", "multiple"]
+        }
+      ]
+    },
+    {
+      "name": "group pages follow definition order rather than expression dependency order",
+      "format": "group",
+      "reverseGroups": true,
+      "answers": { "GATE": "Y", "AGE": "18" },
+      "pages": [
+        {
+          "id": "g:details",
+          "groupId": "details",
+          "questionIds": ["age", "choice", "note", "follow", "multiple"]
+        },
+        { "id": "g:main", "groupId": "main", "questionIds": ["gate"] }
+      ]
+    },
+    {
+      "name": "hiding a group removes all its question pages",
+      "format": "question",
+      "answers": { "GATE": "N", "AGE": "18" },
+      "pages": [{ "id": "q:gate", "groupId": "main", "questionIds": ["gate"] }]
+    },
+    {
+      "name": "empty group presentation still has a submission page",
+      "format": "group",
+      "hideAll": true,
+      "answers": {},
+      "pages": [{ "id": "empty", "groupId": null, "questionIds": [] }]
+    },
+    {
+      "name": "empty question presentation still has a submission page",
+      "format": "question",
+      "hideAll": true,
+      "answers": {},
+      "pages": [{ "id": "empty", "groupId": null, "questionIds": [] }]
+    },
+    {
+      "name": "empty all presentation retains its stable page identity",
+      "format": "all",
+      "hideAll": true,
+      "answers": {},
+      "pages": [{ "id": "all", "groupId": null, "questionIds": [] }]
+    }
+  ]
+}

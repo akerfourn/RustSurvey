@@ -1,0 +1,1105 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-11-14T16:12:53.737Z",
+  "subject": "RustSurvey local HTTP release baseline; no LimeSurvey comparison",
+  "source": {
+    "head": "422bd6e5b760c30cc20affefd1aec37b468727b0",
+    "dirty": true,
+    "binarySha256": "fd497e4e3bb83a785b9eb6d47f967cf93a22b8c5c129d3c677c29b2526336ac7",
+    "rustc": "rustc 1.100.0 (0ef1bc386 2026-11-09)"
+  },
+  "host": {
+    "platform": "win32",
+    "release": "10.0.26300",
+    "arch": "x64",
+    "cpu": "AMD Ryzen 7 7700X 8-Core Processor             ",
+    "logicalProcessors": 16,
+    "availableParallelism": 16,
+    "totalMemoryBytes": 67799826432,
+    "node": "v24.15.0"
+  },
+  "configuration": {
+    "operations": 1000,
+    "sessions": 1000,
+    "repeats": 3,
+    "concurrency": [1, 2, 8],
+    "queue": 0,
+    "database": "disposable file SQLite, driver defaults",
+    "objectStore": "file",
+    "memorySamplingIntervalMs": 100,
+    "warmupSavesPerWorker": 10,
+    "retries": 0,
+    "sameHostClient": true
+  },
+  "scenarios": [
+    {
+      "name": "small",
+      "profile": "native-pages-v1",
+      "questions": 7,
+      "definitionSha256": "06c3eca877e86e90b5febb35b01d6b3e30c275063fa145061c2b331e270ba559",
+      "sessionGrowth": [
+        {
+          "additionalOpenParticipants": 0,
+          "metrics": {
+            "cpuMs": 93.75,
+            "residentBytes": 11030528,
+            "peakResidentBytes": 29696000,
+            "privateCommittedBytes": 2322432
+          }
+        },
+        {
+          "additionalOpenParticipants": 100,
+          "phase": {
+            "attempts": 100,
+            "successful": 100,
+            "statuses": {
+              "201:created": 100
+            },
+            "durationMs": 565.341499999995,
+            "cpuMs": 375,
+            "cpuMsPerAttempt": 3.75,
+            "cpuMsPerSuccess": 3.75,
+            "successesPerSecond": 176.8842372265275,
+            "cpuPercentOfOneCore": 66.33158895994781,
+            "successfulLatencyMs": {
+              "p50": 4.902900000000955,
+              "p95": 49.51619999999821,
+              "p99": 81.23249999999825
+            },
+            "rejectedLatencyMs": {
+              "p95": null
+            },
+            "residentBeforeBytes": 11030528,
+            "residentAfterBytes": 12353536,
+            "sampledPeakResidentBytes": 12353536,
+            "lifetimePeakResidentBytes": 29696000,
+            "privateCommittedAfterBytes": 3440640,
+            "memorySamples": 7
+          },
+          "metrics": {
+            "cpuMs": 468.75,
+            "residentBytes": 12353536,
+            "peakResidentBytes": 29696000,
+            "privateCommittedBytes": 3440640
+          }
+        },
+        {
+          "additionalOpenParticipants": 1000,
+          "phase": {
+            "attempts": 900,
+            "successful": 900,
+            "statuses": {
+              "201:created": 900
+            },
+            "durationMs": 4241.1823,
+            "cpuMs": 2328.125,
+            "cpuMsPerAttempt": 2.5868055555555554,
+            "cpuMsPerSuccess": 2.5868055555555554,
+            "successesPerSecond": 212.20497878622191,
+            "cpuPercentOfOneCore": 54.89330180407477,
+            "successfulLatencyMs": {
+              "p50": 4.3862999999983,
+              "p95": 35.554999999993015,
+              "p99": 81.84079999999085
+            },
+            "rejectedLatencyMs": {
+              "p95": null
+            },
+            "residentBeforeBytes": 12353536,
+            "residentAfterBytes": 12656640,
+            "sampledPeakResidentBytes": 12656640,
+            "lifetimePeakResidentBytes": 29696000,
+            "privateCommittedAfterBytes": 3743744,
+            "memorySamples": 43
+          },
+          "metrics": {
+            "cpuMs": 2796.875,
+            "residentBytes": 12656640,
+            "peakResidentBytes": 29696000,
+            "privateCommittedBytes": 3743744
+          }
+        }
+      ],
+      "writes": [
+        {
+          "repetition": 1,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4642.138600000006,
+          "cpuMs": 3359.375,
+          "cpuMsPerAttempt": 3.359375,
+          "cpuMsPerSuccess": 3.359375,
+          "successesPerSecond": 215.41795413002075,
+          "cpuPercentOfOneCore": 72.36696896555385,
+          "successfulLatencyMs": {
+            "p50": 4.583299999998417,
+            "p95": 5.672999999995227,
+            "p99": 6.368799999996554
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 12808192,
+          "residentAfterBytes": 13873152,
+          "sampledPeakResidentBytes": 14139392,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 4935680,
+          "memorySamples": 47
+        },
+        {
+          "repetition": 1,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4626.597699999998,
+          "cpuMs": 3046.875,
+          "cpuMsPerAttempt": 3.046875,
+          "cpuMsPerSuccess": 3.046875,
+          "successesPerSecond": 216.14155040971042,
+          "cpuPercentOfOneCore": 65.85562864045865,
+          "successfulLatencyMs": {
+            "p50": 4.323600000003353,
+            "p95": 49.13150000000314,
+            "p99": 80.89719999999215
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13205504,
+          "residentAfterBytes": 14499840,
+          "sampledPeakResidentBytes": 14499840,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 5914624,
+          "memorySamples": 47
+        },
+        {
+          "repetition": 1,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 64,
+          "statuses": {
+            "503:write_busy": 936,
+            "200:ok": 64
+          },
+          "durationMs": 270.42369999999937,
+          "cpuMs": 250,
+          "cpuMsPerAttempt": 0.25,
+          "cpuMsPerSuccess": 3.90625,
+          "successesPerSecond": 236.6656472786969,
+          "cpuPercentOfOneCore": 92.44751846824099,
+          "successfulLatencyMs": {
+            "p50": 5.352599999998347,
+            "p95": 23.338200000012876,
+            "p99": 175.180400000012
+          },
+          "rejectedLatencyMs": {
+            "p95": 2.056299999996554
+          },
+          "residentBeforeBytes": 13754368,
+          "residentAfterBytes": 14270464,
+          "sampledPeakResidentBytes": 14270464,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 5464064,
+          "memorySamples": 4
+        },
+        {
+          "repetition": 2,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4652.620800000004,
+          "cpuMs": 3109.375,
+          "cpuMsPerAttempt": 3.109375,
+          "cpuMsPerSuccess": 3.109375,
+          "successesPerSecond": 214.93262464028857,
+          "cpuPercentOfOneCore": 66.83061297408973,
+          "successfulLatencyMs": {
+            "p50": 4.570300000006682,
+            "p95": 5.725800000000163,
+            "p99": 6.4518000000098255
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13803520,
+          "residentAfterBytes": 14643200,
+          "sampledPeakResidentBytes": 14905344,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 5828608,
+          "memorySamples": 47
+        },
+        {
+          "repetition": 2,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4771.777100000007,
+          "cpuMs": 3156.25,
+          "cpuMsPerAttempt": 3.15625,
+          "cpuMsPerSuccess": 3.15625,
+          "successesPerSecond": 209.56553062799154,
+          "cpuPercentOfOneCore": 66.14412060445983,
+          "successfulLatencyMs": {
+            "p50": 4.370200000004843,
+            "p95": 49.02829999999085,
+            "p99": 95.53870000000461
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13770752,
+          "residentAfterBytes": 14942208,
+          "sampledPeakResidentBytes": 14942208,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 6348800,
+          "memorySamples": 48
+        },
+        {
+          "repetition": 2,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 48,
+          "statuses": {
+            "503:write_busy": 952,
+            "200:ok": 48
+          },
+          "durationMs": 228.9820000000036,
+          "cpuMs": 187.5,
+          "cpuMsPerAttempt": 0.1875,
+          "cpuMsPerSuccess": 3.90625,
+          "successesPerSecond": 209.62346385305065,
+          "cpuPercentOfOneCore": 81.8841655675979,
+          "successfulLatencyMs": {
+            "p50": 5.188999999998487,
+            "p95": 35.65810000000056,
+            "p99": 113.05509999999776
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.5872999999992317
+          },
+          "residentBeforeBytes": 13852672,
+          "residentAfterBytes": 14024704,
+          "sampledPeakResidentBytes": 14258176,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 5079040,
+          "memorySamples": 4
+        },
+        {
+          "repetition": 3,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4682.39929999999,
+          "cpuMs": 3312.5,
+          "cpuMsPerAttempt": 3.3125,
+          "cpuMsPerSuccess": 3.3125,
+          "successesPerSecond": 213.5657247343263,
+          "cpuPercentOfOneCore": 70.74364631824558,
+          "successfulLatencyMs": {
+            "p50": 4.6134999999922,
+            "p95": 5.516300000002957,
+            "p99": 6.735300000000279
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14036992,
+          "residentAfterBytes": 14712832,
+          "sampledPeakResidentBytes": 15060992,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 5853184,
+          "memorySamples": 48
+        },
+        {
+          "repetition": 3,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4812.189500000008,
+          "cpuMs": 3078.125,
+          "cpuMsPerAttempt": 3.078125,
+          "cpuMsPerSuccess": 3.078125,
+          "successesPerSecond": 207.80561530255582,
+          "cpuPercentOfOneCore": 63.96516596031796,
+          "successfulLatencyMs": {
+            "p50": 4.414199999999255,
+            "p95": 48.91449999999895,
+            "p99": 95.7505999999994
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13643776,
+          "residentAfterBytes": 15060992,
+          "sampledPeakResidentBytes": 15060992,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 6459392,
+          "memorySamples": 49
+        },
+        {
+          "repetition": 3,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 54,
+          "statuses": {
+            "503:write_busy": 946,
+            "200:ok": 54
+          },
+          "durationMs": 226.6313000000082,
+          "cpuMs": 234.375,
+          "cpuMsPerAttempt": 0.234375,
+          "cpuMsPerSuccess": 4.340277777777778,
+          "successesPerSecond": 238.27247163122678,
+          "cpuPercentOfOneCore": 103.41687136771996,
+          "successfulLatencyMs": {
+            "p50": 5.298399999999674,
+            "p95": 36.03900000000431,
+            "p99": 97.40120000000752
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.582299999994575
+          },
+          "residentBeforeBytes": 13938688,
+          "residentAfterBytes": 14401536,
+          "sampledPeakResidentBytes": 14401536,
+          "lifetimePeakResidentBytes": 29696000,
+          "privateCommittedAfterBytes": 6356992,
+          "memorySamples": 4
+        }
+      ],
+      "verifiedAfterProcessRestart": true
+    },
+    {
+      "name": "forms",
+      "profile": "native-pages-v1",
+      "questions": 28,
+      "definitionSha256": "e4b95efce2e64e36e15c2cfdd83538e84099442e0131c21827188b5cc44e083a",
+      "sessionGrowth": [
+        {
+          "additionalOpenParticipants": 0,
+          "metrics": {
+            "cpuMs": 62.5,
+            "residentBytes": 11141120,
+            "peakResidentBytes": 29691904,
+            "privateCommittedBytes": 2416640
+          }
+        },
+        {
+          "additionalOpenParticipants": 100,
+          "phase": {
+            "attempts": 100,
+            "successful": 100,
+            "statuses": {
+              "201:created": 100
+            },
+            "durationMs": 607.9850000000006,
+            "cpuMs": 156.25,
+            "cpuMsPerAttempt": 1.5625,
+            "cpuMsPerSuccess": 1.5625,
+            "successesPerSecond": 164.47774204955698,
+            "cpuPercentOfOneCore": 25.69964719524328,
+            "successfulLatencyMs": {
+              "p50": 5.081999999994878,
+              "p95": 48.7216000000044,
+              "p99": 112.37380000000121
+            },
+            "rejectedLatencyMs": {
+              "p95": null
+            },
+            "residentBeforeBytes": 11141120,
+            "residentAfterBytes": 12869632,
+            "sampledPeakResidentBytes": 13033472,
+            "lifetimePeakResidentBytes": 29691904,
+            "privateCommittedAfterBytes": 4046848,
+            "memorySamples": 7
+          },
+          "metrics": {
+            "cpuMs": 218.75,
+            "residentBytes": 12869632,
+            "peakResidentBytes": 29691904,
+            "privateCommittedBytes": 4046848
+          }
+        },
+        {
+          "additionalOpenParticipants": 1000,
+          "phase": {
+            "attempts": 900,
+            "successful": 900,
+            "statuses": {
+              "201:created": 900
+            },
+            "durationMs": 4746.334400000007,
+            "cpuMs": 2906.25,
+            "cpuMsPerAttempt": 3.2291666666666665,
+            "cpuMsPerSuccess": 3.2291666666666665,
+            "successesPerSecond": 189.6200149740816,
+            "cpuPercentOfOneCore": 61.23146316871385,
+            "successfulLatencyMs": {
+              "p50": 4.729200000001583,
+              "p95": 49.96710000000894,
+              "p99": 80.34909999999218
+            },
+            "rejectedLatencyMs": {
+              "p95": null
+            },
+            "residentBeforeBytes": 12869632,
+            "residentAfterBytes": 13328384,
+            "sampledPeakResidentBytes": 13578240,
+            "lifetimePeakResidentBytes": 29691904,
+            "privateCommittedAfterBytes": 4825088,
+            "memorySamples": 48
+          },
+          "metrics": {
+            "cpuMs": 3125,
+            "residentBytes": 13328384,
+            "peakResidentBytes": 29691904,
+            "privateCommittedBytes": 4825088
+          }
+        }
+      ],
+      "writes": [
+        {
+          "repetition": 1,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4903.083700000003,
+          "cpuMs": 3234.375,
+          "cpuMsPerAttempt": 3.234375,
+          "cpuMsPerSuccess": 3.234375,
+          "successesPerSecond": 203.95327944330205,
+          "cpuPercentOfOneCore": 65.96613881994301,
+          "successfulLatencyMs": {
+            "p50": 4.867499999993015,
+            "p95": 5.97280000000319,
+            "p99": 6.588100000008126
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13590528,
+          "residentAfterBytes": 14778368,
+          "sampledPeakResidentBytes": 14778368,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6094848,
+          "memorySamples": 50
+        },
+        {
+          "repetition": 1,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5217.577200000014,
+          "cpuMs": 3250,
+          "cpuMsPerAttempt": 3.25,
+          "cpuMsPerSuccess": 3.25,
+          "successesPerSecond": 191.65983782664438,
+          "cpuPercentOfOneCore": 62.28944729365942,
+          "successfulLatencyMs": {
+            "p50": 4.855100000000675,
+            "p95": 50.029000000009546,
+            "p99": 111.24229999999807
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14217216,
+          "residentAfterBytes": 15007744,
+          "sampledPeakResidentBytes": 15364096,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6569984,
+          "memorySamples": 53
+        },
+        {
+          "repetition": 1,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 48,
+          "statuses": {
+            "503:write_busy": 952,
+            "200:ok": 48
+          },
+          "durationMs": 243.86290000000736,
+          "cpuMs": 250,
+          "cpuMsPerAttempt": 0.25,
+          "cpuMsPerSuccess": 5.208333333333333,
+          "successesPerSecond": 196.83190842066813,
+          "cpuPercentOfOneCore": 102.51661896909799,
+          "successfulLatencyMs": {
+            "p50": 5.767600000006496,
+            "p95": 36.439200000007986,
+            "p99": 50.45019999999204
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.6729000000050291
+          },
+          "residentBeforeBytes": 13914112,
+          "residentAfterBytes": 14360576,
+          "sampledPeakResidentBytes": 14471168,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 5455872,
+          "memorySamples": 4
+        },
+        {
+          "repetition": 2,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5005.057399999991,
+          "cpuMs": 3328.125,
+          "cpuMsPerAttempt": 3.328125,
+          "cpuMsPerSuccess": 3.328125,
+          "successesPerSecond": 199.79790841160022,
+          "cpuPercentOfOneCore": 66.4952413932357,
+          "successfulLatencyMs": {
+            "p50": 4.911899999991874,
+            "p95": 6.010099999999511,
+            "p99": 6.884699999995064
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14585856,
+          "residentAfterBytes": 15667200,
+          "sampledPeakResidentBytes": 15667200,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6574080,
+          "memorySamples": 51
+        },
+        {
+          "repetition": 2,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5006.151700000002,
+          "cpuMs": 3265.625,
+          "cpuMsPerAttempt": 3.265625,
+          "cpuMsPerSuccess": 3.265625,
+          "successesPerSecond": 199.75423437527863,
+          "cpuPercentOfOneCore": 65.23224216317693,
+          "successfulLatencyMs": {
+            "p50": 4.750399999989895,
+            "p95": 50.12299999999232,
+            "p99": 96.90220000001136
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14192640,
+          "residentAfterBytes": 15306752,
+          "sampledPeakResidentBytes": 15306752,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6586368,
+          "memorySamples": 51
+        },
+        {
+          "repetition": 2,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 52,
+          "statuses": {
+            "503:write_busy": 948,
+            "200:ok": 52
+          },
+          "durationMs": 247.8538000000117,
+          "cpuMs": 312.5,
+          "cpuMsPerAttempt": 0.3125,
+          "cpuMsPerSuccess": 6.009615384615385,
+          "successesPerSecond": 209.8011004874549,
+          "cpuPercentOfOneCore": 126.08239211986472,
+          "successfulLatencyMs": {
+            "p50": 5.678199999994831,
+            "p95": 51.716700000019046,
+            "p99": 69.79349999999977
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.5971999999892432
+          },
+          "residentBeforeBytes": 13975552,
+          "residentAfterBytes": 14548992,
+          "sampledPeakResidentBytes": 14548992,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6193152,
+          "memorySamples": 4
+        },
+        {
+          "repetition": 3,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4835.936300000001,
+          "cpuMs": 3312.5,
+          "cpuMsPerAttempt": 3.3125,
+          "cpuMsPerSuccess": 3.3125,
+          "successesPerSecond": 206.78518863037954,
+          "cpuPercentOfOneCore": 68.49759373381323,
+          "successfulLatencyMs": {
+            "p50": 4.739900000015041,
+            "p95": 5.818199999979697,
+            "p99": 6.628900000010617
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14553088,
+          "residentAfterBytes": 15130624,
+          "sampledPeakResidentBytes": 15507456,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6381568,
+          "memorySamples": 49
+        },
+        {
+          "repetition": 3,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5076.106,
+          "cpuMs": 3343.75,
+          "cpuMsPerAttempt": 3.34375,
+          "cpuMsPerSuccess": 3.34375,
+          "successesPerSecond": 197.00140225598128,
+          "cpuPercentOfOneCore": 65.87234387934373,
+          "successfulLatencyMs": {
+            "p50": 4.736000000004424,
+            "p95": 50.61009999999078,
+            "p99": 96.53250000000116
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13885440,
+          "residentAfterBytes": 15495168,
+          "sampledPeakResidentBytes": 15495168,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 6619136,
+          "memorySamples": 51
+        },
+        {
+          "repetition": 3,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 44,
+          "statuses": {
+            "503:write_busy": 956,
+            "200:ok": 44
+          },
+          "durationMs": 228.9709000000148,
+          "cpuMs": 171.875,
+          "cpuMsPerAttempt": 0.171875,
+          "cpuMsPerSuccess": 3.90625,
+          "successesPerSecond": 192.16415710466768,
+          "cpuPercentOfOneCore": 75.06412386901081,
+          "successfulLatencyMs": {
+            "p50": 5.55460000000312,
+            "p95": 50.3295999999973,
+            "p99": 82.09880000000703
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.4772999999986496
+          },
+          "residentBeforeBytes": 13942784,
+          "residentAfterBytes": 14692352,
+          "sampledPeakResidentBytes": 14692352,
+          "lifetimePeakResidentBytes": 29691904,
+          "privateCommittedAfterBytes": 5984256,
+          "memorySamples": 4
+        }
+      ],
+      "verifiedAfterProcessRestart": true
+    },
+    {
+      "name": "defaults",
+      "profile": "native-defaults-v1",
+      "questions": 28,
+      "definitionSha256": "0d478b903960921a3dce791621e9dee3c54bea608e870bd634b27cd646429cf9",
+      "sessionGrowth": [
+        {
+          "additionalOpenParticipants": 0,
+          "metrics": {
+            "cpuMs": 62.5,
+            "residentBytes": 11280384,
+            "peakResidentBytes": 29728768,
+            "privateCommittedBytes": 2449408
+          }
+        },
+        {
+          "additionalOpenParticipants": 100,
+          "phase": {
+            "attempts": 100,
+            "successful": 100,
+            "statuses": {
+              "201:created": 100
+            },
+            "durationMs": 545.8830000000016,
+            "cpuMs": 281.25,
+            "cpuMsPerAttempt": 2.8125,
+            "cpuMsPerSuccess": 2.8125,
+            "successesPerSecond": 183.1894380297604,
+            "cpuPercentOfOneCore": 51.52202944587012,
+            "successfulLatencyMs": {
+              "p50": 4.910600000002887,
+              "p95": 64.97390000001178,
+              "p99": 97.51560000001336
+            },
+            "rejectedLatencyMs": {
+              "p95": null
+            },
+            "residentBeforeBytes": 11280384,
+            "residentAfterBytes": 13213696,
+            "sampledPeakResidentBytes": 13213696,
+            "lifetimePeakResidentBytes": 29728768,
+            "privateCommittedAfterBytes": 4493312,
+            "memorySamples": 7
+          },
+          "metrics": {
+            "cpuMs": 343.75,
+            "residentBytes": 13213696,
+            "peakResidentBytes": 29728768,
+            "privateCommittedBytes": 4493312
+          }
+        },
+        {
+          "additionalOpenParticipants": 1000,
+          "phase": {
+            "attempts": 900,
+            "successful": 900,
+            "statuses": {
+              "201:created": 900
+            },
+            "durationMs": 4833.13440000001,
+            "cpuMs": 3156.25,
+            "cpuMsPerAttempt": 3.5069444444444446,
+            "cpuMsPerSuccess": 3.5069444444444446,
+            "successesPerSecond": 186.21456088620215,
+            "cpuPercentOfOneCore": 65.30441197745284,
+            "successfulLatencyMs": {
+              "p50": 4.930099999997765,
+              "p95": 52.07180000000517,
+              "p99": 109.49599999998463
+            },
+            "rejectedLatencyMs": {
+              "p95": null
+            },
+            "residentBeforeBytes": 13213696,
+            "residentAfterBytes": 13578240,
+            "sampledPeakResidentBytes": 13660160,
+            "lifetimePeakResidentBytes": 29728768,
+            "privateCommittedAfterBytes": 4784128,
+            "memorySamples": 49
+          },
+          "metrics": {
+            "cpuMs": 3500,
+            "residentBytes": 13578240,
+            "peakResidentBytes": 29728768,
+            "privateCommittedBytes": 4784128
+          }
+        }
+      ],
+      "writes": [
+        {
+          "repetition": 1,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5130.223700000002,
+          "cpuMs": 3609.375,
+          "cpuMsPerAttempt": 3.609375,
+          "cpuMsPerSuccess": 3.609375,
+          "successesPerSecond": 194.9232740084998,
+          "cpuPercentOfOneCore": 70.35511921244289,
+          "successfulLatencyMs": {
+            "p50": 5.077599999989616,
+            "p95": 6.173399999999674,
+            "p99": 7.140200000023469
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13684736,
+          "residentAfterBytes": 14876672,
+          "sampledPeakResidentBytes": 15106048,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6451200,
+          "memorySamples": 52
+        },
+        {
+          "repetition": 1,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5406.325899999996,
+          "cpuMs": 3250,
+          "cpuMsPerAttempt": 3.25,
+          "cpuMsPerSuccess": 3.25,
+          "successesPerSecond": 184.96850143643778,
+          "cpuPercentOfOneCore": 60.11476296684227,
+          "successfulLatencyMs": {
+            "p50": 4.903699999995297,
+            "p95": 51.42559999998775,
+            "p99": 126.3585000000021
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 13824000,
+          "residentAfterBytes": 15192064,
+          "sampledPeakResidentBytes": 15192064,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6656000,
+          "memorySamples": 54
+        },
+        {
+          "repetition": 1,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 41,
+          "statuses": {
+            "503:write_busy": 959,
+            "200:ok": 41
+          },
+          "durationMs": 236.8422000000137,
+          "cpuMs": 140.625,
+          "cpuMsPerAttempt": 0.140625,
+          "cpuMsPerSuccess": 3.4298780487804876,
+          "successesPerSecond": 173.11104186668436,
+          "cpuPercentOfOneCore": 59.37497625000607,
+          "successfulLatencyMs": {
+            "p50": 5.820000000006985,
+            "p95": 50.399800000013784,
+            "p99": 113.18280000000959
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.712599999998929
+          },
+          "residentBeforeBytes": 14450688,
+          "residentAfterBytes": 14893056,
+          "sampledPeakResidentBytes": 14893056,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 5779456,
+          "memorySamples": 4
+        },
+        {
+          "repetition": 2,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4814.671099999978,
+          "cpuMs": 3671.875,
+          "cpuMsPerAttempt": 3.671875,
+          "cpuMsPerSuccess": 3.671875,
+          "successesPerSecond": 207.6985071732116,
+          "cpuPercentOfOneCore": 76.26429560266364,
+          "successfulLatencyMs": {
+            "p50": 4.918700000009267,
+            "p95": 5.915800000017043,
+            "p99": 6.727600000012899
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14979072,
+          "residentAfterBytes": 15187968,
+          "sampledPeakResidentBytes": 15728640,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6103040,
+          "memorySamples": 49
+        },
+        {
+          "repetition": 2,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 5274.660999999993,
+          "cpuMs": 3656.25,
+          "cpuMsPerAttempt": 3.65625,
+          "cpuMsPerSuccess": 3.65625,
+          "successesPerSecond": 189.58564351339382,
+          "cpuPercentOfOneCore": 69.31725090958462,
+          "successfulLatencyMs": {
+            "p50": 5.021399999997811,
+            "p95": 50.161900000006426,
+            "p99": 111.28349999999045
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14106624,
+          "residentAfterBytes": 15478784,
+          "sampledPeakResidentBytes": 15835136,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6754304,
+          "memorySamples": 53
+        },
+        {
+          "repetition": 2,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 40,
+          "statuses": {
+            "503:write_busy": 960,
+            "200:ok": 40
+          },
+          "durationMs": 248.3959999999788,
+          "cpuMs": 203.125,
+          "cpuMsPerAttempt": 0.203125,
+          "cpuMsPerSuccess": 5.078125,
+          "successesPerSecond": 161.03318894025432,
+          "cpuPercentOfOneCore": 81.7746662587229,
+          "successfulLatencyMs": {
+            "p50": 6.24189999999362,
+            "p95": 52.09200000000419,
+            "p99": 81.76209999999264
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.6806999999971595
+          },
+          "residentBeforeBytes": 14258176,
+          "residentAfterBytes": 14614528,
+          "sampledPeakResidentBytes": 14794752,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 5324800,
+          "memorySamples": 4
+        },
+        {
+          "repetition": 3,
+          "concurrency": 1,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4755.080199999997,
+          "cpuMs": 3484.375,
+          "cpuMsPerAttempt": 3.484375,
+          "cpuMsPerSuccess": 3.484375,
+          "successesPerSecond": 210.30139512683732,
+          "cpuPercentOfOneCore": 73.27689236450739,
+          "successfulLatencyMs": {
+            "p50": 4.590999999985797,
+            "p95": 5.84429999999702,
+            "p99": 7.562200000014855
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14610432,
+          "residentAfterBytes": 15200256,
+          "sampledPeakResidentBytes": 15855616,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6377472,
+          "memorySamples": 48
+        },
+        {
+          "repetition": 3,
+          "concurrency": 2,
+          "attempts": 1000,
+          "successful": 1000,
+          "statuses": {
+            "200:ok": 1000
+          },
+          "durationMs": 4364.598799999978,
+          "cpuMs": 2578.125,
+          "cpuMsPerAttempt": 2.578125,
+          "cpuMsPerSuccess": 2.578125,
+          "successesPerSecond": 229.11613319419072,
+          "cpuPercentOfOneCore": 59.0690030891273,
+          "successfulLatencyMs": {
+            "p50": 4.1929999999993015,
+            "p95": 35.15020000000368,
+            "p99": 80.23510000001988
+          },
+          "rejectedLatencyMs": {
+            "p95": null
+          },
+          "residentBeforeBytes": 14196736,
+          "residentAfterBytes": 15556608,
+          "sampledPeakResidentBytes": 15556608,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6451200,
+          "memorySamples": 45
+        },
+        {
+          "repetition": 3,
+          "concurrency": 8,
+          "attempts": 1000,
+          "successful": 48,
+          "statuses": {
+            "503:write_busy": 952,
+            "200:ok": 48
+          },
+          "durationMs": 217.5630999999994,
+          "cpuMs": 203.125,
+          "cpuMsPerAttempt": 0.203125,
+          "cpuMsPerSuccess": 4.231770833333333,
+          "successesPerSecond": 220.6256483751157,
+          "cpuPercentOfOneCore": 93.36371838790703,
+          "successfulLatencyMs": {
+            "p50": 5.437900000018999,
+            "p95": 49.78759999998147,
+            "p99": 66.27540000001318
+          },
+          "rejectedLatencyMs": {
+            "p95": 1.4175000000104774
+          },
+          "residentBeforeBytes": 14413824,
+          "residentAfterBytes": 14970880,
+          "sampledPeakResidentBytes": 14970880,
+          "lifetimePeakResidentBytes": 29728768,
+          "privateCommittedAfterBytes": 6303744,
+          "memorySamples": 4
+        }
+      ],
+      "verifiedAfterProcessRestart": true
+    }
+  ],
+  "completedAt": "2026-11-14T16:14:47.981Z"
+}

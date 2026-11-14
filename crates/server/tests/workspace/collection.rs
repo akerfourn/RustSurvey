@@ -1,9 +1,21 @@
 use super::*;
 
+#[path = "collection/defaults.rs"]
+mod defaults;
+#[path = "collection/exclusive.rs"]
+mod exclusive;
+#[path = "collection/exports.rs"]
+mod exports;
+#[path = "collection/filters.rs"]
+mod filters;
 #[path = "collection/forms.rs"]
 mod forms;
+#[path = "collection/navigation.rs"]
+mod navigation;
 #[path = "collection/participation.rs"]
 mod participation;
+#[path = "collection/source_execution.rs"]
+mod source_execution;
 
 const TOKEN: &str = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
@@ -82,6 +94,12 @@ pub(super) async fn roundtrip(fixture: &Fixture) {
     );
     participation::roundtrip(fixture).await;
     forms::roundtrip(fixture).await;
+    exports::roundtrip(fixture).await;
+    navigation::roundtrip(fixture).await;
+    exclusive::roundtrip(fixture).await;
+    filters::roundtrip(fixture).await;
+    defaults::roundtrip(fixture).await;
+    source_execution::roundtrip(fixture).await;
 }
 
 #[tokio::test]
@@ -198,7 +216,7 @@ async fn test_collection_migration_should_preserve_preexisting_definitions_and_s
     let fixture = fixture().await;
     let (cookie, csrf) = login(&fixture).await;
     let stored = create(&fixture, &cookie, &csrf, definition()).await;
-    Migrator::down(&fixture.database, Some(2)).await.unwrap();
+    rollback_after(&fixture.database, 3).await;
     assert!(
         !SchemaManager::new(&fixture.database)
             .has_table("responses")

@@ -12,6 +12,7 @@ import {
   type Translation,
 } from "./model.ts";
 import { decodeReport } from "../api/inspection.ts";
+import { decodeQuestionDefaults } from "../survey/defaults.ts";
 
 function object(value: unknown): Record<string, unknown> {
   if (value === null || typeof value !== "object" || Array.isArray(value))
@@ -113,6 +114,7 @@ function question(value: unknown, legacy: boolean): Question {
       const image = object(value);
       return { id: text(image.id), alt: text(image.alt), language: nullable(image.language) };
     }),
+    defaults: decodeQuestionDefaults(item.defaults),
   };
 }
 function group(value: unknown, legacy: boolean): Group {
@@ -130,10 +132,10 @@ function group(value: unknown, legacy: boolean): Group {
 }
 export function decodeDefinition(value: unknown): Definition {
   const item = object(value);
-  if (item.schemaVersion !== 1 && item.schemaVersion !== 2 && item.schemaVersion !== 3)
+  if (![1, 2, 3, 4].includes(number(item.schemaVersion)))
     throw new Error("Version de questionnaire non prise en charge.");
   const definition: Definition = {
-    schemaVersion: 3,
+    schemaVersion: 4,
     title: text(item.title),
     language: text(item.language),
     welcome: text(item.welcome),
@@ -145,10 +147,17 @@ export function decodeDefinition(value: unknown): Definition {
       item.showWelcome === null || item.showWelcome === undefined ? null : bool(item.showWelcome),
   };
   if (
-    item.schemaVersion !== 3 &&
+    number(item.schemaVersion) < 3 &&
     definition.groups.some((group) => group.questions.some((question) => question.media.length > 0))
   )
     throw new Error("Les références de médias nécessitent le format natif v3.");
+  if (
+    number(item.schemaVersion) < 4 &&
+    definition.groups.some((group) =>
+      group.questions.some((question) => question.defaults !== null),
+    )
+  )
+    throw new Error("Les valeurs par défaut nécessitent le format natif v4.");
   return definition;
 }
 export function decodeSourceInfo(value: unknown): ImportInfo | null {

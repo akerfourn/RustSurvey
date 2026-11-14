@@ -2,6 +2,7 @@
 mod auth;
 mod auth_repository;
 mod collection;
+mod collection_check;
 mod error;
 mod forms;
 mod history;
@@ -14,7 +15,10 @@ mod media_content;
 mod media_repository;
 mod password_policy;
 mod repository;
+mod response_imports;
 mod runtime;
+mod source_contexts;
+mod write_admission;
 
 pub use error::AppError;
 pub use password_policy::PasswordPolicy;
@@ -36,6 +40,7 @@ pub struct WorkspaceState {
     login_slots: Arc<Semaphore>,
     secure_cookie: bool,
     writes: Arc<Semaphore>,
+    write_waiters: Arc<Semaphore>,
     imports: Arc<Semaphore>,
     objects: Arc<dyn rustsurvey_object_store::ObjectStore>,
     object_reads: Arc<Semaphore>,
@@ -57,6 +62,7 @@ impl WorkspaceState {
             runtime,
             login_slots: Arc::new(Semaphore::new(1)),
             writes: Arc::new(Semaphore::new(2)),
+            write_waiters: Arc::new(Semaphore::new(8)),
             imports: Arc::new(Semaphore::new(2)),
             secure_cookie,
         }
@@ -67,6 +73,20 @@ impl WorkspaceState {
     ) -> Self {
         self.objects = objects;
         self
+    }
+
+    pub fn with_participant_write_queue_capacity(
+        mut self,
+        capacity: usize,
+    ) -> std::io::Result<Self> {
+        if capacity > 32 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "COLLECTION_WRITE_QUEUE_CAPACITY must be between 0 and 32",
+            ));
+        }
+        self.write_waiters = Arc::new(Semaphore::new(capacity));
+        Ok(self)
     }
 }
 
@@ -93,6 +113,8 @@ pub fn routes(state: WorkspaceState) -> Router {
         .route_layer(axum::middleware::from_fn_with_state(state.clone(), protect));
     Router::new()
         .merge(collection::routes(state.clone()))
+        .merge(response_imports::routes(state.clone()))
+        .merge(source_contexts::routes(state.clone()))
         .route("/api/studies", get(forms::list))
         .route("/api/studies/{id}", get(forms::get))
         .route(
@@ -116,6 +138,14 @@ pub fn routes(state: WorkspaceState) -> Router {
         .route(
             "/api/admin/studies/{id}/revisions/{revision}/modified.lss",
             get(lss_export::export),
+        )
+        .route(
+            "/api/admin/studies/{id}/revisions/{revision}/collection-check",
+            get(collection_check::get),
+        )
+        .route(
+            "/api/admin/studies/{id}/revisions/{revision}/definition.lss",
+            get(lss_export::native),
         )
         .route(
             "/api/admin/studies/{id}/original.lss",

@@ -4,6 +4,7 @@ use crate::{QuestionKind, rules};
 pub(super) fn compile(
     definition: &Definition,
     extended: bool,
+    defaults_enabled: bool,
 ) -> Result<Questionnaire, Vec<ValidationIssue>> {
     let mut issues = definition.validate();
     issues.extend(rules::validate(definition, None));
@@ -36,7 +37,15 @@ pub(super) fn compile(
         }
         for (index, question) in group.questions.iter().enumerate() {
             let path = format!("{path}.questions[{index}]");
-            match prepare(question, &group.id, &group.relevance, &path, extended) {
+            match prepare(
+                question,
+                &group.id,
+                &group.relevance,
+                &path,
+                extended,
+                defaults_enabled,
+                definition,
+            ) {
                 Ok(question) => questions.push(question),
                 Err(mut errors) => issues.append(&mut errors),
             }
@@ -66,38 +75,17 @@ pub(super) fn compile(
             fields.insert(cell.key.clone(), index);
         }
     }
-    let selections: BTreeMap<_, Arc<BTreeSet<_>>> = questions
-        .iter()
-        .filter(|question| {
-            matches!(
-                question.source.kind,
-                QuestionKind::MultipleChoice | QuestionKind::MultipleChoiceComment
-            )
-        })
-        .map(|question| {
-            let fields = question
-                .cells
-                .iter()
-                .filter(|cell| cell.kind == CellKind::Multiple)
-                .map(|cell| cell.key.clone())
-                .collect();
-            (question.source.code.clone(), Arc::new(fields))
-        })
-        .collect();
-    for question in &mut questions {
-        for filter in &mut question.filters {
-            filter.selections = selections
-                .get(&filter.code)
-                .cloned()
-                .ok_or_else(|| vec![issue(&question.source.id, "Source de filtre inconnue.")])?;
-        }
-    }
     let order = order(&questions, &fields)?;
+    if defaults_enabled {
+        super::defaults::check_inactive_references(&questions, &fields)?;
+    }
+    super::filters::prepare(&mut questions)?;
     Ok(Questionnaire {
         definition: definition.clone(),
         questions,
         fields,
         order,
+        defaults_enabled,
     })
 }
 
@@ -116,8 +104,18 @@ fn prepare(
     relevance: &str,
     path: &str,
     extended: bool,
+    defaults_enabled: bool,
+    definition: &Definition,
 ) -> Result<PreparedQuestion, Vec<ValidationIssue>> {
     let mut issues = Vec::new();
+    if !defaults_enabled
+        && question
+            .defaults
+            .as_ref()
+            .is_some_and(|defaults| !defaults.values.is_empty())
+    {
+        issues.push(issue(path, "L’initialisation des valeurs par défaut n’est pas encore prise en charge par ce profil de collecte."));
+    }
     if extended {
         forms::check_shape(question, path, &mut issues);
     } else {
@@ -134,7 +132,14 @@ fn prepare(
         prepare_cells(question, path)?
     };
     let equation = prepare_equation(question, path)?;
-    Ok(PreparedQuestion {
+    let exclusive = crate::exclusive::ExclusiveOptions::parse(question)
+        .map_err(|message| vec![issue(path, message)])?;
+    let defaults = if defaults_enabled {
+        super::defaults::Defaults::compile(question, definition, path)?
+    } else {
+        super::defaults::Defaults::default()
+    };
+    let prepared = PreparedQuestion {
         source: question.clone(),
         group_id: group_id.to_owned(),
         relevance: vec![
@@ -143,13 +148,17 @@ fn prepare(
         ],
         constraints,
         equation,
+        exclusive,
         cells,
+        defaults,
         filters: if extended {
             forms::filters(question)
         } else {
             Vec::new()
         },
-    })
+    };
+    prepared.defaults.validate_literals(&prepared, definition)?;
+    Ok(prepared)
 }
 
 fn check_shape(question: &Question, path: &str, issues: &mut Vec<ValidationIssue>) {
@@ -223,7 +232,10 @@ fn check_question_texts(question: &Question, path: &str, issues: &mut Vec<Valida
     for translation in &question.translations {
         let text = translation.text.as_deref().unwrap_or("");
         if question.kind == Equation {
-            if !text.is_empty() && text != question.title {
+            if attribute(question, "equation").is_empty()
+                && !text.is_empty()
+                && text != question.title
+            {
                 issues.push(issue(
                     path,
                     "Les équations localisées restent hors du profil de collecte.",
@@ -411,7 +423,7 @@ fn order(
     fields: &BTreeMap<String, usize>,
 ) -> Result<Vec<usize>, Vec<ValidationIssue>> {
     let mut dependencies = Vec::new();
-    for question in questions {
+    for (question_index, question) in questions.iter().enumerate() {
         let mut required = BTreeSet::new();
         let expressions = question
             .relevance
@@ -440,6 +452,17 @@ fn order(
                 .position(|source| source.source.code == filter.code)
             {
                 required.insert(index);
+            }
+        }
+        for name in &question.defaults.variables {
+            let index = fields.get(variable(name)).ok_or_else(|| {
+                vec![issue(
+                    &question.source.id,
+                    "Variable inconnue dans une valeur par défaut.",
+                )]
+            })?;
+            if *index != question_index {
+                required.insert(*index);
             }
         }
         dependencies.push(required);

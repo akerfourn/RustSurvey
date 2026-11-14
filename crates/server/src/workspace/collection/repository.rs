@@ -1,16 +1,18 @@
 use super::{AppError, Document, Run, WorkspaceState, access, missing};
+use rustsurvey_domain::collection::{DEFAULTS_PROFILE, FORMS_PROFILE, PAGES_PROFILE, PROFILE};
 use sea_orm::{
     ConnectionTrait, QueryResult,
     sea_query::{Expr, ExprTrait, Order, Query},
 };
 use serde::Serialize;
 
-const RESPONSE_COLUMNS: [&str; 7] = [
+const RESPONSE_COLUMNS: [&str; 8] = [
     "id",
     "run_id",
     "version",
     "status",
     "document",
+    "initial_language",
     "created_at",
     "updated_at",
 ];
@@ -21,8 +23,66 @@ pub(super) struct StoredResponse {
     pub version: i64,
     pub status: String,
     pub document: Document,
+    pub initial_language: Option<String>,
     pub created_at: i64,
     pub updated_at: i64,
+}
+
+pub(super) struct ExportRecord {
+    pub run_id: String,
+    pub status: String,
+    pub document: String,
+    pub initial_language: Option<String>,
+    pub updated_at: i64,
+}
+
+pub(super) async fn missing_initial_language(
+    state: &WorkspaceState,
+    run: &str,
+) -> Result<bool, AppError> {
+    Ok(state
+        .database
+        .query_one(
+            &Query::select()
+                .column("id")
+                .from("responses")
+                .and_where(Expr::col("run_id").eq(run))
+                .and_where(Expr::col("initial_language").is_null())
+                .limit(1)
+                .to_owned(),
+        )
+        .await?
+        .is_some())
+}
+
+pub(super) async fn export_record(
+    state: &WorkspaceState,
+    id: &str,
+) -> Result<ExportRecord, AppError> {
+    let row = state
+        .database
+        .query_one(
+            &Query::select()
+                .columns([
+                    "run_id",
+                    "status",
+                    "document",
+                    "updated_at",
+                    "initial_language",
+                ])
+                .from("responses")
+                .and_where(Expr::col("id").eq(id))
+                .to_owned(),
+        )
+        .await?
+        .ok_or_else(AppError::internal)?;
+    Ok(ExportRecord {
+        run_id: row.try_get("", "run_id")?,
+        status: row.try_get("", "status")?,
+        document: row.try_get("", "document")?,
+        initial_language: row.try_get("", "initial_language")?,
+        updated_at: row.try_get("", "updated_at")?,
+    })
 }
 
 pub(super) struct ResponseAccess {
@@ -65,17 +125,33 @@ pub(super) struct Summary {
 }
 
 fn run_row(row: &QueryResult) -> Result<Run, AppError> {
+    let profile: String = row.try_get("", "profile")?;
+    let navigation = row
+        .try_get::<Option<String>>("", "navigation")?
+        .map(|document| serde_json::from_str(&document))
+        .transpose()
+        .map_err(|_| AppError::internal())?;
+    let valid = match profile.as_str() {
+        PAGES_PROFILE | DEFAULTS_PROFILE => navigation.is_some(),
+        PROFILE | FORMS_PROFILE => navigation.is_none(),
+        _ => false,
+    };
+    if !valid {
+        return Err(AppError::internal());
+    }
     Ok(Run {
         id: row.try_get("", "id")?,
         study_id: row.try_get("", "study_id")?,
         revision: row.try_get("", "definition_revision")?,
-        profile: row.try_get("", "profile")?,
+        profile,
         is_open: row.try_get("", "is_open")?,
         created_at: row.try_get("", "created_at")?,
         participation_policy: serde_json::from_str(
             &row.try_get::<String>("", "participation_policy")?,
         )
         .map_err(|_| AppError::internal())?,
+        navigation,
+        has_execution: row.try_get("", "has_execution")?,
     })
 }
 
@@ -92,7 +168,12 @@ pub(super) async fn run(connection: &impl ConnectionTrait, id: &str) -> Result<R
                     "is_open",
                     "created_at",
                     "participation_policy",
+                    "navigation",
                 ])
+                .expr_as(
+                    Expr::col("execution_document").is_not_null(),
+                    "has_execution",
+                )
                 .from("runs")
                 .and_where(Expr::col("id").eq(id))
                 .to_owned(),
@@ -115,9 +196,14 @@ pub(super) async fn runs(state: &WorkspaceState, id: &str) -> Result<Vec<Run>, A
                     "is_open",
                     "created_at",
                     "participation_policy",
+                    "navigation",
                 ])
                 .from("runs")
                 .and_where(Expr::col("study_id").eq(id))
+                .expr_as(
+                    Expr::col("execution_document").is_not_null(),
+                    "has_execution",
+                )
                 .order_by("created_at", Order::Desc)
                 .order_by("id", Order::Desc)
                 .limit(50)
@@ -148,6 +234,7 @@ pub(super) async fn find(
             version: row.try_get("", "version")?,
             status: row.try_get("", "status")?,
             document: serde_json::from_str(&document).map_err(|_| AppError::internal())?,
+            initial_language: row.try_get("", "initial_language")?,
             created_at: row.try_get("", "created_at")?,
             updated_at: row.try_get("", "updated_at")?,
         })
@@ -198,5 +285,28 @@ pub(super) async fn summaries(
                 updated_at: row.try_get("", "updated_at")?,
             })
         })
+        .collect()
+}
+
+pub(super) async fn export_ids(
+    state: &WorkspaceState,
+    run: &str,
+    after: &str,
+) -> Result<Vec<String>, AppError> {
+    state
+        .database
+        .query_all(
+            &Query::select()
+                .column("id")
+                .from("responses")
+                .and_where(Expr::col("run_id").eq(run))
+                .and_where(Expr::col("id").gt(after))
+                .order_by("id", Order::Asc)
+                .limit(50)
+                .to_owned(),
+        )
+        .await?
+        .into_iter()
+        .map(|row| row.try_get("", "id").map_err(Into::into))
         .collect()
 }

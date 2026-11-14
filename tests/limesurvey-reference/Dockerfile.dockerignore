@@ -1,0 +1,12 @@
+**
+!tests/
+!tests/limesurvey-reference/
+!tests/limesurvey-reference/Dockerfile
+!tests/limesurvey-reference/config.php
+!tests/limesurvey-reference/ReferenceCommand.php
+!tests/limesurvey-reference/SettingsCases.php
+!tests/limesurvey-reference/FilterCases.php
+!tests/limesurvey-reference/DefaultCases.php
+!tools/
+!tools/limesurvey/
+!tools/limesurvey/RustSurveySettingsCommand.php
