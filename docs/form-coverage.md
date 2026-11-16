@@ -481,10 +481,12 @@ Leurs variantes restantes et le corpus de référence constituent la suite du
 travail sans stockage. F2/F3 doivent ensuite précéder toute annonce de règles
 générales compatibles. F4 avance sur les rendus autonomes ; ses fonctions
 nécessitant des médias importés restent à compléter. Le port objet et les images
-natives couvrent une première partie de F6. Collecte, reprise, fichiers
-participants, quotas et minuteries de F5/F6 restent à réaliser. F7 peut préparer
-le corpus et comparer les profils locaux dès maintenant ; la parité complète
-reste à vérifier après les fonctions différées.
+natives couvrent une première partie de F6. La collecte native et sa reprise
+couvrent maintenant une partie de F5 ; fichiers participants, quotas et
+minuteries restent à réaliser. F7 peut préparer le corpus et comparer les
+profils locaux dès maintenant ; la parité complète reste à vérifier après les
+fonctions différées. Le [plan de travail](roadmap.md) donne l’ordre des
+prochains lots.
 
 ## Preuves à obtenir pour chaque capacité
 

@@ -14,17 +14,17 @@ départ technique de RustSurvey, à conserver sauf besoin particulier.
 
 ## Contraintes acquises
 
-| Sujet          | Attente                                                          |
-| -------------- | ---------------------------------------------------------------- |
-| Serveur        | Rust minimal, ressources maîtrisées                              |
-| Navigateur     | TypeScript et Preact                                             |
-| Répartition    | Déporter les interactions et calculs sûrs côté client            |
-| Sécurité       | Contrôles serveur même lorsque le client valide déjà             |
-| Bases          | SQLite, MariaDB et PostgreSQL                                    |
-| Évolution      | Migrations de base automatisées et versionnées                   |
-| Échange        | Import/export de fichiers LimeSurvey                             |
-| Référence      | LimeSurvey 6.5.14 en production                                  |
-| Étape actuelle | Import LSS, viewer local, éditeur natif et compte administrateur |
+| Sujet          | Attente                                                   |
+| -------------- | --------------------------------------------------------- |
+| Serveur        | Rust minimal, ressources maîtrisées                       |
+| Navigateur     | TypeScript et Preact                                      |
+| Répartition    | Déporter les interactions et calculs sûrs côté client     |
+| Sécurité       | Contrôles serveur même lorsque le client valide déjà      |
+| Bases          | SQLite, MariaDB et PostgreSQL                             |
+| Évolution      | Migrations de base automatisées et versionnées            |
+| Échange        | Import/export de fichiers LimeSurvey                      |
+| Référence      | LimeSurvey 6.5.14 en production                           |
+| Étape actuelle | Import LSS, éditeur natif, collecte SQL et reprise privée |
 
 La cible fonctionnelle couvre tous les formulaires natifs de la version 6.5.14 :
 types de questions, variantes de rendu, règles et parcours. Les questionnaires

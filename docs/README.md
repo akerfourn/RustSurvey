@@ -6,6 +6,10 @@ fonctionnel couvre l’[adaptateur `.lss`](../crates/limesurvey/README.md) et le
 [viewer avec saisie locale](viewer.md), le stockage SQL et
 l’[éditeur avec administration](authoring.md).
 
+Pour continuer le développement ou changer de machine, commencer par le
+[plan de travail et de reprise](roadmap.md). Il donne l’état livré, les lots
+priorisés, leurs critères de validation et un message pour le prochain agent.
+
 ## Parcours de lecture
 
 Pour essayer le livrable actuel, commencer par le [guide du pilote](pilot.md).
@@ -19,7 +23,7 @@ Pour essayer le livrable actuel, commencer par le [guide du pilote](pilot.md).
 7. [Bases de données et migrations](database.md).
 8. [Environnement de développement](development.md).
 9. [Choix de la pile technique](decisions/0001-technology-stack.md).
-10. [Feuille de route](roadmap.md).
+10. [Plan de travail et reprise du projet](roadmap.md).
 11. [Viewer et moteur d’aperçu](viewer.md).
 12. [Couverture des formulaires et plan de réalisation](form-coverage.md).
 13. [Catalogue des attributs et fonctions ExpressionScript](form-catalog.md).

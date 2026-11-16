@@ -156,7 +156,7 @@ Commencer par l’[index de documentation] et les [besoins du projet].
 | [Administration]       | Compte, éditeur et API SQL       |
 | [Développement]        | Outillage et commandes           |
 | [Choix techniques]     | Alternatives et compromis        |
-| [Feuille de route]     | Prochaines étapes                |
+| [Feuille de route]     | Plan priorisé et reprise         |
 | [AGENTS.md](AGENTS.md) | Consignes de contribution        |
 
 ## Vérifier l’environnement

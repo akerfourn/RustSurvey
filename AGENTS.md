@@ -36,6 +36,11 @@ une modification. Distinguer les contraintes acquises, les décisions de
 conception et les fonctionnalités réellement vérifiées. Pour le parcours web,
 lire aussi le [périmètre du viewer](docs/viewer.md).
 
+Pour reprendre le travail, suivre le [plan de travail](docs/roadmap.md) : état
+livré, prochains lots, critères de validation et reprise sur une autre machine.
+Le maintenir à jour après chaque incrément ; les lots proposés ne sont pas des
+fonctionnalités déjà présentes.
+
 La cible couvre tous les formulaires natifs de la version de référence. Pour les
 types, rendus et règles, suivre l’[audit de couverture](docs/form-coverage.md)
 et son [catalogue](docs/form-catalog.md). Un LSS sans blocage détecté ne prouve
@@ -155,8 +160,8 @@ protections utilisent une horloge et une navigation contrôlées.
 - Ne pas ajouter Redis, une file de tâches, un runtime Node en production ou un
   autre service sans besoin démontré et décision documentée.
 - Éviter l’état de session non borné en mémoire et les sessions attachées à un
-  processus. La reprise native est documentée et testée ; la continuité des
-  reprises migrées reste à réaliser.
+  processus. La reprise native SQL est implémentée et testée après redémarrage ;
+  la continuité des participations historiques LimeSurvey reste distincte.
 - Justifier les dépendances ajoutées et leurs options dans la décision technique
   concernée ; désactiver les fonctions inutilisées lorsque possible.
 - Versionner les lockfiles. Ne pas les régénérer sans raison liée au changement.

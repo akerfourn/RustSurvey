@@ -1,5 +1,9 @@
 # Environnement de développement
 
+Le [plan de travail et de reprise](roadmap.md) décrit l’état actuel, les
+prochains lots et la procédure pour continuer sur une autre machine, avec ou
+sans les données privées de développement.
+
 ## Outillage constaté
 
 Inventaire effectué sur cette machine Linux le **10 novembre 2026**.
