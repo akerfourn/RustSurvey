@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useContext, useEffect, useMemo, useState } from "preact/hooks";
+import { NavigationContext } from "../navigation/context.ts";
 import { getPublicStudy, message } from "./api.ts";
 import { publicStudyHash } from "./publication-links.ts";
 import { toViewer, type StoredStudy } from "./model.ts";
@@ -6,6 +7,7 @@ import { StudyViewer } from "../components/StudyViewer.tsx";
 import { ViewerBoundary } from "../components/ViewerBoundary.tsx";
 
 export function PublicStudy({ id, revision }: { id: string; revision: number | null }) {
+  const navigation = useContext(NavigationContext);
   const [stored, setStored] = useState<StoredStudy | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -18,12 +20,7 @@ export function PublicStudy({ id, revision }: { id: string; revision: number | n
         if (controller.signal.aborted) return;
         setStored(study);
         if (revision === null) {
-          // Pin this visit without a hashchange that would remount/reset the running viewer.
-          window.history.replaceState(
-            window.history.state,
-            "",
-            publicStudyHash(id, study.revision),
-          );
+          navigation?.replaceHash(publicStudyHash(id), publicStudyHash(id, study.revision));
         }
       } catch (cause) {
         if (!controller.signal.aborted) setError(message(cause));
@@ -31,7 +28,7 @@ export function PublicStudy({ id, revision }: { id: string; revision: number | n
     }
     void load();
     return () => controller.abort();
-  }, [id, revision]);
+  }, [id, revision, navigation]);
   const study = useMemo(
     () => (stored === null ? null : toViewer(stored.definition, stored.id, stored.source !== null)),
     [stored],

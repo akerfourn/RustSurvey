@@ -22,6 +22,7 @@ export interface ViewerAnswers {
     submit?: boolean,
     selectedLanguage?: string,
   ) => PageEntry;
+  replace: (answers: Answers) => void;
 }
 
 export function useViewerAnswers({
@@ -77,5 +78,8 @@ export function useViewerAnswers({
     setState({ answers: entry.snapshot.answers, issues: entry.snapshot.issues });
     return entry;
   }
-  return { answers: state.answers, snapshot, update };
+  function replace(answers: Answers): void {
+    setState({ answers: new Map(answers), issues: [] });
+  }
+  return { answers: state.answers, snapshot, update, replace };
 }

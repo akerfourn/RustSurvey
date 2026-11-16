@@ -31,7 +31,7 @@ export function ViewerHeader({
     eyebrow = "Participation au questionnaire";
     title = "Vos réponses";
     notice =
-      "Le passage au groupe suivant enregistre votre progression. Vous pouvez aussi enregistrer en cours de saisie. Le bouton final envoie définitivement vos réponses.";
+      "La progression est enregistrée automatiquement après une pause, aux changements de page ou avec le bouton d’enregistrement. Le bouton final envoie vos réponses.";
   }
   return (
     <>

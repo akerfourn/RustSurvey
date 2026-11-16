@@ -1,21 +1,20 @@
-import { useEffect, useState } from "preact/hooks";
 import { LssPreview } from "./LssPreview.tsx";
 import { Catalogue } from "./authoring/Catalogue.tsx";
 import { Administration } from "./authoring/Administration.tsx";
 import { PublicStudy } from "./authoring/PublicStudy.tsx";
 import { RunStart } from "./collection/RunStart.tsx";
 import { Participation } from "./collection/Participation.tsx";
+import { NavigationContext } from "./navigation/context.ts";
+import { useHashRoute } from "./navigation/useHashRoute.ts";
 
 export function App() {
-  const [route, setRoute] = useState(window.location.hash || "#/");
-  useEffect(() => {
-    function handleRoute(): void {
-      setRoute(window.location.hash || "#/");
-    }
-    window.addEventListener("hashchange", handleRoute);
-    return () => window.removeEventListener("hashchange", handleRoute);
-  }, []);
-  if (route === "#/import") return <LssPreview />;
+  const { route, navigation } = useHashRoute();
+  if (route === "#/import")
+    return (
+      <NavigationContext.Provider value={navigation}>
+        <LssPreview />
+      </NavigationContext.Provider>
+    );
   let content = (
     <section className="panel">
       <h1>Page introuvable</h1>
@@ -40,10 +39,15 @@ export function App() {
   else if (run !== null) content = <RunStart id={run[1]!} invitationToken={run[2]} />;
   else if (response !== null)
     content = (
-      <Participation id={response[1]!} token={response[2]!} invitationToken={response[3]} />
+      <Participation
+        key={route}
+        id={response[1]!}
+        token={response[2]!}
+        invitationToken={response[3]}
+      />
     );
   return (
-    <>
+    <NavigationContext.Provider value={navigation}>
       <header className="site-header">
         <a className="brand" href="#/">
           RustSurvey
@@ -56,6 +60,6 @@ export function App() {
       </header>
       <main>{content}</main>
       <footer>RustSurvey · Éditeur et questionnaires publics</footer>
-    </>
+    </NavigationContext.Provider>
   );
 }

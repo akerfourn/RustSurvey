@@ -119,6 +119,41 @@ LSS** permettent un premier [échange des données](response-exchange.md). Les
 invitations, ressources et moyens de reprise ne font pas partie de ces deux
 fichiers ; ils ne constituent pas une archive complète d'étude.
 
+## Sauvegarde automatique et protection de navigation
+
+Dans une participation modifiable, les modifications sont enregistrées après
+deux secondes de pause, avec un délai maximal visé de dix secondes de saisie
+continue. Il n'y a pas de requête à chaque frappe. Les sauvegardes automatiques
+restent partielles : seul le bouton final soumet les réponses. Les campagnes
+fermées et les réponses en consultation ne déclenchent aucune sauvegarde.
+
+Les trois présentations, les valeurs par défaut et les corrections autorisées
+par invitation conservent leur profil de campagne. Les changements de page et
+les commandes manuelles partagent les mêmes versions et réessais que les envois
+automatiques. Aucun second moteur de collecte ni nouvelle table de réponses
+n'est ajouté pour cette protection.
+
+Le participant peut continuer à écrire pendant un envoi automatique. Un accusé
+ancien ne remplace pas ses modifications plus récentes. La position acquittée
+par le serveur est appliquée seulement si aucune nouvelle modification locale
+n'a eu lieu. Une erreur reste visible ; une tentative rejetée n'est pas répétée
+en boucle sans correction ou action du participant.
+
+Un envoi incertain conserve exactement son identifiant et son contenu pour le
+réessai. L'édition et la navigation entre pages attendent sa résolution. Le
+bouton d'enregistrement permet de réessayer ; une soumission déjà reçue est
+acquittée sans créer un nouveau brouillon. Les délais réseau restent bornés à
+vingt secondes côté client. Un conflit ou un droit révoqué exige un rechargement
+explicite, sans écrasement automatique de la saisie locale.
+
+Les liens internes et l'historique du navigateur demandent confirmation avant de
+quitter une saisie non confirmée. Refuser conserve le formulaire et son URL
+privée. Le rechargement et la fermeture utilisent l'avertissement natif du
+navigateur. Ces délais supposent un onglet actif et aucun envoi déjà en cours ;
+un arrêt brutal avant confirmation peut encore perdre les dernières frappes.
+Aucune copie de réponses ou de secrets n'est ajoutée dans un stockage navigateur
+persistant. Le contrôle visuel des dialogues reste à réaliser.
+
 ## Droits de reprise
 
 Le navigateur crée un UUID et un secret aléatoire de 256 bits avec Web Crypto.

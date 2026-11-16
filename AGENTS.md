@@ -113,6 +113,13 @@ PUT conditionnel seul : la référence Garage l'ignore. Le
 lecture des anciens objets SQL. Ne pas accéder au disque depuis le métier ni
 servir directement les répertoires privés.
 
+La collecte regroupe les modifications pour une sauvegarde automatique après
+deux secondes de pause, avec un délai maximal visé de dix secondes. Les accusés
+tardifs ne doivent jamais écraser des modifications plus récentes. La navigation
+interne et la fermeture protègent les changements non confirmés ; ne pas ajouter
+de réponses ou secrets dans un stockage navigateur persistant. Les tests de ces
+protections utilisent une horloge et une navigation contrôlées.
+
 ## Contraintes du produit
 
 - Rust minimal côté serveur ; TypeScript et Preact côté navigateur.

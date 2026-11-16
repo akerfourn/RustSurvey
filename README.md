@@ -39,6 +39,8 @@ privé ; une publication explicite rend la révision accessible :
 - définitions natives validées côté Rust et versions immuables en SQL ;
 - sauvegarde protégée contre l’écrasement entre deux onglets ;
 - publication sans pause, révision conservée pour les parcours déjà ouverts ;
+- collecte SQL avec sauvegarde automatique et protection de la saisie pendant
+  les envois, erreurs et changements de page ;
 - historique consultable et restaurable, import/export JSON des définitions ;
 - export LSS des créations natives, avec refus des données non représentables ;
 - export VV des réponses des campagnes natives fermées, avec lecture progressive
