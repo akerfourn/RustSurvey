@@ -20,11 +20,18 @@ function array<T>(value: unknown, decode: (item: unknown) => T): T[] {
   if (!Array.isArray(value)) throw new Error("Liste du serveur invalide.");
   return value.map(decode);
 }
+function publishedRevision(value: unknown): number | null {
+  if (value === null) return null;
+  const revision = number(value);
+  if (revision < 1) throw new Error("Révision publiée invalide.");
+  return revision;
+}
 function stored(value: unknown): StoredStudy {
   const item = object(value);
   return {
     id: text(item.id),
     revision: number(item.revision),
+    publishedRevision: publishedRevision(item.publishedRevision),
     createdAt: number(item.createdAt),
     updatedAt: number(item.updatedAt),
     definition: decodeDefinition(item.definition),
@@ -37,6 +44,7 @@ function summary(value: unknown): StudySummary {
     id: text(item.id),
     title: text(item.title),
     revision: number(item.revision),
+    publishedRevision: publishedRevision(item.publishedRevision),
     createdAt: number(item.createdAt),
     updatedAt: number(item.updatedAt),
   };
@@ -104,15 +112,43 @@ export async function logout(csrf: string): Promise<Session> {
 export async function listStudies(
   offset: number,
   signal?: AbortSignal,
+  administrator = false,
 ): Promise<{ items: StudySummary[]; hasMore: boolean }> {
-  const body = object(await request(`/api/studies?offset=${offset}`, { signal: signal ?? null }));
+  let path = "/api/studies";
+  if (administrator) path = "/api/admin/studies";
+  const body = object(await request(`${path}?offset=${offset}`, { signal: signal ?? null }));
   if (typeof body.hasMore !== "boolean") throw new Error("Pagination invalide.");
   return { items: array(body.items, summary), hasMore: body.hasMore };
 }
 export async function getStudy(id: string, signal?: AbortSignal): Promise<StoredStudy> {
   return stored(
-    await request(`/api/studies/${encodeURIComponent(id)}`, { signal: signal ?? null }),
+    await request(`/api/admin/studies/${encodeURIComponent(id)}`, { signal: signal ?? null }),
   );
+}
+export async function getPublicStudy(
+  id: string,
+  revision: number | null,
+  signal: AbortSignal,
+): Promise<StoredStudy> {
+  let path = `/api/studies/${encodeURIComponent(id)}`;
+  if (revision !== null) path += `/revisions/${revision}`;
+  return stored(await request(path, { signal }));
+}
+export async function publishStudy(
+  id: string,
+  revision: number,
+  csrf: string,
+  signal: AbortSignal,
+): Promise<number> {
+  const body = object(
+    await request(`/api/admin/studies/${encodeURIComponent(id)}/publish`, {
+      ...write("POST", { expectedRevision: revision }, csrf),
+      signal,
+    }),
+  );
+  const result = publishedRevision(body.publishedRevision);
+  if (result === null) throw new Error("Publication du serveur invalide.");
+  return result;
 }
 export async function saveStudy(
   id: string | null,

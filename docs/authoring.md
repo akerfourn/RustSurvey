@@ -3,10 +3,19 @@
 ## Périmètre réalisé
 
 Un unique administrateur crée et modifie des questionnaires natifs. Le catalogue
-et les définitions sont publics, sans compte participant ni jeton d’accès. Toute
-sauvegarde devient immédiatement visible dans les aperçus. Les campagnes de
-collecte figent séparément une révision avec leur propre politique d’accès. Il
-n’existe pas encore de suppression de questionnaire.
+et les définitions publiées sont publics, sans compte participant ni jeton
+d’accès. Les créations et imports commencent en brouillon privé. Une sauvegarde
+crée un instantané immuable ; **Publier cette révision** le rend visible dans le
+catalogue public. Les campagnes de collecte figent séparément une révision et
+leur propre politique d’accès. Il n’existe pas encore de suppression de
+questionnaire.
+
+Le lien public sélectionne la dernière publication. Un aperçu déjà ouvert garde
+sa définition et ses médias ; son URL porte la révision choisie. Recharger cet
+aperçu retrouve la définition mais efface ses réponses locales. Les
+participations durables utilisent les liens de campagne et de reprise ; leur
+révision est conservée côté serveur. Publier ne modifie pas une campagne déjà
+ouverte. Voir la [décision 0006](decisions/0006-drafts-and-publications.md).
 
 L’éditeur propose les 28 types sans fichiers rendus par le viewer : textes,
 nombres, dates, choix, commentaires, tableaux, doubles échelles, matrices,
@@ -67,7 +76,8 @@ retrouver dans la liste après redémarrage. Le bilan indique les valeurs résol
    mode expression permet des règles complexes et l’insertion d’un code de
    variable recherché. Il ne convertit pas de force les expressions complexes.
 5. Essayer **Aperçu**, modifier les réponses locales et ouvrir l’inspection des
-   conditions et valeurs. Enregistrer pour rendre la nouvelle révision publique.
+   conditions et valeurs. Enregistrer le brouillon puis publier pour rendre la
+   nouvelle révision accessible aux nouveaux arrivants.
 
 Exemple : `AGE >= 18 && CONSENT == 'Y'`. Les codes de choix restent des chaînes,
 notamment `'01'`. Les règles s’appuient sur le moteur borné existant, sans
@@ -136,14 +146,16 @@ Après un premier enregistrement natif, ouvrir **Médiathèque du questionnaire*
 1. Sélectionner une image PNG/JPEG puis **Enregistrer l’image**.
 2. Choisir la question à illustrer et **Associer à la question**.
 3. Renseigner la description alternative dans **Images associées**.
-4. Enregistrer le questionnaire pour rendre cette association publique.
+4. Enregistrer le brouillon puis publier pour rendre cette association publique.
 
 L’aperçu privé peut afficher les images du brouillon. Une image n’est accessible
-publiquement que si la révision courante la référence. Elle doit appartenir à la
-même étude et son envoi doit être terminé. Une question accepte huit images.
-Dissocier conserve le fichier et les anciennes révisions. Un envoi interrompu
-peut être repris depuis sa carte avec **Reprendre cet envoi**, en sélectionnant
-le même fichier ; le serveur vérifie aussi son empreinte.
+publiquement que si une révision publiée la référence. L’URL sans révision suit
+la dernière publication ; les parcours précédents utilisent leur propre route de
+révision. Elle doit appartenir à la même étude et son envoi doit être terminé.
+Une question accepte huit images. Dissocier conserve le fichier et les anciennes
+révisions. Un envoi interrompu peut être repris depuis sa carte avec **Reprendre
+cet envoi**, en sélectionnant le même fichier ; le serveur vérifie aussi son
+empreinte.
 
 Les binaires passent par le port `ObjectStore`. SQL reste le défaut sans
 configuration ; `.env.example` propose le mode fichiers dans `.data/media/`. Les
@@ -290,7 +302,7 @@ rechargement propose de le remplacer explicitement. **Historique des révisions*
 permet de consulter les versions par lots de vingt, essayer leur aperçu,
 exporter leur définition et restaurer un instantané dans une nouvelle révision.
 La restauration exige la version courante attendue et conserve tout
-l’historique.
+l’historique. Elle modifie le brouillon sans changer la publication existante.
 
 Le serveur borne à deux les écritures simultanées par processus. Les routes de
 ce module ont un délai de 15 secondes, des corps limités et
@@ -315,11 +327,15 @@ secondes Unix UTC ; les identifiants d’études sont des UUID textuels.
 | -------- | -------------------------------------------------------------- | -------------------------------------------------- |
 | GET      | `/api/studies?offset=0`                                        | Public ; `items` et `hasMore`                      |
 | GET      | `/api/studies/{id}`                                            | Public ; définition courante                       |
+| GET      | `/api/studies/{id}/revisions/{revision}`                       | Public ; définition déjà publiée                   |
+| GET      | `/api/admin/studies?offset=0`                                  | Admin ; catalogue incluant les brouillons          |
+| GET      | `/api/admin/studies/{id}`                                      | Admin ; brouillon courant                          |
 | GET      | `/api/admin/session`                                           | État, identifiant et jeton CSRF si connecté        |
 | POST     | `/api/admin/login`                                             | `username`, `password` ; cookie                    |
 | POST     | `/api/admin/logout`                                            | Révocation et suppression cookie                   |
 | POST     | `/api/admin/studies`                                           | Admin + CSRF ; définition, HTTP 201                |
 | PUT      | `/api/admin/studies/{id}`                                      | Admin + CSRF ; `expectedRevision`, `definition`    |
+| POST     | `/api/admin/studies/{id}/publish`                              | Admin + CSRF ; `expectedRevision`                  |
 | POST     | `/api/admin/imports/lss`                                       | Admin + CSRF ; XML brut, HTTP 201                  |
 | GET      | `/api/admin/studies/{id}/original.lss`                         | Admin ; original inchangé, téléchargement          |
 | GET      | `/api/admin/studies/{id}/revisions?before=1000000000`          | Admin ; historique paginé                          |
@@ -331,12 +347,17 @@ secondes Unix UTC ; les identifiants d’études sont des UUID textuels.
 | PUT      | `/api/admin/studies/{id}/media/{mediaId}?name=...`             | Admin + CSRF ; image brute, envoi répétable        |
 | GET/HEAD | `/api/admin/studies/{id}/media/{mediaId}`                      | Admin ; image privée                               |
 | GET/HEAD | `/api/studies/{id}/media/{mediaId}`                            | Public ; image référencée par la révision courante |
+| GET/HEAD | `/api/studies/{id}/revisions/{revision}/media/{mediaId}`       | Public ; image référencée par cette publication    |
 
 La représentation enregistrée contient `id`, `revision`, `createdAt`,
-`updatedAt`, `definition` et `source` (`null` pour une création native).
-`source` contient l’empreinte SHA-256 et le rapport d’import, jamais le XML. Les
-erreurs métier exposent un code, un message et éventuellement des diagnostics
-`path`/`message`, sans détail de connexion SQL.
+`updatedAt`, `publishedRevision`, `definition` et `source` (`null` pour une
+création native). `publishedRevision` vaut `null` pour un brouillon jamais
+publié. Les lectures publiques renvoient les métadonnées de la publication
+sélectionnée ; elles n’exposent pas les modifications du brouillon. Les études
+déjà présentes à la migration 0004 conservent leur révision courante comme
+publication initiale. `source` contient l’empreinte SHA-256 et le rapport
+d’import, jamais le XML. Les erreurs métier exposent un code, un message et
+éventuellement des diagnostics `path`/`message`, sans détail de connexion SQL.
 
 La [stratégie SQL](database.md) détaille les tables et leurs tests. Les
 [choix d’authentification](decisions/0003-authoring.md) justifient les nouvelles

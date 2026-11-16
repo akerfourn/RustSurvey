@@ -4,8 +4,8 @@
 
 Le modèle général ci-dessous prépare la migration d’études en cours et un
 backend sobre sur les trois bases. Le premier sous-ensemble implémenté couvre
-`studies`, `definition_revisions`, `import_sources`, les médias et
-l’administration, avec migrations SQL. Le premier profil de
+`studies`, `definition_revisions`, `study_publications`, `import_sources`, les
+médias et l’administration, avec migrations SQL. Le premier profil de
 [collecte native](collection.md) ajoute `runs`, `responses` et
 `operation_receipts`, avec réponses et checkpoint dans un document borné. Les
 [invitations natives](participation.md) ajoutent une politique de campagne, des
@@ -32,8 +32,11 @@ pour construire cette architecture.
 ```mermaid
 erDiagram
     STUDY ||--o{ DEFINITION_REVISION : versions
-    DEFINITION_REVISION ||--o{ RUN : executes
+    STUDY ||--o{ PUBLICATION : publishes
+    DEFINITION_REVISION ||--o| PUBLICATION : exposes
+    STUDY ||--o{ RUN : organizes
     RUN ||--o{ RESPONSE : collects
+    DEFINITION_REVISION ||--o{ RESPONSE : defines
     RUN ||--o{ PARTICIPANT : authorizes
     RESPONSE ||--o{ ANSWER_BLOCK : contains
     RESPONSE ||--o| CHECKPOINT : resumes
@@ -64,9 +67,9 @@ chargement d’un fichier plus récent.
 
 ### Run
 
-`Run` est une campagne de collecte liée à une révision de définition. Elle porte
-ouverture, fermeture, dates d’accès et politique de participation. Sa vie
-opérationnelle est distincte de l’historique des réponses.
+`Run` est une campagne de collecte liée à une étude. Elle porte ouverture,
+fermeture, dates d’accès et politique de participation. Sa vie opérationnelle
+est distincte de l’historique des réponses.
 
 Les campagnes natives `native-pages-v1` figent aussi `navigation` : format
 groupe/question/tout et progression. Leur checkpoint possède une identité de
@@ -87,12 +90,24 @@ un import reste en préparation ; l’ouverture est une transition explicite
 soumise au rapport de compatibilité. Les corrections d’une campagne active
 devront définir les conversions autorisées avant d’être implémentées.
 
+La publication sélectionne séparément la définition proposée aux nouveaux
+visiteurs du catalogue public. Une copie de travail reste un brouillon privé
+jusqu’à publication explicite. Les campagnes existantes conservent leur
+révision, leurs réponses et leurs droits de reprise. La sélection automatique
+d’une nouvelle révision pour de nouvelles participations dans une même campagne
+reste à harmoniser avec ce modèle de campagnes figées. Voir la
+[décision 0006](decisions/0006-drafts-and-publications.md).
+
 ### Response, AnswerBlock et Checkpoint
 
 `Response` identifie une participation, sa campagne, sa révision de définition,
 son état de soumission et sa version de concurrence. Une réponse importée
 partielle reste partielle. Une date de soumission historique n’est pas réécrite
 comme un événement de la nouvelle collecte.
+
+Sa révision de définition est immuable, même lors d’une reprise après une
+nouvelle publication. Le serveur déduit la définition de la participation
+enregistrée ; il ne prend pas la dernière version de l’étude pour la valider.
 
 L’état soumis est distinct de la connaissance d’un instant réel de soumission.
 Une date conventionnelle source reste conservée comme telle ; elle ne devient
@@ -252,13 +267,13 @@ peuvent être chargées depuis un cache borné partagé entre requêtes. Une
 sauvegarde ne réécrit que les blocs affectés et le checkpoint. L’export lit les
 réponses par lots ; il ne charge pas une étude entière en mémoire.
 
-Les tables `studies`, `definition_revisions`, `runs`, `responses` et
-`operation_receipts` sont présentes pour leur profil explicite. Les suivantes
-restent à réaliser : `answer_blocks`, `response_access`, `participants`,
-`transfer_batches` et les correspondances qualifiées par installation. Les
-préparations de réponses LSR n'incarnent pas encore le transfert complet. Le
-premier droit de reprise et le checkpoint sont stockés sur la ligne réponse ;
-une table par concept n’est pas imposée.
+Les tables `studies`, `definition_revisions`, `study_publications`, `runs`,
+`responses` et `operation_receipts` sont présentes pour leur profil explicite.
+Les suivantes restent à réaliser : `answer_blocks`, `response_access`,
+`participants`, `transfer_batches` et les correspondances qualifiées par
+installation. Les préparations de réponses LSR n'incarnent pas encore le
+transfert complet. Le premier droit de reprise et le checkpoint sont stockés sur
+la ligne réponse ; une table par concept n’est pas imposée.
 
 Les identifiants d’objets internes sont des UUID sous forme textuelle canonique.
 Les versions et compteurs utilisent des entiers ; les instants natifs utilisent

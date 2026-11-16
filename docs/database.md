@@ -160,6 +160,17 @@ réaliser.
 
 ## Automatisation et déploiement
 
+La migration `m20261116_000012_publications` ajoute `study_publications` :
+révision publiée, titre public et instant de publication. Une clé étrangère
+composée vise l’instantané immuable. La dernière publication est sélectionnée
+par numéro de révision ; les précédentes restent accessibles aux parcours
+ouverts. La migration conserve les études déjà publiques en publiant seulement
+leur révision courante. Elle ne réécrit aucun document historique. Les nouvelles
+créations et importations restent des brouillons privés.
+
+La [décision 0006](decisions/0006-drafts-and-publications.md) décrit le workflow
+et la distinction entre publications publiques et campagnes de collecte figées.
+
 Les migrations automatiques au démarrage conviennent à ce socle local à un
 processus. L’exécution unique avant un déploiement à plusieurs instances et la
 coordination des démarrages restent à implémenter. Ne pas supposer que deux

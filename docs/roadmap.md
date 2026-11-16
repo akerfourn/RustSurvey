@@ -133,6 +133,12 @@ l'obligatoire des listes/classements. Le tableau H peut servir de source ; son
 filtrage cible natif bloque l'export LSS et son aperçu importé signale l'écart,
 car la référence n'exécute pas cette fonction.
 
+Le workflow de brouillon et publication est présent : une publication change la
+version des nouveaux arrivants sans interrompre les parcours déjà ouverts.
+Chaque future participation persistante devra conserver sa révision lors des
+sauvegardes et reprises. La reprise des données historiques LimeSurvey relève
+d’un outil externe ultérieur ; l’échange standard VV/LSR/LSA reste requis.
+
 ## Étape 0 — Cadrage et squelette
 
 Livrable du premier tour : README, consignes AGENTS, besoins, architecture,

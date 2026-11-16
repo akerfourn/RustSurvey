@@ -157,6 +157,7 @@ pub(super) async fn roundtrip(fixture: &Fixture) {
         before,
         "a new context must not change the default assessment"
     );
+    publish(fixture, &cookie, &csrf, &study, 1).await;
     let public = json(
         call(
             &restarted,

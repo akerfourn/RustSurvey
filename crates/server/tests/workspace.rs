@@ -57,6 +57,8 @@ mod local_storage_tests;
 mod media_tests;
 #[path = "../../object-store/tests/common/mod.rs"]
 mod object_contract;
+#[path = "workspace/publications.rs"]
+mod publication_tests;
 #[path = "workspace/response_imports.rs"]
 mod response_import_tests;
 #[path = "workspace/s3_storage.rs"]
@@ -308,6 +310,21 @@ async fn create(fixture: &Fixture, cookie: &str, csrf: &str, definition: Value) 
     assert_eq!(status, StatusCode::CREATED, "{body}");
     body
 }
+async fn publish(fixture: &Fixture, cookie: &str, csrf: &str, id: &str, revision: i64) -> Value {
+    let response = call(
+        &fixture.app,
+        "POST",
+        &format!("/api/admin/studies/{id}/publish"),
+        Some(json!({"expectedRevision":revision})),
+        Some(cookie),
+        Some(csrf),
+    )
+    .await;
+    let status = response.status();
+    let body = json(response).await;
+    assert_eq!(status, StatusCode::OK, "{body}");
+    body
+}
 #[tokio::test]
 async fn test_administration_should_require_authentication_and_csrf_before_writing() {
     let fixture = fixture().await;
@@ -353,6 +370,13 @@ async fn test_administration_should_require_authentication_and_csrf_before_writi
     );
     let stored = create(&fixture, &cookie, &csrf, definition()).await;
     let path = format!("/api/studies/{}", stored["id"].as_str().unwrap());
+    assert_eq!(
+        call(&fixture.app, "GET", &path, None, None, None)
+            .await
+            .status(),
+        StatusCode::NOT_FOUND
+    );
+    publish(&fixture, &cookie, &csrf, stored["id"].as_str().unwrap(), 1).await;
     let response = call(&fixture.app, "GET", &path, None, None, None).await;
     assert_eq!(response.status(), StatusCode::OK);
     assert_eq!(response.headers()[header::CACHE_CONTROL], "no-store");
@@ -416,6 +440,7 @@ async fn test_revisions_should_preserve_history_and_reject_stale_editor_writes()
         serde_json::from_str::<Value>(&initial).unwrap(),
         definition()
     );
+    publish(&fixture, &cookie, &csrf, id, 2).await;
     assert_eq!(
         json(
             call(
@@ -646,6 +671,7 @@ async fn large_document_roundtrip(fixture: &Fixture) {
     .unwrap();
     assert!(document.to_string().len() > 65536);
     let stored = create(fixture, &cookie, &csrf, document.clone()).await;
+    publish(fixture, &cookie, &csrf, stored["id"].as_str().unwrap(), 1).await;
     let public = json(
         call(
             &fixture.app,
@@ -697,6 +723,7 @@ async fn concurrent_updates(fixture: &Fixture) {
         second_response
     };
     let saved = json(winning_response).await;
+    publish(fixture, &cookie, &csrf, id, 2).await;
     let public = json(
         call(
             &fixture.app,
@@ -710,7 +737,8 @@ async fn concurrent_updates(fixture: &Fixture) {
     )
     .await;
     assert_eq!(saved["revision"], 2);
-    assert_eq!(public, saved);
+    assert_eq!(public["definition"], saved["definition"]);
+    assert_eq!(public["publishedRevision"], 2);
     let revisions = fixture
         .database
         .query_all(
@@ -837,8 +865,9 @@ async fn import_roundtrip(fixture: &Fixture) {
         xml
     );
     let public_path = format!("/api/studies/{id}");
+    publish(fixture, &cookie, &csrf, id, 1).await;
     let public = json(call(&fixture.app, "GET", &public_path, None, None, None).await).await;
-    assert_eq!(public, stored);
+    assert_eq!(public["definition"], stored["definition"]);
     let mut invalid = stored["definition"].clone();
     invalid["title"] = json!("Forbidden content edit");
     let update_path = format!("/api/admin/studies/{id}");
@@ -949,9 +978,12 @@ async fn import_roundtrip(fixture: &Fixture) {
     let state =
         WorkspaceState::with_runtime(fixture.database.clone(), false, fixture.runtime.clone());
     let restarted = routes(state);
+    publish(fixture, &cookie, &csrf, id, 2).await;
+    let mut published = saved.clone();
+    published["publishedRevision"] = json!(2);
     assert_eq!(
         json(call(&restarted, "GET", &public_path, None, None, None).await).await,
-        saved
+        published
     );
     let response = call(&restarted, "GET", &original_path, None, Some(&cookie), None).await;
     assert_eq!(response.status(), StatusCode::OK);
@@ -1150,6 +1182,7 @@ async fn test_external_database_should_apply_migrations_and_roundtrip_large_docu
     source_context_tests::roundtrip(&fixture).await;
     source_context_tests::concurrent_limit(&fixture).await;
     s3_storage_tests::index_roundtrip(&fixture).await;
+    publication_tests::roundtrip(&fixture).await;
     object_contract::contract(&rustsurvey_server::object_store::SqlObjectStore::new(
         fixture.database.clone(),
     ))

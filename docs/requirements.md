@@ -60,6 +60,17 @@ nouvelles collectes et échanges de fichiers. Lorsqu'une bascule sera proposée,
 elle devra conserver réponses complètes et partielles, participants, ressources
 et comportement ; une fonction manquante ne devra pas provoquer de perte.
 
+L’enregistrement d’un questionnaire conserve un brouillon privé. La publication
+change la définition proposée dans le catalogue sans modifier les campagnes
+existantes. Chaque participation durable garde la révision de sa campagne et son
+droit de reprise ; les aperçus publics restent locaux.
+
+L’échange standard des réponses LimeSurvey reste requis : VV et réponses XML
+LSR, notamment dans les archives LSA. Il conserve valeurs, correspondances et
+états disponibles sans devoir recréer les anciennes participations reprenables.
+L’extraction des métadonnées spécifiques à LimeSurvey pour une migration
+complète relève d’un outil externe ultérieur. Aucun état absent n’est inventé.
+
 ## Périmètre initial proposé
 
 La priorité actuelle est une [version pilote utilisable](pilot.md) sur les
@@ -85,8 +96,8 @@ sauvegarde SQL, import persistant et conditions éditables, sans changer le
 périmètre local des réponses.
 
 Le [protocole de migration](study-migration.md) distingue conservation,
-réexport, exécution et continuité. Le transfert complet inclut les compléments
-nécessaires lorsqu’un fichier standard ne transporte pas tout l’état utile.
+réexport, exécution et continuité. Il documente la cible ultérieure de transfert
+complet, distincte de l’échange standard des réponses.
 
 L’éditeur visuel avancé, les statistiques complexes, les invitations, les
 fichiers joints et les extensions seront priorisés après ce premier parcours. Ce

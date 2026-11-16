@@ -14,6 +14,7 @@ mod media_body;
 mod media_content;
 mod media_repository;
 mod password_policy;
+mod publications;
 mod repository;
 mod response_imports;
 mod runtime;
@@ -107,6 +108,10 @@ pub fn routes(state: WorkspaceState) -> Router {
         .route("/api/admin/studies/{id}", put(forms::update))
         .route("/api/admin/studies/{id}/restore", post(history::restore))
         .route(
+            "/api/admin/studies/{id}/publish",
+            post(publications::publish),
+        )
+        .route(
             "/api/admin/studies/{id}/media/{media_id}",
             put(media::upload),
         )
@@ -115,11 +120,21 @@ pub fn routes(state: WorkspaceState) -> Router {
         .merge(collection::routes(state.clone()))
         .merge(response_imports::routes(state.clone()))
         .merge(source_contexts::routes(state.clone()))
-        .route("/api/studies", get(forms::list))
-        .route("/api/studies/{id}", get(forms::get))
+        .route("/api/studies", get(publications::list))
+        .route("/api/studies/{id}", get(publications::get))
+        .route(
+            "/api/studies/{id}/revisions/{revision}",
+            get(publications::get_revision),
+        )
+        .route("/api/admin/studies", get(forms::list))
+        .route("/api/admin/studies/{id}", get(forms::get))
         .route(
             "/api/studies/{id}/media/{media_id}",
             get(media::get_public).head(media::head_public),
+        )
+        .route(
+            "/api/studies/{id}/revisions/{revision}/media/{media_id}",
+            get(media::get_public_revision).head(media::head_public_revision),
         )
         .route(
             "/api/admin/studies/{id}/media/{media_id}",

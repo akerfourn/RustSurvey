@@ -151,9 +151,9 @@ async fn imported_roundtrip(fixture: &Fixture) {
         call(
             &fixture.app,
             "GET",
-            &format!("/api/studies/{id}"),
+            &format!("/api/admin/studies/{id}"),
             None,
-            None,
+            Some(&cookie),
             None,
         )
         .await,

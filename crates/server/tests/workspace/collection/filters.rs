@@ -113,8 +113,9 @@ async fn test_filter_authoring_should_refuse_an_incompatible_source_edit_without
             .iter()
             .any(|issue| issue["message"].as_str().unwrap().contains("Le filtre SRC"))
     );
-    let read_path = format!("/api/studies/{}", study["id"].as_str().unwrap());
-    let current = json(call(&fixture.app, "GET", &read_path, None, None, None).await).await;
+    let read_path = format!("/api/admin/studies/{}", study["id"].as_str().unwrap());
+    let current =
+        json(call(&fixture.app, "GET", &read_path, None, Some(&cookie), None).await).await;
     assert_eq!(current["revision"], 1);
     assert_eq!(
         current["definition"]["groups"][0]["questions"][0]["kind"],

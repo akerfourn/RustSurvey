@@ -72,6 +72,11 @@ fonctionnel dans LimeSurvey 6.5.14 ; cette vérification reste à réaliser.
 
 ## Limites restantes
 
+La [décision 0006](0006-drafts-and-publications.md) remplace depuis le 16
+novembre le comportement de publication décrit ci-dessous : l’enregistrement
+alimente un brouillon privé et une action explicite publie pour les nouveaux
+arrivants, sans modifier les parcours déjà ouverts.
+
 Publication distincte du brouillon, campagnes figées, moteur Rust d’évaluation,
 collecte, reprise des participations et migration d’études en cours restent à
 implémenter. Les modifications sont encore publiques dès leur sauvegarde ; les

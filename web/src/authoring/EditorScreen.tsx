@@ -1,6 +1,7 @@
 import { ImportDetails } from "./ImportDetails.tsx";
 import { RevisionHistory } from "./RevisionHistory.tsx";
 import { MediaLibrary } from "./MediaLibrary.tsx";
+import { PublicationPanel } from "./PublicationPanel.tsx";
 import { useCallback, useMemo, useState } from "preact/hooks";
 import type { Session, ValidationIssue } from "./model.ts";
 import { toViewer } from "./model.ts";
@@ -31,13 +32,16 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
   const editor = useEditor(id, session.csrfToken);
   const [preview, setPreview] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const writing = editor.saving || restoring;
+  const writing = editor.saving || editor.publishing || restoring;
   const study = useMemo(
     () => toViewer(editor.definition, id, editor.source !== null),
     [editor.definition, id, editor.source],
   );
   function handleSave(): void {
     void editor.save();
+  }
+  function handlePublish(): void {
+    void editor.publish();
   }
   function handlePreview(): void {
     setPreview(!preview);
@@ -67,23 +71,12 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
     );
   let login = null;
   if (editor.needsLogin) login = <LoginPanel configured={true} onLogin={handleLogin} />;
-  let publicLink = null;
-  if (id !== null)
-    publicLink = (
-      <a
-        className="button-link secondary"
-        href={`#/studies/${id}`}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Ouvrir le questionnaire public
-      </a>
-    );
   let status = "Brouillon non enregistré";
-  if (editor.revision > 0) status = `Version ${editor.revision} enregistrée`;
+  if (editor.revision > 0) status = `Brouillon enregistré · révision ${editor.revision}`;
   if (editor.dirty) status = "Modifications non enregistrées";
   if (editor.saving) status = "Enregistrement…";
   if (restoring) status = "Restauration de la révision…";
+  if (editor.publishing) status = "Publication…";
   let previewLabel = "Aperçu";
   if (preview) previewLabel = "Revenir à l’éditeur";
   let content = <p role="status">Chargement du questionnaire…</p>;
@@ -157,8 +150,8 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
           <h1>Éditeur de questionnaire</h1>
           <p role="status">{status}</p>
           <p className="muted">
-            Le questionnaire devient public dès son premier enregistrement. Une campagne distincte
-            permet de collecter les réponses du profil pris en charge.
+            L’enregistrement modifie le brouillon privé. La publication rend cette version visible
+            dans le catalogue ; les campagnes collectent séparément sur leur révision figée.
           </p>
         </div>
         <div className="button-row">
@@ -178,14 +171,21 @@ export function EditorScreen({ id, session, onSession }: EditorScreenProps) {
             onClick={handleSave}
             disabled={!editor.ready || writing || (!editor.dirty && editor.revision > 0)}
           >
-            Enregistrer
+            Enregistrer le brouillon
           </button>
-          {publicLink}
           {reload}
         </div>
         {error}
       </section>
       {login}
+      <PublicationPanel
+        id={id}
+        revision={editor.revision}
+        publishedRevision={editor.publishedRevision}
+        disabled={!editor.ready || writing || editor.dirty}
+        publishing={editor.publishing}
+        onPublish={handlePublish}
+      />
       <ImportDetails
         id={id}
         source={editor.source}

@@ -112,12 +112,14 @@ export interface StudySummary {
   id: string;
   title: string;
   revision: number;
+  publishedRevision: number | null;
   createdAt: number;
   updatedAt: number;
 }
 export interface StoredStudy {
   id: string;
   revision: number;
+  publishedRevision: number | null;
   createdAt: number;
   updatedAt: number;
   definition: Definition;

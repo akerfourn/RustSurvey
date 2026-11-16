@@ -9,6 +9,17 @@ nouvelles collectes ou les échanges de fichiers. L'ouverture d'une
 [nouvelle campagne depuis un import](import-execution.md) reste distincte d'une
 bascule avec anciennes participations.
 
+L’échange standard des définitions et réponses reste dans le périmètre : LSS, VV
+et LSR/LSA. Importer des réponses n’exige pas de recréer les droits de reprise,
+cookies ou sessions de l’ancienne installation. Les états complets/partiels et
+les informations utiles présentes dans les fichiers restent des données à
+conserver ; ils ne constituent pas un droit d’accès.
+
+Le protocole complet ci-dessous reste une cible ultérieure. L’extraction et la
+conversion des métadonnées propres à LimeSurvey relèveront d’un outil externe ;
+le backend et le frontend natifs n’accéderont pas à sa base ou à ses sessions.
+Cette continuité historique n’est pas un préalable à la collecte RustSurvey.
+
 La migration doit conserver les données et permettre à l’étude de continuer avec
 le comportement attendu. Ce besoin fait partie de l’architecture dès maintenant,
 même si toutes les fonctions LimeSurvey seront implémentées progressivement.

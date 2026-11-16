@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import { ApiError, getStudy, message, saveStudy } from "./api.ts";
+import { ApiError, getStudy, message, publishStudy, saveStudy } from "./api.ts";
 import {
   createDefinition,
   type Definition,
@@ -12,8 +12,10 @@ export function useEditor(id: string | null, csrf: string | null) {
   const [definition, setDefinition] = useState<Definition>(() => createDefinition());
   const [source, setSource] = useState<ImportInfo | null>(null);
   const [revision, setRevision] = useState(0);
+  const [publishedRevision, setPublishedRevision] = useState<number | null>(null);
   const [ready, setReady] = useState(id === null);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [issues, setIssues] = useState<ValidationIssue[]>([]);
@@ -33,6 +35,7 @@ export function useEditor(id: string | null, csrf: string | null) {
           setDefinition(study.definition);
           setSource(study.source);
           setRevision(study.revision);
+          setPublishedRevision(study.publishedRevision);
           setReady(true);
           setDirty(false);
         }
@@ -59,6 +62,7 @@ export function useEditor(id: string | null, csrf: string | null) {
     setDefinition(study.definition);
     setSource(study.source);
     setRevision(study.revision);
+    setPublishedRevision(study.publishedRevision);
     setDirty(false);
     setError(null);
     setIssues([]);
@@ -69,7 +73,7 @@ export function useEditor(id: string | null, csrf: string | null) {
     setReload((value) => value + 1);
   }
   async function save(): Promise<void> {
-    if (csrf === null || saving || !ready) return;
+    if (csrf === null || saving || publishing || !ready) return;
     const controller = new AbortController();
     saveRequest.current = controller;
     setSaving(true);
@@ -91,12 +95,33 @@ export function useEditor(id: string | null, csrf: string | null) {
       if (!controller.signal.aborted) setSaving(false);
     }
   }
+  async function publish(): Promise<void> {
+    if (id === null || csrf === null || dirty || saving || publishing || !ready) return;
+    const controller = new AbortController();
+    saveRequest.current = controller;
+    setPublishing(true);
+    setError(null);
+    try {
+      const published = await publishStudy(id, revision, csrf, controller.signal);
+      if (!controller.signal.aborted) setPublishedRevision(published);
+    } catch (cause) {
+      if (controller.signal.aborted) return;
+      setError(message(cause));
+      if (cause instanceof ApiError && (cause.status === 401 || cause.status === 403)) {
+        setNeedsLogin(true);
+      }
+    } finally {
+      if (!controller.signal.aborted) setPublishing(false);
+    }
+  }
   return {
     definition,
     source,
     revision,
+    publishedRevision,
     ready,
     saving,
+    publishing,
     dirty,
     error,
     issues,
@@ -106,5 +131,6 @@ export function useEditor(id: string | null, csrf: string | null) {
     acceptSaved,
     reloadSaved,
     save,
+    publish,
   };
 }

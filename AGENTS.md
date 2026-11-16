@@ -14,9 +14,15 @@ Le développement couvre l’adaptateur LimeSurvey, son outil CLI et un premier
 viewer web avec saisie locale, stockage SQL et premier éditeur natif. Un compte
 administrateur protège l’édition ; les questionnaires restent publics.
 L’administration importe les LSS en SQL et édite les conditions de groupes et
-questions. Les autres réglages importés restent protégés dans ce lot. Suivre les
-grandes lignes et livrer des incréments fonctionnels testés ; ne pas remplacer
-le code demandé par un nouveau tour de cadrage général.
+questions. Brouillons et publications sont séparés : enregistrer ne change pas
+la version publique. Publier sert la nouvelle révision aux nouveaux arrivants,
+sans interruption ; un parcours déjà commencé conserve sa révision et ses
+médias. La collecte existante conserve sa révision par campagne ; publier ne
+change pas une campagne déjà ouverte. Lire la
+[décision de publication](docs/decisions/0006-drafts-and-publications.md). Les
+autres réglages importés restent protégés dans ce lot. Suivre les grandes lignes
+et livrer des incréments fonctionnels testés ; ne pas remplacer le code demandé
+par un nouveau tour de cadrage général.
 
 Le porteur du projet a explicitement accepté de différer la continuité exacte
 des études en cours : sessions, droits de reprise et états internes incomplets
@@ -124,9 +130,10 @@ servir directement les répertoires privés.
   actives et une attente bornée ; lire la
   [décision 0013](docs/decisions/0013-bounded-write-admission.md).
 - Les calculs déportés au client ne remplacent jamais les contrôles serveur.
-- La future migration d'études en cours, différée, devra préserver données et
-  comportement, y compris réponses partielles et moyens de reprise. Lire le
-  [protocole de transfert](docs/study-migration.md).
+- L’échange standard des réponses LimeSurvey (VV et LSR/LSA) fait partie du
+  périmètre, sans imposer la reprise des anciennes participations. L’extraction
+  des métadonnées source nécessaires à une migration complète relève d’un outil
+  externe ultérieur. Lire le [protocole de transfert](docs/study-migration.md).
 
 ## Architecture et dépendances
 

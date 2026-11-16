@@ -17,7 +17,7 @@ export function Catalogue({ administrator = false }: CatalogueProps) {
     setError(null);
     async function load(): Promise<void> {
       try {
-        const page = await listStudies(offset, controller.signal);
+        const page = await listStudies(offset, controller.signal, administrator);
         if (!controller.signal.aborted) {
           setItems(page.items);
           setMore(page.hasMore);
@@ -30,7 +30,7 @@ export function Catalogue({ administrator = false }: CatalogueProps) {
     }
     void load();
     return () => controller.abort();
-  }, [offset]);
+  }, [offset, administrator]);
   function handlePrevious(): void {
     setOffset(Math.max(0, offset - 50));
   }
@@ -47,7 +47,8 @@ export function Catalogue({ administrator = false }: CatalogueProps) {
       </a>
     );
   }
-  let content = <p>Aucun questionnaire enregistré pour le moment.</p>;
+  let content = <p>Aucun questionnaire publié pour le moment.</p>;
+  if (administrator) content = <p>Aucun questionnaire enregistré pour le moment.</p>;
   if (busy) content = <p role="status">Chargement des questionnaires…</p>;
   else if (error !== null)
     content = (
@@ -59,6 +60,21 @@ export function Catalogue({ administrator = false }: CatalogueProps) {
     content = (
       <ul className="study-list">
         {items.map((study) => {
+          let open = null;
+          if (study.publishedRevision !== null) {
+            open = (
+              <a className="button-link secondary" href={`#/studies/${study.id}`}>
+                Ouvrir
+              </a>
+            );
+          }
+          let status = `Révision publiée ${study.revision}`;
+          if (administrator) {
+            status = `Brouillon r${study.revision} · non publié`;
+            if (study.publishedRevision !== null) {
+              status = `Brouillon r${study.revision} · publication r${study.publishedRevision}`;
+            }
+          }
           let edit = null;
           if (administrator)
             edit = (
@@ -70,12 +86,10 @@ export function Catalogue({ administrator = false }: CatalogueProps) {
             <li key={study.id}>
               <div>
                 <h2>{study.title}</h2>
-                <p className="muted">Version {study.revision}</p>
+                <p className="muted">{status}</p>
               </div>
               <div className="button-row">
-                <a className="button-link secondary" href={`#/studies/${study.id}`}>
-                  Ouvrir
-                </a>
+                {open}
                 {edit}
               </div>
             </li>

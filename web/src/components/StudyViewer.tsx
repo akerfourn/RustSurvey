@@ -1,4 +1,5 @@
 import { RuntimeInspector } from "../authoring/RuntimeInspector.tsx";
+import { publicMediaPath } from "../authoring/publication-links.ts";
 import { useMemo, useState } from "preact/hooks";
 import { createRuntime, runtimeIssues } from "../survey/engine.ts";
 import { useViewerAnswers } from "../survey/use-viewer-answers.ts";
@@ -26,6 +27,7 @@ interface StudyViewerProps {
   report?: InspectionReport | undefined;
   debug?: boolean;
   persistence?: ViewerPersistence;
+  publishedRevision?: number;
 }
 
 function focusQuestion(id: string | undefined): void {
@@ -41,6 +43,7 @@ export function StudyViewer({
   report: sourceReport,
   debug = false,
   persistence,
+  publishedRevision,
 }: StudyViewerProps) {
   const report = sourceReport ?? inspection?.report ?? { errors: 0, sections: [] };
   const runtime = useMemo(() => createRuntime(study), [study]);
@@ -48,6 +51,9 @@ export function StudyViewer({
   if (study.surveyId !== null) {
     const prefix = debug ? "/api/admin/studies" : "/api/studies";
     mediaBaseUrl = `${prefix}/${encodeURIComponent(study.surveyId)}/media`;
+    if (!debug && publishedRevision !== undefined) {
+      mediaBaseUrl = publicMediaPath(study.surveyId, publishedRevision);
+    }
   }
   const textProblems = useMemo(() => studyTextIssues(runtime), [runtime]);
   const notices = useMemo(() => presentationNotices(runtime), [runtime]);

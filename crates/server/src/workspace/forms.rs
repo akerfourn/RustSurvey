@@ -12,7 +12,7 @@ use serde_json::json;
 #[derive(Deserialize)]
 pub(super) struct Page {
     #[serde(default)]
-    offset: u64,
+    pub(super) offset: u64,
 }
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -40,24 +40,32 @@ pub(super) fn document(definition: &Definition, maximum: usize) -> Result<String
 }
 pub(super) async fn list(
     State(state): State<WorkspaceState>,
+    headers: HeaderMap,
     Query(page): Query<Page>,
 ) -> Result<Response, AppError> {
-    if page.offset > 100000 {
+    auth::authorize_read(&state, &headers).await?;
+    validate_page(page.offset)?;
+    let mut items = repository::list(&state.database, page.offset).await?;
+    let has_more = items.len() > 50;
+    items.truncate(50);
+    Ok(response(json!({"items":items, "hasMore":has_more})))
+}
+pub(super) fn validate_page(offset: u64) -> Result<(), AppError> {
+    if offset > 100000 {
         return Err(AppError::new(
             StatusCode::BAD_REQUEST,
             "invalid_page",
             "Pagination invalide.",
         ));
     }
-    let mut items = repository::list(&state.database, page.offset).await?;
-    let has_more = items.len() > 50;
-    items.truncate(50);
-    Ok(response(json!({"items":items, "hasMore":has_more})))
+    Ok(())
 }
 pub(super) async fn get(
     State(state): State<WorkspaceState>,
     Path(id): Path<String>,
+    headers: HeaderMap,
 ) -> Result<Response, AppError> {
+    auth::authorize_read(&state, &headers).await?;
     if uuid::Uuid::try_parse(&id).is_err() {
         return Err(AppError::not_found());
     }

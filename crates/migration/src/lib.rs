@@ -13,6 +13,7 @@ mod m20261114_000008_source_settings;
 mod m20261114_000009_navigation;
 mod m20261114_000010_import_execution;
 mod m20261114_000011_s3_objects;
+mod m20261116_000012_publications;
 
 pub struct Migrator;
 
@@ -31,6 +32,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20261114_000009_navigation::Migration),
             Box::new(m20261114_000010_import_execution::Migration),
             Box::new(m20261114_000011_s3_objects::Migration),
+            Box::new(m20261116_000012_publications::Migration),
         ]
     }
 }

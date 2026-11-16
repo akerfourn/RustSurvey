@@ -37,6 +37,12 @@ de collecte, réponse et droit de reprise. Les tables sont communes aux études 
 des blocs de données typés et versionnés limitent le nombre d’écritures et les
 dépendances aux particularités JSON des bases.
 
+Le [workflow de publication](decisions/0006-drafts-and-publications.md) sépare
+les brouillons privés des définitions publiques. Une publication change la
+révision des nouvelles participations sans interrompre celles déjà commencées.
+La future reprise persistante chargera la révision de la participation, jamais
+la dernière publication de l’étude.
+
 L’adaptateur LimeSurvey conserve les éléments source et les correspondances
 d’identifiants, en plus du modèle exécutable. Conservation, réexport, exécution
 et continuité sont évalués séparément. Le

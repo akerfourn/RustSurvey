@@ -115,6 +115,13 @@ pub(super) async fn roundtrip(fixture: &Fixture) {
     )
     .await;
     assert_eq!(saved.status(), StatusCode::OK);
+    assert_eq!(
+        call(&fixture.app, "GET", &public, None, None, None)
+            .await
+            .status(),
+        StatusCode::NOT_FOUND
+    );
+    publish(fixture, &cookie, &csrf, id, 2).await;
     let request = Request::builder()
         .uri(&public)
         .header(header::RANGE, "bytes=0-7")
@@ -151,6 +158,33 @@ pub(super) async fn roundtrip(fixture: &Fixture) {
         call(&fixture.app, "GET", &public, None, None, None)
             .await
             .status(),
+        StatusCode::OK
+    );
+    publish(fixture, &cookie, &csrf, id, 3).await;
+    assert_eq!(
+        call(&fixture.app, "GET", &public, None, None, None)
+            .await
+            .status(),
+        StatusCode::NOT_FOUND
+    );
+    let pinned = format!("/api/studies/{id}/revisions/2/media/{MEDIA_ID}");
+    assert_eq!(
+        call(&fixture.app, "GET", &pinned, None, None, None)
+            .await
+            .status(),
+        StatusCode::OK
+    );
+    assert_eq!(
+        call(&fixture.app, "HEAD", &pinned, None, None, None)
+            .await
+            .status(),
+        StatusCode::OK
+    );
+    let unpublished = format!("/api/studies/{id}/revisions/1/media/{MEDIA_ID}");
+    assert_eq!(
+        call(&fixture.app, "GET", &unpublished, None, None, None)
+            .await
+            .status(),
         StatusCode::NOT_FOUND
     );
     let restored = call(
@@ -163,6 +197,13 @@ pub(super) async fn roundtrip(fixture: &Fixture) {
     )
     .await;
     assert_eq!(restored.status(), StatusCode::OK);
+    assert_eq!(
+        call(&fixture.app, "GET", &public, None, None, None)
+            .await
+            .status(),
+        StatusCode::NOT_FOUND
+    );
+    publish(fixture, &cookie, &csrf, id, 4).await;
     assert_eq!(
         call(&fixture.app, "GET", &public, None, None, None)
             .await

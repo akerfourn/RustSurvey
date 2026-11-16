@@ -225,9 +225,12 @@ async fn test_collection_migration_should_preserve_preexisting_definitions_and_s
     );
     Migrator::up(&fixture.database, None).await.unwrap();
     let path = format!("/api/studies/{}", stored["id"].as_str().unwrap());
+    // The restored legacy layout made every saved study public before publications existed.
+    let mut expected = stored;
+    expected["publishedRevision"] = json!(1);
     assert_eq!(
         json(call(&fixture.app, "GET", &path, None, None, None).await).await,
-        stored
+        expected
     );
     let session = json(
         call(
@@ -338,6 +341,8 @@ fn update(version: i64, operation: u64, answers: Value, submit: bool) -> Value {
 async fn test_runs_should_require_admin_csrf_and_preserve_the_selected_revision() {
     let fixture = fixture().await;
     let (study, run, cookie, csrf) = campaign(&fixture).await;
+    publish(&fixture, &cookie, &csrf, &study, 1).await;
+    let participant_id = start(&fixture, &run, 3301).await;
     let path = format!("/api/admin/studies/{study}/runs");
     assert_eq!(
         call(
@@ -377,6 +382,33 @@ async fn test_runs_should_require_admin_csrf_and_preserve_the_selected_revision(
     )
     .await;
     assert_eq!(updated.status(), StatusCode::OK);
+    publish(&fixture, &cookie, &csrf, &study, 2).await;
+    let public = json(
+        call(
+            &fixture.app,
+            "GET",
+            &format!("/api/studies/{study}"),
+            None,
+            None,
+            None,
+        )
+        .await,
+    )
+    .await;
+    assert_eq!(public["revision"], 2);
+    let resumed = json(
+        participant(
+            &fixture.app,
+            "GET",
+            &format!("/api/responses/{participant_id}"),
+            None,
+            Some(TOKEN),
+        )
+        .await,
+    )
+    .await;
+    assert_eq!(resumed["run"]["revision"], 1);
+    assert_eq!(resumed["definition"]["title"], "Collecte synthétique");
     let pinned =
         json(participant(&fixture.app, "GET", &format!("/api/runs/{run}"), None, None).await).await;
     assert_eq!(pinned["run"]["revision"], 1);

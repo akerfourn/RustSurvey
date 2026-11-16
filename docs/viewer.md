@@ -46,6 +46,14 @@ source et une définition v4 en SQL. Ses conditions de groupes et questions sont
 diagnostics, notamment les sections non prises en charge. L’inspection des
 valeurs et de la visibilité est réservée à l’aperçu d’administration.
 
+Le catalogue public ne montre que les publications. Au premier chargement, le
+viewer choisit la dernière révision publiée et inscrit son numéro dans l’URL,
+sans réinitialiser la saisie. Les éditions et publications suivantes ne
+modifient pas ce parcours. Les images sont lues depuis cette même révision.
+Recharger conserve la définition sélectionnée mais efface toujours les réponses
+locales. La future reprise persistante devra retrouver cette révision depuis la
+participation enregistrée, pas depuis la dernière publication.
+
 ## Types et règles couverts
 
 Le viewer admet les **28 types natifs sans fichiers**, dans un profil local

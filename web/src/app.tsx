@@ -22,14 +22,19 @@ export function App() {
       <a href="#/">Retour aux questionnaires</a>
     </section>
   );
-  const publicStudy = /^#\/studies\/([a-f0-9-]{36})$/.exec(route);
+  const publicStudy = /^#\/studies\/([a-f0-9-]{36})(?:\/revisions\/([1-9][0-9]{0,8}))?$/.exec(
+    route,
+  );
   const editStudy = /^#\/admin\/edit\/([a-f0-9-]{36})$/.exec(route);
   const run = /^#\/runs\/([a-f0-9-]{36})(?:\/invite\/([a-f0-9]{64}))?$/.exec(route);
   const response =
     /^#\/responses\/([a-f0-9-]{36})\/([a-f0-9]{64})(?:\/invite\/([a-f0-9]{64}))?$/.exec(route);
   if (route === "#/") content = <Catalogue />;
-  else if (publicStudy !== null) content = <PublicStudy id={publicStudy[1]!} />;
-  else if (route === "#/admin") content = <Administration id={null} editing={false} />;
+  else if (publicStudy !== null) {
+    let revision: number | null = null;
+    if (publicStudy[2] !== undefined) revision = Number(publicStudy[2]);
+    content = <PublicStudy key={route} id={publicStudy[1]!} revision={revision} />;
+  } else if (route === "#/admin") content = <Administration id={null} editing={false} />;
   else if (route === "#/admin/new") content = <Administration id={null} editing={true} />;
   else if (editStudy !== null) content = <Administration id={editStudy[1]!} editing={true} />;
   else if (run !== null) content = <RunStart id={run[1]!} invitationToken={run[2]} />;

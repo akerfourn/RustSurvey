@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { ApiError, decodeDefinition, downloadLss, importDefinition, saveStudy } from "./api.ts";
+import {
+  ApiError,
+  decodeDefinition,
+  downloadLss,
+  getPublicStudy,
+  getStudy,
+  importDefinition,
+  listStudies,
+  publishStudy,
+  saveStudy,
+} from "./api.ts";
+import { publicMediaPath, publicStudyHash } from "./publication-links.ts";
 import { createDefinition, createQuestion } from "./model.ts";
 
 test("test_save_should_explain_oversized_payload_rejections_even_without_json", async (context) => {
@@ -47,7 +58,14 @@ test("test_save_should_send_csrf_and_expected_revision_without_persisting_creden
     sentUrl = url;
     sentOptions = options;
     return new Response(
-      JSON.stringify({ id: "study-1", revision: 4, createdAt: 1, updatedAt: 2, definition }),
+      JSON.stringify({
+        id: "study-1",
+        revision: 4,
+        publishedRevision: 2,
+        createdAt: 1,
+        updatedAt: 2,
+        definition,
+      }),
     );
   });
   const stored = await saveStudy("study-1", 3, definition, "csrf-for-test", controller.signal);
@@ -125,4 +143,77 @@ test("test_lss_download_should_show_export_blockers_without_navigating_away_from
       ),
   );
   await assert.rejects(downloadLss("study-1", 2, new AbortController().signal), /réexport bloqué/);
+});
+
+test("test_public_visit_should_request_its_pinned_revision_and_never_fall_back_to_the_latest", async (context) => {
+  const paths: string[] = [];
+  const definition = createDefinition(() => "g1");
+  context.mock.method(globalThis, "fetch", async (path: string) => {
+    paths.push(path);
+    if (path.endsWith("/revisions/3")) {
+      return new Response(JSON.stringify({ error: { message: "Révision non publiée." } }), {
+        status: 404,
+      });
+    }
+    let revision = 2;
+    if (path.endsWith("/revisions/1")) revision = 1;
+    return new Response(
+      JSON.stringify({
+        id: "s1",
+        revision,
+        publishedRevision: revision,
+        createdAt: 1,
+        updatedAt: 1,
+        definition,
+      }),
+    );
+  });
+  const signal = new AbortController().signal;
+  assert.equal((await getPublicStudy("s1", null, signal)).revision, 2);
+  assert.equal((await getPublicStudy("s1", 1, signal)).revision, 1);
+  await assert.rejects(getPublicStudy("s1", 3, signal), /Révision non publiée/);
+  assert.deepEqual(paths, [
+    "/api/studies/s1",
+    "/api/studies/s1/revisions/1",
+    "/api/studies/s1/revisions/3",
+  ]);
+  assert.equal(publicStudyHash("s1"), "#/studies/s1");
+  assert.equal(publicStudyHash("s1", 1), "#/studies/s1/revisions/1");
+  assert.equal(publicMediaPath("s1", 1), "/api/studies/s1/revisions/1/media");
+});
+
+test("test_administrator_should_load_private_drafts_and_publish_only_the_reviewed_revision", async (context) => {
+  const paths: string[] = [];
+  const signal = new AbortController().signal;
+  context.mock.method(globalThis, "fetch", async (path: string, options: RequestInit) => {
+    paths.push(path);
+    if (path.endsWith("/publish")) {
+      assert.equal(options.method, "POST");
+      assert.equal(new Headers(options.headers).get("X-CSRF-Token"), "test-csrf");
+      assert.deepEqual(JSON.parse(String(options.body)), { expectedRevision: 4 });
+      return new Response(JSON.stringify({ publishedRevision: 4 }));
+    }
+    if (path.includes("?offset="))
+      return new Response(JSON.stringify({ items: [], hasMore: false }));
+    return new Response(
+      JSON.stringify({
+        id: "s1",
+        revision: 4,
+        publishedRevision: 2,
+        createdAt: 1,
+        updatedAt: 1,
+        definition: createDefinition(() => "g1"),
+      }),
+    );
+  });
+  const draft = await getStudy("s1", signal);
+  assert.equal(draft.revision, 4);
+  assert.equal(draft.publishedRevision, 2);
+  await listStudies(0, signal, true);
+  assert.equal(await publishStudy("s1", 4, "test-csrf", signal), 4);
+  assert.deepEqual(paths, [
+    "/api/admin/studies/s1",
+    "/api/admin/studies?offset=0",
+    "/api/admin/studies/s1/publish",
+  ]);
 });

@@ -52,17 +52,23 @@ exhaustif de toutes les dépendances d’une étude.
 
 ## Formats et priorités proposées
 
-| Format         | Nature              | Priorité proposée         |
-| -------------- | ------------------- | ------------------------- |
-| `.lss`         | Structure XML       | Première cible            |
-| `.lsa`         | Archive ZIP         | Requise pour la migration |
-| `.lsg`, `.lsq` | Groupe/question XML | Ultérieure                |
-| TSV            | Structure tabulée   | Selon usage réel          |
-| CSV/réponses   | Résultats           | Périmètre à définir       |
+| Format         | Nature              | Priorité proposée          |
+| -------------- | ------------------- | -------------------------- |
+| `.lss`         | Structure XML       | Première cible             |
+| `.lsa`         | Archive ZIP         | Échange structure/réponses |
+| `.lsr`         | Réponses XML        | Requis, à implémenter      |
+| VV             | Réponses tabulées   | Import/export requis       |
+| `.lsg`, `.lsq` | Groupe/question XML | Ultérieure                 |
+| TSV            | Structure tabulée   | Selon usage réel           |
+| CSV/réponses   | Résultats           | Export pour analyse        |
 
 Le [manuel officiel][manual] distingue la structure `.lss`, sans réponses, de
 l’archive `.lsa`. Commencer par `.lss` fixe l’ordre de développement de
 l’adaptateur, sans limiter le modèle aux structures seules.
+
+L’échange standard des réponses n’exige pas de recréer les anciens droits de
+reprise ou sessions LimeSurvey. L’outil externe de transfert complet reste un
+chantier ultérieur, distinct de cette compatibilité de fichiers.
 
 ## Points établis dans le code 6.5.14
 

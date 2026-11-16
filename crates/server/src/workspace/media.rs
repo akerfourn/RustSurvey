@@ -217,13 +217,14 @@ async fn read(
     headers: HeaderMap,
     private: bool,
     head_only: bool,
+    revision: Option<i64>,
 ) -> Result<Response, AppError> {
     if private {
         auth::authorize_read(&state, &headers).await?;
     }
     valid_id(&study)?;
     valid_id(&id)?;
-    if !private && !repository::is_public(&state.database, &study, &id).await? {
+    if !private && !repository::is_public(&state.database, &study, &id, revision).await? {
         return Err(not_found());
     }
     let media = repository::get(&state.database, &study, &id)
@@ -319,26 +320,42 @@ pub(super) async fn get_private(
     Path((study, id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<Response, AppError> {
-    read(state, study, id, headers, true, false).await
+    read(state, study, id, headers, true, false, None).await
 }
 pub(super) async fn head_private(
     State(state): State<WorkspaceState>,
     Path((study, id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<Response, AppError> {
-    read(state, study, id, headers, true, true).await
+    read(state, study, id, headers, true, true, None).await
 }
 pub(super) async fn get_public(
     State(state): State<WorkspaceState>,
     Path((study, id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<Response, AppError> {
-    read(state, study, id, headers, false, false).await
+    read(state, study, id, headers, false, false, None).await
 }
 pub(super) async fn head_public(
     State(state): State<WorkspaceState>,
     Path((study, id)): Path<(String, String)>,
     headers: HeaderMap,
 ) -> Result<Response, AppError> {
-    read(state, study, id, headers, false, true).await
+    read(state, study, id, headers, false, true, None).await
+}
+
+pub(super) async fn get_public_revision(
+    State(state): State<WorkspaceState>,
+    Path((study, revision, id)): Path<(String, i64, String)>,
+    headers: HeaderMap,
+) -> Result<Response, AppError> {
+    read(state, study, id, headers, false, false, Some(revision)).await
+}
+
+pub(super) async fn head_public_revision(
+    State(state): State<WorkspaceState>,
+    Path((study, revision, id)): Path<(String, i64, String)>,
+    headers: HeaderMap,
+) -> Result<Response, AppError> {
+    read(state, study, id, headers, false, true, Some(revision)).await
 }

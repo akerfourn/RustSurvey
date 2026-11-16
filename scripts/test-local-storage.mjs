@@ -504,7 +504,7 @@ async function verifyCollection(fixture) {
   assert.equal(resumedSource.version, 2);
   assert.deepEqual(resumedSource.answers, { S: "après relance", T: "" });
   assert.equal(resumedSource.checkpoint.language, "en");
-  const imported = await json(`/api/studies/${defaults.imported.id}`);
+  const imported = await json(`/api/admin/studies/${defaults.imported.id}`);
   assert.deepEqual(imported.definition, defaults.imported.definition);
   assert.deepEqual(
     imported.source.report.defaultProjection,
@@ -708,6 +708,9 @@ try {
     expectedRevision: 1,
     definition: study.definition,
   });
+  await json(`/api/admin/studies/${study.id}/publish`, "POST", {
+    expectedRevision: study.revision,
+  });
   await stop();
   await start("file");
   await verifyCollection(collection);
@@ -740,6 +743,9 @@ try {
   study = await json(`/api/admin/studies/${study.id}`, "PUT", {
     expectedRevision: 2,
     definition: study.definition,
+  });
+  await json(`/api/admin/studies/${study.id}/publish`, "POST", {
+    expectedRevision: study.revision,
   });
   const partial = await request(
     `/api/studies/${study.id}/media/${media[1]}`,

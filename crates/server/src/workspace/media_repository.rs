@@ -148,27 +148,32 @@ pub(super) async fn is_public(
     connection: &impl ConnectionTrait,
     study: &str,
     media: &str,
+    revision: Option<i64>,
 ) -> Result<bool, AppError> {
-    Ok(connection
-        .query_one(
-            &Query::select()
-                .column(("media_references", "media_id"))
-                .from("media_references")
-                .inner_join(
-                    "studies",
-                    Expr::col(("studies", "id"))
-                        .equals(("media_references", "study_id"))
-                        .and(
-                            Expr::col(("studies", "revision"))
-                                .equals(("media_references", "revision")),
-                        ),
-                )
-                .and_where(Expr::col(("media_references", "study_id")).eq(study))
-                .and_where(Expr::col("media_id").eq(media))
-                .to_owned(),
+    let mut query = Query::select();
+    query
+        .column(("media_references", "media_id"))
+        .from("media_references")
+        .inner_join(
+            "study_publications",
+            Expr::col(("study_publications", "study_id"))
+                .equals(("media_references", "study_id"))
+                .and(
+                    Expr::col(("study_publications", "revision"))
+                        .equals(("media_references", "revision")),
+                ),
         )
-        .await?
-        .is_some())
+        .and_where(Expr::col(("media_references", "study_id")).eq(study))
+        .and_where(Expr::col("media_id").eq(media));
+    if let Some(revision) = revision {
+        query.and_where(Expr::col(("study_publications", "revision")).eq(revision));
+    } else {
+        query.and_where(
+            Expr::col(("study_publications", "revision"))
+                .eq(super::publications::latest(Expr::val(study))),
+        );
+    }
+    Ok(connection.query_one(&query).await?.is_some())
 }
 pub(super) fn matches(
     media: &Media,

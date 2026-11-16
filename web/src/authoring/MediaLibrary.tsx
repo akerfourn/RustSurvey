@@ -82,7 +82,7 @@ function LibraryBody({ id, csrf, definition, disabled, onChange, onExpired }: Pr
         }),
       })),
     });
-    setNotice("Image associée au brouillon. Enregistrez pour la rendre publique.");
+    setNotice("Image associée au brouillon. Enregistrez puis publiez pour la rendre publique.");
   }
   const cards = items.map((media) => (
     <MediaCard
@@ -114,7 +114,8 @@ function LibraryBody({ id, csrf, definition, disabled, onChange, onExpired }: Pr
     <div>
       <p>
         Images PNG/JPEG, 8 Mio maximum. Les fichiers sont privés tant qu’ils ne sont pas associés à
-        une révision courante enregistrée. Les images des anciennes révisions sont conservées.
+        une révision publiée. Les images des anciennes publications restent accessibles à leurs
+        parcours.
       </p>
       <MediaUpload
         study={id}

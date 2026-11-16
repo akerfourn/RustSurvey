@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { getStudy, message } from "./api.ts";
+import { getPublicStudy, message } from "./api.ts";
+import { publicStudyHash } from "./publication-links.ts";
 import { toViewer, type StoredStudy } from "./model.ts";
 import { StudyViewer } from "../components/StudyViewer.tsx";
 import { ViewerBoundary } from "../components/ViewerBoundary.tsx";
 
-export function PublicStudy({ id }: { id: string }) {
+export function PublicStudy({ id, revision }: { id: string; revision: number | null }) {
   const [stored, setStored] = useState<StoredStudy | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -13,15 +14,24 @@ export function PublicStudy({ id }: { id: string }) {
     setError(null);
     async function load(): Promise<void> {
       try {
-        const study = await getStudy(id, controller.signal);
-        if (!controller.signal.aborted) setStored(study);
+        const study = await getPublicStudy(id, revision, controller.signal);
+        if (controller.signal.aborted) return;
+        setStored(study);
+        if (revision === null) {
+          // Pin this visit without a hashchange that would remount/reset the running viewer.
+          window.history.replaceState(
+            window.history.state,
+            "",
+            publicStudyHash(id, study.revision),
+          );
+        }
       } catch (cause) {
         if (!controller.signal.aborted) setError(message(cause));
       }
     }
     void load();
     return () => controller.abort();
-  }, [id]);
+  }, [id, revision]);
   const study = useMemo(
     () => (stored === null ? null : toViewer(stored.definition, stored.id, stored.source !== null)),
     [stored],
@@ -43,7 +53,11 @@ export function PublicStudy({ id }: { id: string }) {
         <section className="panel">
           <h1>{stored.definition.title}</h1>
         </section>
-        <StudyViewer study={study} report={stored.source?.report} />
+        <StudyViewer
+          study={study}
+          report={stored.source?.report}
+          publishedRevision={stored.revision}
+        />
       </ViewerBoundary>
     );
   return (

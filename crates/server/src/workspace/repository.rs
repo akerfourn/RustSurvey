@@ -25,6 +25,7 @@ pub struct StudySummary {
     pub id: String,
     pub title: String,
     pub revision: i64,
+    pub published_revision: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
 }
@@ -33,17 +34,19 @@ pub struct StudySummary {
 pub struct StoredStudy {
     pub id: String,
     pub revision: i64,
+    pub published_revision: Option<i64>,
     pub created_at: i64,
     pub updated_at: i64,
     pub definition: Definition,
     pub source: Option<ImportInfo>,
 }
 
-fn summary(row: &QueryResult) -> Result<StudySummary, AppError> {
+pub(super) fn summary(row: &QueryResult) -> Result<StudySummary, AppError> {
     Ok(StudySummary {
         id: row.try_get("", "id")?,
         title: row.try_get("", "title")?,
         revision: row.try_get("", "revision")?,
+        published_revision: row.try_get("", "published_revision")?,
         created_at: row.try_get("", "created_at")?,
         updated_at: row.try_get("", "updated_at")?,
     })
@@ -56,6 +59,10 @@ pub async fn list(
         .query_all(
             &Query::select()
                 .columns(["id", "title", "revision", "created_at", "updated_at"])
+                .expr_as(
+                    super::publications::latest(Expr::col(("studies", "id"))),
+                    "published_revision",
+                )
                 .from("studies")
                 .order_by("created_at", Order::Desc)
                 .order_by("id", Order::Asc)
@@ -71,6 +78,10 @@ pub async fn get(database: &DatabaseConnection, id: &str) -> Result<StoredStudy,
         .query_one(
             &Query::select()
                 .columns(["id", "title", "revision", "created_at", "updated_at"])
+                .expr_as(
+                    super::publications::latest(Expr::col(("studies", "id"))),
+                    "published_revision",
+                )
                 .from("studies")
                 .and_where(Expr::col("id").eq(id))
                 .to_owned(),
@@ -90,18 +101,23 @@ pub async fn get(database: &DatabaseConnection, id: &str) -> Result<StoredStudy,
         .await?
         .ok_or_else(AppError::internal)?;
     let document: String = revision.try_get("", "document")?;
-    let mut definition: Definition =
-        serde_json::from_str(&document).map_err(|_| AppError::internal())?;
-    definition.upgrade().map_err(|_| AppError::internal())?;
+    let definition = decode_definition(&document)?;
     let source = import_info(database, id).await?;
     Ok(StoredStudy {
         id: metadata.id,
         revision: metadata.revision,
+        published_revision: metadata.published_revision,
         created_at: metadata.created_at,
         updated_at: metadata.updated_at,
         definition,
         source,
     })
+}
+pub(super) fn decode_definition(document: &str) -> Result<Definition, AppError> {
+    let mut definition: Definition =
+        serde_json::from_str(document).map_err(|_| AppError::internal())?;
+    definition.upgrade().map_err(|_| AppError::internal())?;
+    Ok(definition)
 }
 async fn insert_revision(
     connection: &impl ConnectionTrait,
@@ -171,6 +187,7 @@ pub async fn create(
     Ok(StoredStudy {
         id: id.to_owned(),
         revision: 1,
+        published_revision: None,
         created_at: now,
         updated_at: now,
         definition: definition.clone(),
@@ -223,6 +240,7 @@ pub async fn update(
     Ok(StoredStudy {
         id: id.to_owned(),
         revision: expected + 1,
+        published_revision: super::publications::current(database, id).await?,
         created_at,
         updated_at: now,
         definition: definition.clone(),

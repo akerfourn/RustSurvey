@@ -53,6 +53,8 @@ Pour essayer le livrable actuel, commencer par le [guide du pilote](pilot.md).
 37. [Distribution du client web et paquet pilote](decisions/0016-pilot-web-delivery.md).
 38. [Participants nombreux, pauses et pointes de charge](performance-participants.md).
 
+39. [Brouillons et publication sans interruption](decisions/0006-drafts-and-publications.md).
+
 ## Lire les statuts
 
 La [collecte native et reprise](collection.md) décrit le premier profil durable.

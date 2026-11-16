@@ -15,8 +15,8 @@ parité complète et la migration des anciennes participations restent des
 chantiers ultérieurs.
 
 **Éditeur de questionnaires avec stockage SQL.** Un compte administrateur permet
-de créer et modifier des questionnaires. Ils sont publics dès leur
-enregistrement :
+de créer et modifier des questionnaires. L’enregistrement garde le brouillon
+privé ; une publication explicite rend la révision accessible :
 
 - groupes et questions réordonnables, textes, codes et choix de réponse ;
 - 28 types sans fichiers : textes, nombres, choix, tableaux, classement et
@@ -38,6 +38,7 @@ enregistrement :
 - catalogue des variables et inspection locale des valeurs dans l’aperçu ;
 - définitions natives validées côté Rust et versions immuables en SQL ;
 - sauvegarde protégée contre l’écrasement entre deux onglets ;
+- publication sans pause, révision conservée pour les parcours déjà ouverts ;
 - historique consultable et restaurable, import/export JSON des définitions ;
 - export LSS des créations natives, avec refus des données non représentables ;
 - export VV des réponses des campagnes natives fermées, avec lecture progressive
@@ -130,8 +131,9 @@ sans afficher les textes du questionnaire. Voir les
 - Compatibilité **des fichiers** `.lss` et `.lsa` avec LimeSurvey
   `6.5.14+240624`, dont le schéma de référence est `DBVersion = 623`. Voir la
   [référence amont][ls-version] et le [contrat de compatibilité].
-- Migration d'études en cours différée : le futur transfert devra conserver
-  données, comportement et moyens de reprise, selon le protocole documenté.
+- Import/export standard des réponses LimeSurvey, sans reprise des anciennes
+  participations obligatoire. L’extraction de métadonnées source pour une
+  migration complète relève d’un outil externe ultérieur.
 - Validation serveur obligatoire, même lorsqu’une règle est évaluée côté client.
 
 ## Documentation
@@ -187,8 +189,10 @@ Ouvrir l’adresse Vite affichée, puis **Administration**. L’exemple utilise
 `admin` / `rustsurvey-dev-only`, des identifiants publics réservés aux tests
 locaux. Choisir un mot de passe privé hors de ces tests. Après connexion,
 cliquer sur **Créer un questionnaire**, ajouter les questions et enregistrer. Le
-questionnaire apparaît dans le catalogue public ; son lien permet une saisie
-locale sans compte. Les modifications sont publiques dès leur sauvegarde.
+questionnaire reste un brouillon privé. **Publier cette révision** le rend
+visible dans le catalogue public ; son lien permet une saisie locale sans
+compte. Les modifications suivantes restent privées jusqu’à publication. Les
+parcours déjà ouverts conservent leur révision sans interrompre l’étude.
 
 Pour reprendre un LSS, utiliser **Importer une étude LimeSurvey** dans
 l’administration. Après enregistrement, **Modifier** ouvre ses groupes et
@@ -202,8 +206,9 @@ Pour les créations natives, **Calculs, validation et présentation** expose les
 réglages interprétés. **Traductions** permet d’éditer les langues
 supplémentaires. Après une première sauvegarde, la **Médiathèque** permet
 d’enregistrer une image, de l’associer à une question et d’en décrire le
-contenu. Enregistrer à nouveau pour publier cette association. **Historique des
-révisions** permet de consulter, exporter ou restaurer un état antérieur.
+contenu. Enregistrer puis publier pour rendre cette association publique.
+**Historique des révisions** permet de consulter, exporter ou restaurer un état
+antérieur.
 
 Le backend Rust charge automatiquement le `.env` du répertoire courant. Les
 variables déjà définies dans l’environnement sont prioritaires. Cette
